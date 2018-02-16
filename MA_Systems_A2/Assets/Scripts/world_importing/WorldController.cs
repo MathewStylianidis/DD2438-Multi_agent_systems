@@ -5,17 +5,23 @@ using UnityEngine;
 public class WorldController : MonoBehaviour {
 
 	public TextAsset data;
+	public GameObject agentPrefab;
 	public World world;
 	public GameObject obstacleParent;
+	public GameObject agentParent;
 	public GameObject boundingPolygon;
+	public float agentRadius = 0.5f;
 	public float objectHeight = 4f;
 	public float objectThickness = 0.2f;
+	private GameObject[] agents;
 
+		
 	// Use this for initialization
 	void Start () {
 		world = World.FromJson(data.text);
 		spawnObstacle (world.boundingPolygon, "Bounding polygon", boundingPolygon);
 		spawnObstacles ();
+		spawnActors ();
 	}
 	
 
@@ -25,6 +31,72 @@ public class WorldController : MonoBehaviour {
 
 
 
+
+
+
+
+
+
+
+
+	void spawnActors() {
+
+		if (world.startPositions.Length != 0 && world.enemyPositions.Length != 0) {
+				//Spawn actors in a way suitable for the shooting problem
+		} else if (world.startPositions.Length != 0 && world.goalPositions.Length != 0) {
+			//Spawn actors in a way suitable for all the other problems
+			agents = new GameObject[world.startPositions.Length];
+			for (int i = 0; i < world.startPositions.Length; i++) 
+				spawnActor (world.startPositions[i], world.goalPositions[i], i); 
+		}
+	}
+
+	void spawnActor(Vector2 position, Vector2 goal, int agentIdx) {
+		agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
+		scaleAgent (agents[agentIdx]);
+		agents [agentIdx].transform.rotation = Quaternion.LookRotation (new Vector3(goal.x, objectHeight, goal.y));
+		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
+		agents [agentIdx].transform.parent = agentParent.transform;
+	}
+
+	void scaleAgent( GameObject agent) {
+		MeshRenderer renderer = agent.GetComponent<MeshRenderer> ();
+		Vector3[] vertices = agent.GetComponent<MeshFilter> ().mesh.vertices;
+		float maxX, minX, maxY, minY, maxZ, minZ;
+		maxX = maxY = maxZ = float.MinValue;
+		minX = minY = minZ = float.MaxValue;
+		for (int i = 0; i < vertices.Length; i++) {
+			if (maxX < vertices [i].x)
+				maxX = vertices [i].x;
+			else if (vertices [i].x < minX)
+				minX = vertices [i].x;
+			if (maxY < vertices [i].y)
+				maxY = vertices [i].y;
+			else if (vertices [i].y < minY)
+				minY = vertices [i].y;
+			if (maxZ < vertices [i].z)
+				maxZ = vertices [i].z;
+			else if (vertices [i].z < minZ)
+				minZ = vertices [i].z;
+		}
+
+		// Get size in each direction
+		float x_size = Mathf.Abs (maxX - minX);
+		float y_size = Mathf.Abs (maxY - minY);
+		float z_size = Mathf.Abs (maxZ - minZ);
+		// Find proportion of change needed to reach desired size radius
+		float proportion_x = agentRadius / x_size;
+		float proportion_y = agentRadius / y_size;
+		float proportion_z = agentRadius / z_size;
+		// Update object's vertices
+		for (int i = 0; i < vertices.Length; i++) {
+			vertices [i].x *= proportion_x;
+			vertices [i].y *= proportion_y;
+			vertices [i].z *= proportion_z;
+		}
+		// Update object
+		agent.GetComponent<MeshFilter>().mesh.vertices = vertices;
+	}
 
 	void spawnObstacles() {
 		//Spawn all the obstacles
