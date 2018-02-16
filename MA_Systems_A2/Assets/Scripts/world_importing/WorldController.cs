@@ -57,6 +57,7 @@ public class WorldController : MonoBehaviour {
 		agents [agentIdx].transform.rotation = Quaternion.LookRotation (new Vector3(goal.x, objectHeight, goal.y));
 		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
 		agents [agentIdx].transform.parent = agentParent.transform;
+		agents [agentIdx].name = "AgentNo_" + agentIdx;
 	}
 
 	void scaleAgent( GameObject agent) {
