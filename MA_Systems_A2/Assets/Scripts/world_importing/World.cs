@@ -18,6 +18,8 @@ public class World {
 	public float sensorRange;
 
 	public Vector2[] currentPositions;
+	public Vector2[] currentVelocities;
+	public float[] currentAngularVel;
 	public VehicleInfo vehicle;
 
 	class TempMap {

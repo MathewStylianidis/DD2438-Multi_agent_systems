@@ -20,6 +20,8 @@ public class WorldController : MonoBehaviour {
 	void Start () {
 		world = World.FromJson(data.text);
 		world.currentPositions = (Vector2[]) world.startPositions.Clone ();
+		world.currentAngularVel = new float[world.currentPositions.Length];
+		initializeVelocities ();
 		spawnObstacle (world.boundingPolygon, "Bounding polygon", boundingPolygon);
 		spawnObstacles ();
 		spawnActors ();
@@ -31,13 +33,13 @@ public class WorldController : MonoBehaviour {
 	}
 
 
-
-
-
-
-
-
-
+	void initializeVelocities() {
+		world.currentVelocities = new Vector2[world.startPositions.Length];
+		for (int i = 0; i < world.currentVelocities.Length - 1; i++) {
+			Vector2 x = world.goalPositions [i] - world.startPositions [i];
+			world.currentVelocities [i] = x.normalized * world.vehicle.maxVelocity;
+		}
+	}
 
 
 	void spawnActors() {
@@ -132,7 +134,6 @@ public class WorldController : MonoBehaviour {
 		wall.transform.parent = parent.transform;
 		//set obstacleParent as parent obstacle
 	}
-
 
 
 }
