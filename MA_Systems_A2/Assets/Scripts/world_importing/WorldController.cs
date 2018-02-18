@@ -19,6 +19,7 @@ public class WorldController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		world = World.FromJson(data.text);
+		world.currentPositions = (Vector2[]) world.startPositions.Clone ();
 		spawnObstacle (world.boundingPolygon, "Bounding polygon", boundingPolygon);
 		spawnObstacles ();
 		spawnActors ();
@@ -52,17 +53,17 @@ public class WorldController : MonoBehaviour {
 	}
 
 	void spawnActor(Vector2 position, Vector2 goal, int agentIdx) {
-		Debug.Log (goal);
 		agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
 		scaleAgent (agents[agentIdx]);
 		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
 		agents [agentIdx].transform.LookAt(new Vector3(goal.x, objectHeight, goal.y));
 		agents [agentIdx].transform.parent = agentParent.transform;
 		agents [agentIdx].name = "AgentNo_" + agentIdx;
+		agents [agentIdx].AddComponent<AgentController> ();
 	}
 
 	void scaleAgent( GameObject agent) {
-		MeshRenderer renderer = agent.GetComponent<MeshRenderer> ();
+		//MeshRenderer renderer = agent.GetComponent<MeshRenderer> ();
 		Vector3[] vertices = agent.GetComponent<MeshFilter> ().mesh.vertices;
 		float maxX, minX, maxY, minY, maxZ, minZ;
 		maxX = maxY = maxZ = float.MinValue;

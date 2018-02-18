@@ -17,6 +17,7 @@ public class World {
 	public Vector2[] pointsOfInterest;
 	public float sensorRange;
 
+	public Vector2[] currentPositions;
 	public VehicleInfo vehicle;
 
 	class TempMap {
