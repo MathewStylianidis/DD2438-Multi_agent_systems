@@ -8,10 +8,10 @@ using UnityEngine;
  * Optimal reciprocal collision avoidance for multiple non-holonomic robots. In Distributed Autonomous
  * Robotic Systems (pp. 203-216). Springer, Berlin, Heidelberg.	
  */
-public class AgentController : MonoBehaviour {
+public class AgentControllerP21 : MonoBehaviour {
 
 	public World world;
-	public float epsilon = 1e-20f;
+	public static float epsilon = 1e-20f;
 	public float wheelDist = epsilon; // Set to epsilon by default to discard car mechanics
 	public float omegaMax = 0.5f; 
 	private float maxTrackingError;
@@ -24,7 +24,7 @@ public class AgentController : MonoBehaviour {
 
 
 
-	public AgentController(World world, float agentRadius, float lowerBounds) {
+	public AgentControllerP21(World world, float agentRadius, float lowerBounds) {
 		this.world = world;
 		this.agentRadius = agentRadius;
 		this.maxTrackingError = agentRadius; //maxTrackingError equal to agent radius guaranteed collision free trajectories
@@ -56,7 +56,7 @@ public class AgentController : MonoBehaviour {
 		
 	}
 
-	// Calculate set of allowed holonomic velocities S_ahv
+	// Calculate set of allowed holonomic velocities S_ahv (Polygonal approximation)
 	List<Vector2> calcSahv(float angle, int agentIdx) {
 		float maxHolSpeed = getMaxHolSpeed(angle, agentIdx); //get maximum holonomic speed
 
@@ -94,7 +94,7 @@ public class AgentController : MonoBehaviour {
 			float gamma = 2 * alpha * (1 - Mathf.Cos(angle)) * vMaxOmega * vMaxOmega / (angle * angle)
 				- this.maxTrackingError * this.maxTrackingError;
 			return Mathf.Min((-beta + Mathf.Sqrt(beta * beta - 4 * alpha * gamma)) / (2 * gamma),
-				this.world.vehicle.maxVelocity)
+				this.world.vehicle.maxVelocity);
 		} else /*if (nonHolOptVel <= vMaxOmega)*/ {
 			float tmp = angle * Mathf.Sin(angle) / (2 * (1 - Mathf.Cos(angle))); // 2nd term in formula in Eq. 14
 			return Mathf.Min (vStarEps / tmp, this.world.vehicle.maxVelocity);

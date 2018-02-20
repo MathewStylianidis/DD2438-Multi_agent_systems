@@ -51,7 +51,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\AgentController.cs" />
+     <Compile Include="Assets\Scripts\AgentControllerP21.cs" />
+     <Compile Include="Assets\Scripts\GeneticAlgorithm.cs" />
      <Compile Include="Assets\Scripts\world_importing\DeserializationTest.cs" />
      <Compile Include="Assets\Scripts\world_importing\Draw.cs" />
      <Compile Include="Assets\Scripts\world_importing\TinyJson.cs" />

@@ -25,6 +25,13 @@ public class WorldController : MonoBehaviour {
 		spawnObstacle (world.boundingPolygon, "Bounding polygon", boundingPolygon);
 		spawnObstacles ();
 		spawnActors ();
+		if (data.name == "P22") {
+			// Use a genetic algorithm if this is the Vehicle Routing Problem
+			int M = 10000;
+			float[,] distanceMatrix = calcDistanceMatrix ();
+			GeneticAlgorithm ga = new GeneticAlgorithm (M, world.pointsOfInterest.Length, agents.Length, distanceMatrix);
+			ga.steadyState ();
+		}
 	}
 	
 
@@ -32,6 +39,31 @@ public class WorldController : MonoBehaviour {
 		
 	}
 
+	// Gets distance matrix between all critical nodes
+	private float[,] calcDistanceMatrix () {
+		int nodeCount = world.pointsOfInterest.Length + agents.Length * 2;
+		float[,] distanceMatrix = new float[nodeCount,nodeCount];
+		Vector2[] nodeArray = getNodeArray ();
+
+		for (int i = 0; i < nodeCount; i++)
+			for (int j = 0; j < nodeCount; j++) 
+				distanceMatrix [i, j] = Vector2.Distance (nodeArray[i],nodeArray[j]); //need to replace euclidean distance with obstacle free path distance found by some algorithm
+		
+		return distanceMatrix;
+	}
+
+	// Create List with all the nodes (points of interests, starting points, goal points)
+	private Vector2[] getNodeArray() {
+		int nodeCount = world.pointsOfInterest.Length + agents.Length * 2;
+		Vector2[] nodeArray = new Vector2[nodeCount];
+		for (int i = 0; i < world.pointsOfInterest.Length; i++)
+			nodeArray [i] = world.pointsOfInterest [i];
+		for (int i = 0; i < world.startPositions.Length; i++)
+			nodeArray [world.pointsOfInterest.Length + i] = world.startPositions [i];
+		for (int i = 0; i < world.goalPositions.Length; i++)
+			nodeArray [world.pointsOfInterest.Length + world.startPositions.Length + i] = world.goalPositions [i];
+		return nodeArray;
+	}
 
 	void initializeVelocities() {
 		world.currentVelocities = new Vector2[world.startPositions.Length];
@@ -61,7 +93,8 @@ public class WorldController : MonoBehaviour {
 		agents [agentIdx].transform.LookAt(new Vector3(goal.x, objectHeight, goal.y));
 		agents [agentIdx].transform.parent = agentParent.transform;
 		agents [agentIdx].name = "AgentNo_" + agentIdx;
-		agents [agentIdx].AddComponent<AgentController> ();
+		if (data.name == "P21")
+			agents [agentIdx].AddComponent<AgentControllerP21> ();
 	}
 
 	void scaleAgent( GameObject agent) {
