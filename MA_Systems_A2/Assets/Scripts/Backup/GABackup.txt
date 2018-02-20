@@ -8,7 +8,7 @@ using UnityEngine;
  * Eiben, A.E. and Smith, J.E., 2008. Introduction to evolutionary computing 
  * (natural computing series). Publisher: Springer-Verlag, New York, LLC.
  */
-public class GeneticAlgorithmBackup {
+public class GeneticAlgorithm {
 
 	private int M; //population size
 	private int lambda; // parents selected in each iteration
@@ -19,7 +19,7 @@ public class GeneticAlgorithmBackup {
 	private bool overselection;
 	private float fitGroupPerc;
 
-	public GeneticAlgorithmBackup(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, bool overselection = false, float fitGroupPerc = 0.3f) {
+	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, bool overselection = false, float fitGroupPerc = 0.3f) {
 		this.M = M;
 		this.lambda = lambda;
 		this.customers = customers;

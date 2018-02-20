@@ -54,7 +54,7 @@ public class GeneticAlgorithm {
 		// Selects lambda parents given the probability distribution <selectionProbabilities>
 		System.Random rng = new System.Random (System.Guid.NewGuid().GetHashCode());
 
-		int currentMember = 0, i = lambda - 1;
+		int currentMember = 0, i = populationIndices - 1;
 
 		while (currentMember < this.lambda) {
 			float r = (float)rng.NextDouble () %  (1f / this.lambda); // this line is out from the loop in the book's pseudocode which might be incorrect
