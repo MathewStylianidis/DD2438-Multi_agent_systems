@@ -5,13 +5,15 @@ using UnityEngine;
 public class GeneticAlgorithm {
 
 	private int M; //population size
+	private int lambda; // parents selected in each iteration
 	private int customers; //number of customers
 	private int vehicles;
 	private List<int>[] population; //population array with lists
 	private float[,] distanceMatrix;
 
-	public GeneticAlgorithm(int M, int customers, int vehicles, float[,] distanceMatrix) {
+	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix) {
 		this.M = M;
+		this.lambda = lambda;
 		this.customers = customers;
 		this.vehicles = vehicles;
 		population = new List<int>[M];
@@ -19,12 +21,61 @@ public class GeneticAlgorithm {
 	}
 
 
-	public void steadyState() {
+	public void generationalGeneticAlgorithm() {
+		// Initialize chromosome population
 		initializePopulation ();
+
+		// Get parent selection probabilities - They do not depend on fitness values but only on population size and hence can be precomputed
+		float[] selectionProbabilities = calculateRankingProbabilities(population.Length, "Linear");
+		//for (int i = 0; i < selectionProbabilities.Length; i++)
+			//Debug.Log (selectionProbabilities [i]);
+		// Calculate fitness for each chromosome
 		float[] populationFitness = calculateFitness ();
+		int[] populationIndices = populationFitness.getIndexList ();
+		// Sort fitness of each chromosome along with their indices
+		System.Array.Sort(populationFitness, populationIndices);
+
 
 	}
 
+
+	private float[] calculateRankingProbabilities(int populationSize, string option = "Linear", float constant = 2f) {
+		float[] selectProbs = new float[populationSize];
+
+		if (option.Equals ("Linear")) {
+			
+			if (constant <= 1 || constant > 2)
+				throw new System.Exception("Set parameter <constant> so that 1 < constant <= 2 when choosing the Linear option");
+			for (int rank = 0; rank < populationSize; rank++)
+				selectProbs [rank] = (2 - constant) / populationSize + 2 * rank * (constant - 1) / (populationSize * (populationSize - 1));
+
+		} else if (option.Equals ("Exp1")) {
+			
+			float normalizationConstant = 0;
+			for (int rank = 0; rank < populationSize; rank++) {
+				selectProbs [rank] = 1 - Mathf.Exp (-rank);
+				normalizationConstant += selectProbs [rank];
+			}
+			// Normalize probabilities
+			for (int rank = 0; rank < populationSize; rank++)
+				selectProbs [rank] /= normalizationConstant;	
+			
+		} else if (option.Equals ("Exp2")) {
+			
+			if (constant >= 1f)
+				throw new System.Exception("Set parameter <constant> to a value between 0 and 1 when choosing the Exp2 option");
+			float normalizationConstant = 0;
+			for (int rank = 0; rank < populationSize; rank++) {
+				selectProbs [rank] = Mathf.Pow (constant, populationSize - rank); 
+				normalizationConstant += selectProbs [rank];
+			}
+			// Normalize probabilities
+			for (int rank = 0; rank < populationSize; rank++)
+				selectProbs [rank] /= normalizationConstant;	
+		}
+			
+		return selectProbs;
+	}
 
 	private float[] calculateFitness() {
 		float[] populationFitness = new float[M];
@@ -110,6 +161,7 @@ public class GeneticAlgorithm {
 		}
 		population [idx] = chromosome;
 	}
+		
 }
 
 
@@ -128,5 +180,13 @@ public static class GeneticAlgorithmHelper {
 			list [k] = list [n];
 			list [n] = value;
 		}
+	}
+
+	public static int[] getIndexList<T>(this IList<T> coll) {
+		int length = coll.Count;
+		int[] array = new int[length];
+		for (int i = 0; i < length; i++)
+			array [i] = i;
+		return array;
 	}
 }
