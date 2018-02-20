@@ -8,7 +8,7 @@ using UnityEngine;
  * Eiben, A.E. and Smith, J.E., 2008. Introduction to evolutionary computing 
  * (natural computing series). Publisher: Springer-Verlag, New York, LLC.
  */
-public class GeneticAlgorithm {
+public class GeneticAlgorithmBackup {
 
 	private int M; //population size
 	private int lambda; // parents selected in each iteration
@@ -16,14 +16,18 @@ public class GeneticAlgorithm {
 	private int vehicles;
 	private List<int>[] population; //population array with lists
 	private float[,] distanceMatrix;
+	private bool overselection;
+	private float fitGroupPerc;
 
-	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix) {
+	public GeneticAlgorithmBackup(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, bool overselection = false, float fitGroupPerc = 0.3f) {
 		this.M = M;
 		this.lambda = lambda;
 		this.customers = customers;
 		this.vehicles = vehicles;
 		population = new List<int>[M];
 		this.distanceMatrix = distanceMatrix;
+		this.overselection = overselection;
+		this.fitGroupPerc = fitGroupPerc;
 	}
 
 
@@ -33,7 +37,20 @@ public class GeneticAlgorithm {
 
 		// Get parent selection probabilities - They do not depend on fitness values but only on population size and hence can be precomputed
 		float[] selectionProbabilities = calculateRankingProbabilities(population.Length, "Linear");
- 
+
+		// If overselection is true, split selection probabilities in two
+		float[] fitSelectionProbabilities = null; //user if overselection is true
+		float[] unfitSelectionProbabilities = null; //user if overselection is true
+		int seperatingIdx = -1; //user if overselection is true
+		if(overselection) {
+			seperatingIdx = M - (int)(this.M * this.fitGroupPerc);
+			fitSelectionProbabilities = calculateRankingProbabilities((int)(this.M * this.fitGroupPerc), "Linear");
+			unfitSelectionProbabilities = calculateRankingProbabilities(seperatingIdx, "Linear");
+		}
+
+
+
+
 		// Calculate fitness for each chromosome
 		float[] populationFitness = calculateFitness ();
 		int[] populationIndices = populationFitness.getIndexList ();
@@ -43,29 +60,46 @@ public class GeneticAlgorithm {
 		System.Array.Reverse (populationFitness);
 		System.Array.Reverse (populationIndices);
 
-		//Run stochastic universal sampling algorithm to get mating pool (selected parents)
-		int[] matingPool = stochasticUniversalSampling(selectionProbabilities, populationIndices); 
+
+		int[] matingPool;
+		if (!overselection)
+			//Run stochastic universal sampling algorithm to get mating pool (selected parents)
+			matingPool = stochasticUniversalSampling (selectionProbabilities, populationIndices, this.lambda);
+		else {
+			// If overselection is activated
+			int[] fitPopulationIndices = new int[(int)(this.M * this.fitGroupPerc)];
+			int[] unfitPopulationIndices = new int[this.M - (int)(this.M * this.fitGroupPerc)];
+			// Split population in fit and unfit where fit is <fitGroupPerc>% of the initial population
+			System.Array.Copy(populationIndices, 0, unfitPopulationIndices, 0,seperatingIdx);
+			System.Array.Copy(populationIndices, seperatingIdx, fitPopulationIndices, 0, (int)(this.M * this.fitGroupPerc));
+			// Select 80% parents from fit group and 20% from unfit group
+			matingPool = stochasticUniversalSampling (fitSelectionProbabilities, fitPopulationIndices, (int)(0.8f * this.M) );
+			matingPool = stochasticUniversalSampling (unfitSelectionProbabilities, unfitPopulationIndices, (int)(0.2f * this.M));
+
+		}
 
 	}
 
 
-	private int[] stochasticUniversalSampling(float[] selectionProbabilities, int[] populationIndices) {
-		int[] matingPool = new int[this.lambda];
+	private int[] stochasticUniversalSampling(float[] selectionProbabilities, int[] populationIndices, int lambda) {
+		int[] matingPool = new int[lambda];
 		// Selects lambda parents given the probability distribution <selectionProbabilities>
 		System.Random rng = new System.Random (System.Guid.NewGuid().GetHashCode());
-
-		int currentMember = 0, i = lambda - 1;
-
-		while (currentMember < this.lambda) {
-			float r = (float)rng.NextDouble () %  (1f / this.lambda); // this line is out from the loop in the book's pseudocode which might be incorrect
+		Debug.Log (lambda);
+		int currentMember = 0, i = populationIndices.Length - 1;
+		while (currentMember < lambda) {
+			Debug.Log ("SHIT");
+			float r = (float)rng.NextDouble () %  (1f / lambda); // this line is out from the loop in the book's pseudocode which might be incorrect
 			while (r <= selectionProbabilities [i]) {
 				matingPool [currentMember] = populationIndices [i];
-				r += 1f / this.lambda;
+				r += 1f / lambda;
 				currentMember++;
+				Debug.Log (currentMember);
 			}
 			i--;
 		}
-			
+		Debug.Log ("DONE");
+
 		return matingPool;
 	}
 
@@ -74,14 +108,14 @@ public class GeneticAlgorithm {
 		float[] selectProbs = new float[populationSize];
 
 		if (option.Equals ("Linear")) {
-			
+
 			if (constant <= 1 || constant > 2)
 				throw new System.Exception("Set parameter <constant> so that 1 < constant <= 2 when choosing the Linear option");
 			for (int rank = 0; rank < populationSize; rank++)
 				selectProbs [rank] = (2 - constant) / populationSize + 2 * rank * (constant - 1) / (populationSize * (populationSize - 1));
 
 		} else if (option.Equals ("Exp1")) {
-			
+
 			float normalizationConstant = 0;
 			for (int rank = 0; rank < populationSize; rank++) {
 				selectProbs [rank] = 1 - Mathf.Exp (-rank);
@@ -90,9 +124,9 @@ public class GeneticAlgorithm {
 			// Normalize probabilities
 			for (int rank = 0; rank < populationSize; rank++)
 				selectProbs [rank] /= normalizationConstant;	
-			
+
 		} else if (option.Equals ("Exp2")) {
-			
+
 			if (constant >= 1f)
 				throw new System.Exception("Set parameter <constant> to a value between 0 and 1 when choosing the Exp2 option");
 			float normalizationConstant = 0;
@@ -104,7 +138,7 @@ public class GeneticAlgorithm {
 			for (int rank = 0; rank < populationSize; rank++)
 				selectProbs [rank] /= normalizationConstant;	
 		}
-			
+
 		return selectProbs;
 	}
 
@@ -169,7 +203,7 @@ public class GeneticAlgorithm {
 			custIdxList.Add (i);
 		for (int i = 0; i < this.vehicles; i++)
 			vehicleIdxList.Add (custIdxList.Count + i);
-		
+
 		// For each population individual
 		for (int i = 0; i < M; i++) {
 			initializeIndividual(population, i, custIdxList, vehicleIdxList);
@@ -192,7 +226,7 @@ public class GeneticAlgorithm {
 		}
 		population [idx] = chromosome;
 	}
-		
+
 }
 
 
