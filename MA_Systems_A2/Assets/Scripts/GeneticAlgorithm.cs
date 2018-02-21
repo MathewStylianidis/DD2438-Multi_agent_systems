@@ -98,8 +98,7 @@ public class GeneticAlgorithm {
 			}
 			i++;
 		}
-
-		Debug.Log (currentMember);
+			
 		return matingPool;
 	}
 
