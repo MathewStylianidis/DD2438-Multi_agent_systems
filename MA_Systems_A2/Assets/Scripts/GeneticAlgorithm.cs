@@ -19,7 +19,7 @@ public class GeneticAlgorithm {
 	private bool overselection;
 	private float fitGroupPerc;
 
-	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, bool overselection = false, float fitGroupPerc = 0.3f) {
+	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, bool overselection = false, float fitGroupPerc = 0.04f) {
 		this.M = M;
 		this.lambda = lambda;
 		this.customers = customers;
@@ -36,11 +36,11 @@ public class GeneticAlgorithm {
 		initializePopulation ();
 
 		// Get parent selection probabilities - They do not depend on fitness values but only on population size and hence can be precomputed
-		float[] selectionProbabilities = calculateRankingProbabilities(population.Length, "Linear");
+		double[] selectionProbabilities = calculateRankingProbabilities(population.Length, "Linear");
 
 		// If overselection is true, split selection probabilities in two
-		float[] fitSelectionProbabilities = null; //user if overselection is true
-		float[] unfitSelectionProbabilities = null; //user if overselection is true
+		double[] fitSelectionProbabilities = null; //user if overselection is true
+		double[] unfitSelectionProbabilities = null; //user if overselection is true
 		int seperatingIdx = -1; //user if overselection is true
 		if(overselection) {
 			seperatingIdx = M - (int)(this.M * this.fitGroupPerc);
@@ -82,16 +82,16 @@ public class GeneticAlgorithm {
 	}
 
 
-	private int[] stochasticUniversalSampling(float[] selectionProbabilities, int[] populationIndices, int lambda) {
+	private int[] stochasticUniversalSampling(double[] selectionProbabilities, int[] populationIndices, int lambda) {
 		int[] matingPool = new int[lambda];
-		float[] a = getCumulativeProbs (selectionProbabilities);
+		double[] a = getCumulativeProbs (selectionProbabilities);
 		// Selects lambda parents given the probability distribution <selectionProbabilities>
 		System.Random rng = new System.Random (System.Guid.NewGuid().GetHashCode());
-		float r = (float)rng.NextDouble () %  (1f / lambda);
+		double r = (double)rng.NextDouble () %  (1f / lambda);
 
 		int currentMember = 0, i = 0;
 		while (currentMember < lambda) {
-			while (r <= a [i]) {
+			while (r < a [i]) {
 				matingPool [currentMember] = populationIndices [i];
 				r += 1f / lambda;
 				currentMember++;
@@ -99,12 +99,13 @@ public class GeneticAlgorithm {
 			i++;
 		}
 
+		Debug.Log (currentMember);
 		return matingPool;
 	}
 
 
-	private float[] calculateRankingProbabilities(int populationSize, string option = "Linear", float constant = 2f) {
-		float[] selectProbs = new float[populationSize];
+	private double[] calculateRankingProbabilities(int populationSize, string option = "Linear", float constant = 2f) {
+		double[] selectProbs = new double[populationSize];
 
 		if (option.Equals ("Linear")) {
 
@@ -115,7 +116,7 @@ public class GeneticAlgorithm {
 
 		} else if (option.Equals ("Exp1")) {
 
-			float normalizationConstant = 0;
+			double normalizationConstant = 0;
 			for (int rank = 1; rank <= populationSize; rank++) {
 				selectProbs [rank - 1] = 1 - Mathf.Exp (-rank);
 				normalizationConstant += selectProbs [rank - 1];
@@ -128,7 +129,7 @@ public class GeneticAlgorithm {
 
 			if (constant >= 1f)
 				throw new System.Exception("Set parameter <constant> to a value between 0 and 1 when choosing the Exp2 option");
-			float normalizationConstant = 0;
+			double normalizationConstant = 0;
 			for (int rank = 1; rank <= populationSize; rank++) {
 				selectProbs [rank - 1] = Mathf.Pow (constant, populationSize - rank); 
 				normalizationConstant += selectProbs [rank - 1];
@@ -226,8 +227,8 @@ public class GeneticAlgorithm {
 		population [idx] = chromosome;
 	}
 
-	private float[] getCumulativeProbs(float[] selectionProbabilities) {
-		float[] a = new float[selectionProbabilities.Length];
+	private double[] getCumulativeProbs(double[] selectionProbabilities) {
+		double[] a = new double[selectionProbabilities.Length];
 		a [0] = selectionProbabilities [0];
 		for (int i = 1; i < a.Length; i++)
 			a [i] = a [i - 1] + selectionProbabilities [i];
