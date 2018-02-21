@@ -4,6 +4,7 @@
 This repository includes solutions to 5 different multi agent problems: Multi-agent collision avoidance,
 the Vehicle Routing Problem........
 
+The implementation is done in Unity 2017.3.0f3 using C#.
 
 ## Multi-agent collision avoidance (P21)
 Given the starting and the goal positions of N vehicles, the goal is to control the vehicles so as to arrive to their goals
