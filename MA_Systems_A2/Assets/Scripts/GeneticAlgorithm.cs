@@ -51,6 +51,8 @@ public class GeneticAlgorithm {
 
 		// Calculate fitness for each chromosome
 		float[] populationFitness = calculateFitness ();
+
+		/*
 		int[] populationIndices = populationFitness.getIndexList ();
 		// Sort fitness of each chromosome along with their indices
 		System.Array.Sort(populationFitness, populationIndices);
@@ -78,7 +80,7 @@ public class GeneticAlgorithm {
 			fitMatingPool.CopyTo (matingPool, 0);
 			unfitMatingPool.CopyTo (matingPool, fitMatingPool.Length);
 		}
-
+		*/
 	}
 
 
@@ -152,18 +154,20 @@ public class GeneticAlgorithm {
 	private float calculateIndividualFitness(int chromosomeIdx) {
 		//int nodeCount = this.customers + 2 * this.vehicles;
 		float pathCost = 0;
-		int currentVehicleStartIdx = population [chromosomeIdx] [0];
+		int chromosomeLength = population [chromosomeIdx].Count;
+		int startingIdx = getFirstVehicleIndex (chromosomeIdx);
+		int currentVehicleStartIdx = population [chromosomeIdx] [startingIdx];
 		int currentVehicleGoalIdx = currentVehicleStartIdx + this.vehicles;
-
+		int prevIdx = currentVehicleStartIdx; //contains the index of the previous node visited in the solution
 		//List<int> indices = new List<int>();
 		//indices.Add (currentVehicleStartIdx);
 
-		for (int i = 1; i < population [chromosomeIdx].Count; i++) {
-			int currentIdx = population [chromosomeIdx] [i];
+		for (int i = 1; i < chromosomeLength; i++) {
+			int currentIdx = population [chromosomeIdx] [(startingIdx + i) % chromosomeLength];
 			// If the current node in the solution is not a point of interest
 			if (currentIdx >= this.customers) {
 				//indices.Add (currentVehicleGoalIdx);
-				int prevIdx = population [chromosomeIdx] [i - 1];
+				prevIdx = population [chromosomeIdx] [(startingIdx + i - 1) % chromosomeLength];
 				// Add distance from previous node to goal node of this vehicle
 				pathCost += this.distanceMatrix[prevIdx, currentVehicleGoalIdx];
 				// Update vehicle indices
@@ -173,12 +177,12 @@ public class GeneticAlgorithm {
 			} else {
 				//indices.Add (currentIdx);
 				//Add distance from previous node to current one
-				int prevIdx = population [chromosomeIdx] [i - 1];
+				prevIdx = population [chromosomeIdx] [(startingIdx + i - 1) % chromosomeLength];
 				pathCost += this.distanceMatrix[prevIdx, currentIdx];
 			}				
 		}
 		//indices.Add (currentVehicleGoalIdx);
-		pathCost += this.distanceMatrix[population [chromosomeIdx].Count - 1, currentVehicleGoalIdx];
+		pathCost += this.distanceMatrix[prevIdx, currentVehicleGoalIdx];
 
 		/*
 		Debug.Log (indices.Count);
@@ -190,6 +194,7 @@ public class GeneticAlgorithm {
 		*/
 		return pathCost;
 	}
+
 
 
 	private void initializePopulation() {
@@ -205,6 +210,8 @@ public class GeneticAlgorithm {
 
 		// For each population individual
 		for (int i = 0; i < M; i++) {
+			custIdxList.Shuffle ();		
+			vehicleIdxList.Shuffle (); 
 			initializeIndividual(population, i, custIdxList, vehicleIdxList);
 		}
 	}
@@ -212,14 +219,10 @@ public class GeneticAlgorithm {
 
 	private void initializeIndividual(List<int>[] population, int idx, List<int> custIdxList, List<int> vehicleIdxList) {
 		List<int> chromosome;
-		custIdxList.Shuffle ();		
-		vehicleIdxList.Shuffle (); 
 		chromosome = new List<int> (custIdxList);
-
-		// insert vehicle indices in list to split the path
-		chromosome.Insert (0, vehicleIdxList[0]);
+		// insert vehicle indices in list to split the path among the vehicles
 		System.Random rng = new System.Random (System.Guid.NewGuid().GetHashCode());
-		for (int i = 1; i < vehicleIdxList.Count; i++) {
+		for (int i = 0; i < vehicleIdxList.Count; i++) {
 			int index = rng.Next (0, chromosome.Count);
 			chromosome.Insert (index, vehicleIdxList [i]);
 		}
@@ -232,6 +235,15 @@ public class GeneticAlgorithm {
 		for (int i = 1; i < a.Length; i++)
 			a [i] = a [i - 1] + selectionProbabilities [i];
 		return a;
+	}
+
+	private int getFirstVehicleIndex(int chromosomeIdx) {
+		// Get first vehicle index in the chromosome
+		for (int i = 0; i < population [chromosomeIdx].Count; i++)
+			// If the index corresponds to a vehicle's starting node
+			if (population [chromosomeIdx] [i] >= this.customers)
+				return i;
+		return -1;
 	}
 }
 
