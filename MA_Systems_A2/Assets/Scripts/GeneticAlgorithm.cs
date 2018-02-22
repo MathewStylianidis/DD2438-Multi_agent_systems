@@ -18,6 +18,7 @@ public class GeneticAlgorithm {
 	private float[,] distanceMatrix;
 	private bool overselection;
 	private float fitGroupPerc;
+	private int solutionSize;
 
 	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, bool overselection = false, float fitGroupPerc = 0.04f) {
 		this.M = M;
@@ -28,11 +29,16 @@ public class GeneticAlgorithm {
 		this.distanceMatrix = distanceMatrix;
 		this.overselection = overselection;
 		this.fitGroupPerc = fitGroupPerc;
+		this.solutionSize = this.customers + this.vehicles;
 	}
 
 
+
+
+
+
 	public void generationalGeneticAlgorithm() {
-		// Initialize chromosome population
+		// Initialize population
 		initializePopulation ();
 
 		// Get parent selection probabilities - They do not depend on fitness values but only on population size and hence can be precomputed
@@ -49,12 +55,10 @@ public class GeneticAlgorithm {
 		}
 			
 
-		// Calculate fitness for each chromosome
+		// Calculate fitness for each individual
 		float[] populationFitness = calculateFitness ();
-
-		/*
 		int[] populationIndices = populationFitness.getIndexList ();
-		// Sort fitness of each chromosome along with their indices
+		// Sort fitness of each individual along with their indices
 		System.Array.Sort(populationFitness, populationIndices);
 		// Reverse since our specific problem (VRP) is a minimization problem
 		System.Array.Reverse (populationFitness);
@@ -80,7 +84,83 @@ public class GeneticAlgorithm {
 			fitMatingPool.CopyTo (matingPool, 0);
 			unfitMatingPool.CopyTo (matingPool, fitMatingPool.Length);
 		}
-		*/
+
+
+		Debug.Log ("PARENT1");
+		for (int i = 0; i < solutionSize; i++)
+			Debug.Log (population[matingPool[0]][i]);
+		Debug.Log ("PARENT2");
+		for (int i = 0; i < solutionSize; i++)
+			Debug.Log (population[matingPool[1]][i]);
+		
+		Debug.Log ("CROSSOVER");
+		IndividualTuple x = crossover (population[matingPool[0]], population[matingPool[1]]);
+		Debug.Log ("SHIT");
+		for (int i = 0; i < solutionSize; i++)
+			Debug.Log (x.individual_x [i]);
+		Debug.Log ("SHIT2");
+		for (int i = 0; i < solutionSize; i++)
+			Debug.Log (x.individual_x [i]);
+
+	}
+
+
+
+
+
+
+	// Performs a two-point ordered crossover and gives two offsprings
+	private IndividualTuple crossover(List<int> parent_1, List<int> parent_2) 
+	{
+		System.Random rng = new System.Random (System.Guid.NewGuid().GetHashCode());
+		int randomCutIdx1 = rng.Next (0, this.solutionSize - 1);
+		int randomCutIdx2 = rng.Next (0, this.solutionSize - 1);
+		// if the two cuts fall in the same position, the children remain the same as the parents
+		if (randomCutIdx1 == randomCutIdx2) {
+			return new IndividualTuple (new List<int> (parent_1), new List<int> (parent_2));
+		} else if (randomCutIdx1 > randomCutIdx2) {
+			int tmp = randomCutIdx2;
+			randomCutIdx2 = randomCutIdx1;
+			randomCutIdx1 = tmp;
+		}
+		// Get one subtour from each parent based on the two cuts
+		List<int> parent1Subset = parent_1.GetRange (randomCutIdx1, randomCutIdx2 - randomCutIdx1 + 1);
+		List<int> parent2Subset = parent_2.GetRange (0, randomCutIdx1);
+		parent2Subset.AddRange (parent_2.GetRange (randomCutIdx2 + 1, this.solutionSize - randomCutIdx2 - 1));
+
+		// Initialize the first offspring with the first parent's subtour and the second offspring with the second parent's
+		List<int> offspring_1 = new List<int>(this.solutionSize);
+		List<int> offspring_2 = new List<int>(this.solutionSize);
+		int curIdx1 = 0, curIdx2 = 0;
+		for (int i = 0; i < this.solutionSize; i++) {
+			if (i >= randomCutIdx1 && i <= randomCutIdx2) {
+				offspring_1.Add (parent_1 [i]);
+				while (parent2Subset.Contains (parent_1 [curIdx1])) 
+					curIdx1++;
+				offspring_2.Add (parent_1 [curIdx1++]);
+			} else {
+				offspring_2.Add (parent_2 [i]);
+				while (parent1Subset.Contains (parent_2 [curIdx2])) 
+					curIdx2++;
+				offspring_1.Add (parent_2 [curIdx2++]);
+			}
+		}
+		Debug.Log (randomCutIdx1);
+		Debug.Log (randomCutIdx2);
+
+		return new IndividualTuple (offspring_1, offspring_2);
+	}
+
+
+	// Performs a swap mutation to an individual
+	private void mutate(List<int> individual) 
+	{
+		System.Random rng = new System.Random (System.Guid.NewGuid().GetHashCode());
+		int randomIdx1 = rng.Next (0, this.solutionSize - 1);
+		int randomIdx2 = rng.Next (0, this.solutionSize - 1);
+		int tmp = individual [randomIdx1];
+		individual [randomIdx1] = individual [randomIdx2];
+		individual [randomIdx2] = individual [randomIdx1];
 	}
 
 
@@ -151,23 +231,22 @@ public class GeneticAlgorithm {
 	}
 
 
-	private float calculateIndividualFitness(int chromosomeIdx) {
-		//int nodeCount = this.customers + 2 * this.vehicles;
+	private float calculateIndividualFitness(int individualIdx) {
 		float pathCost = 0;
-		int chromosomeLength = population [chromosomeIdx].Count;
-		int startingIdx = getFirstVehicleIndex (chromosomeIdx);
-		int currentVehicleStartIdx = population [chromosomeIdx] [startingIdx];
+		int solutionLength = population [individualIdx].Count;
+		int startingIdx = getFirstVehicleIndex (individualIdx);
+		int currentVehicleStartIdx = population [individualIdx] [startingIdx];
 		int currentVehicleGoalIdx = currentVehicleStartIdx + this.vehicles;
 		int prevIdx = currentVehicleStartIdx; //contains the index of the previous node visited in the solution
 		//List<int> indices = new List<int>();
 		//indices.Add (currentVehicleStartIdx);
 
-		for (int i = 1; i < chromosomeLength; i++) {
-			int currentIdx = population [chromosomeIdx] [(startingIdx + i) % chromosomeLength];
+		for (int i = 1; i < solutionLength; i++) {
+			int currentIdx = population [individualIdx] [(startingIdx + i) % solutionLength];
 			// If the current node in the solution is not a point of interest
 			if (currentIdx >= this.customers) {
 				//indices.Add (currentVehicleGoalIdx);
-				prevIdx = population [chromosomeIdx] [(startingIdx + i - 1) % chromosomeLength];
+				prevIdx = population [individualIdx] [(startingIdx + i - 1) % solutionLength];
 				// Add distance from previous node to goal node of this vehicle
 				pathCost += this.distanceMatrix[prevIdx, currentVehicleGoalIdx];
 				// Update vehicle indices
@@ -177,7 +256,7 @@ public class GeneticAlgorithm {
 			} else {
 				//indices.Add (currentIdx);
 				//Add distance from previous node to current one
-				prevIdx = population [chromosomeIdx] [(startingIdx + i - 1) % chromosomeLength];
+				prevIdx = population [individualIdx] [(startingIdx + i - 1) % solutionLength];
 				pathCost += this.distanceMatrix[prevIdx, currentIdx];
 			}				
 		}
@@ -218,15 +297,15 @@ public class GeneticAlgorithm {
 
 
 	private void initializeIndividual(List<int>[] population, int idx, List<int> custIdxList, List<int> vehicleIdxList) {
-		List<int> chromosome;
-		chromosome = new List<int> (custIdxList);
+		List<int> individual;
+		individual = new List<int> (custIdxList);
 		// insert vehicle indices in list to split the path among the vehicles
 		System.Random rng = new System.Random (System.Guid.NewGuid().GetHashCode());
 		for (int i = 0; i < vehicleIdxList.Count; i++) {
-			int index = rng.Next (0, chromosome.Count);
-			chromosome.Insert (index, vehicleIdxList [i]);
+			int index = rng.Next (0, individual.Count);
+			individual.Insert (index, vehicleIdxList [i]);
 		}
-		population [idx] = chromosome;
+		population [idx] = individual;
 	}
 
 	private double[] getCumulativeProbs(double[] selectionProbabilities) {
@@ -237,13 +316,24 @@ public class GeneticAlgorithm {
 		return a;
 	}
 
-	private int getFirstVehicleIndex(int chromosomeIdx) {
-		// Get first vehicle index in the chromosome
-		for (int i = 0; i < population [chromosomeIdx].Count; i++)
+	private int getFirstVehicleIndex(int individualIdx) {
+		// Get first vehicle index in the individual
+		for (int i = 0; i < population [individualIdx].Count; i++)
 			// If the index corresponds to a vehicle's starting node
-			if (population [chromosomeIdx] [i] >= this.customers)
+			if (population [individualIdx] [i] >= this.customers)
 				return i;
 		return -1;
+	}
+
+	private class IndividualTuple
+	{
+		public List<int> individual_x;
+		public List<int> individual_y;
+
+		public IndividualTuple(List<int> x, List<int> y) {
+			this.individual_x = x;
+			this.individual_y = y;
+		}
 	}
 }
 
