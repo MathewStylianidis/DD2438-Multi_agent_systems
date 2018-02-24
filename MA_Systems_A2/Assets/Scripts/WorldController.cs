@@ -34,6 +34,7 @@ public class WorldController : MonoBehaviour {
 			ga.generationalGeneticAlgorithm ();
 			List<int> solution = ga.getFittestIndividual ();
 		}
+		world.DebugDraw ();
 	}
 	
 
@@ -69,8 +70,14 @@ public class WorldController : MonoBehaviour {
 
 	void initializeVelocities() {
 		world.currentVelocities = new Vector2[world.startPositions.Length];
+		Debug.Log (world.goalPositions.Length);
+		Debug.Log (world.startPositions.Length);
 		for (int i = 0; i < world.currentVelocities.Length - 1; i++) {
-			Vector2 x = world.goalPositions [i] - world.startPositions [i];
+			Vector2 x;
+			if (data.name != "P25" && data.name != "P26" && data.name != "P27")
+				x = world.goalPositions [i] - world.startPositions [i];
+			else
+				x = Vector2.up;
 			world.currentVelocities [i] = x.normalized * world.vehicle.maxVelocity;
 		}
 	}
@@ -79,12 +86,17 @@ public class WorldController : MonoBehaviour {
 	void spawnActors() {
 
 		if (world.startPositions.Length != 0 && world.enemyPositions.Length != 0) {
-				//Spawn actors in a way suitable for the shooting problem
+			//Spawn actors in a way suitable for the shooting problem
 		} else if (world.startPositions.Length != 0 && world.goalPositions.Length != 0) {
 			//Spawn actors in a way suitable for all the other problems
 			agents = new GameObject[world.startPositions.Length];
-			for (int i = 0; i < world.startPositions.Length; i++) 
-				spawnActor (world.startPositions[i], world.goalPositions[i], i); 
+			for (int i = 0; i < world.startPositions.Length; i++)
+				spawnActor (world.startPositions [i], world.goalPositions [i], i); 
+		} else if (world.startPositions.Length != 0 && world.formationPositions.Length != 0) {
+			//P25 and P26 problems
+			agents = new GameObject[world.formationPositions.Length];
+			for (int i = 0; i < world.formationPositions.Length; i++)
+				spawnActor (world.formationPositions [i], i); 
 		}
 	}
 
@@ -93,6 +105,18 @@ public class WorldController : MonoBehaviour {
 		scaleAgent (agents[agentIdx]);
 		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
 		agents [agentIdx].transform.LookAt(new Vector3(goal.x, objectHeight, goal.y));
+		agents [agentIdx].transform.parent = agentParent.transform;
+		agents [agentIdx].name = "AgentNo_" + agentIdx;
+		if (data.name == "P21")
+			agents [agentIdx].AddComponent<AgentControllerP21> ();
+	}
+
+	// Overloaded method for the problems that include formation
+	void spawnActor(Vector2 position, int agentIdx) {
+		agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
+		scaleAgent (agents[agentIdx]);
+		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
+		agents [agentIdx].transform.LookAt(agents[agentIdx].transform.position + (Vector3.right));
 		agents [agentIdx].transform.parent = agentParent.transform;
 		agents [agentIdx].name = "AgentNo_" + agentIdx;
 		if (data.name == "P21")
