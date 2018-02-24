@@ -30,7 +30,7 @@ public class WorldController : MonoBehaviour {
 			int M = 10000;
 			int lambda = 10000;
 			float[,] distanceMatrix = calcDistanceMatrix ();
-			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 1000, false, 0.04f);
+			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 50, false, 0.04f);
 			ga.generationalGeneticAlgorithm ();
 			List<int> solution = ga.getFittestIndividual ();
 		}
