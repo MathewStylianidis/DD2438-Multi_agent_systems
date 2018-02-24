@@ -19,8 +19,9 @@ public class GeneticAlgorithm {
 	private bool overselection;
 	private float fitGroupPerc;
 	private int solutionSize;
+	private int mutationProbability;
 
-	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, bool overselection = false, float fitGroupPerc = 0.04f) {
+	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, float mutationProbability, bool overselection = false, float fitGroupPerc = 0.04f) {
 		this.M = M;
 		this.lambda = lambda;
 		this.customers = customers;
@@ -30,6 +31,7 @@ public class GeneticAlgorithm {
 		this.overselection = overselection;
 		this.fitGroupPerc = fitGroupPerc;
 		this.solutionSize = this.customers + this.vehicles;
+		this.mutationProbability = (int)(mutationProbability * 100);
 	}
 
 
@@ -85,26 +87,42 @@ public class GeneticAlgorithm {
 			unfitMatingPool.CopyTo (matingPool, fitMatingPool.Length);
 		}
 
-
-		Debug.Log ("PARENT1");
-		for (int i = 0; i < solutionSize; i++)
-			Debug.Log (population[matingPool[0]][i]);
-		Debug.Log ("PARENT2");
-		for (int i = 0; i < solutionSize; i++)
-			Debug.Log (population[matingPool[1]][i]);
-		
-		Debug.Log ("CROSSOVER");
-		IndividualTuple x = crossover (population[matingPool[0]], population[matingPool[1]]);
-		Debug.Log ("SHIT");
-		for (int i = 0; i < solutionSize; i++)
-			Debug.Log (x.individual_x [i]);
-		Debug.Log ("SHIT2");
-		for (int i = 0; i < solutionSize; i++)
-			Debug.Log (x.individual_x [i]);
+		// Mate the parents selected to get offsprings
+		List<int>[] offsprings = mateParents(matingPool);
 
 	}
 
 
+	List<int>[] mateParents(int[] matingPool) {
+		List<int>[] offsprings = new  List<int>[matingPool.Length];
+		System.Random rng = new System.Random (System.Guid.NewGuid().GetHashCode());
+
+		// Shuffle parents to make mating random
+		matingPool.Shuffle ();
+		for (int i = 0; i + 1 < matingPool.Length; i = i + 2) {
+			IndividualTuple x = crossover (population[matingPool[i]], population[matingPool[i + 1]]);
+			offsprings [i] = x.individual_x;
+			offsprings [i + 1] = x.individual_y;
+			if (rng.Next (0, 100) <= this.mutationProbability)
+				mutate (offsprings [i]);
+			if (rng.Next (0, 100) <= this.mutationProbability)
+				mutate (offsprings [i + 1]);
+		}
+
+		// If the number is even and one parent has no mate to create offsprings
+		if (matingPool.Length % 2 != 0) {
+			// Then make one parent mate twice and create the two extra offsprings
+			IndividualTuple x = crossover (population[matingPool[matingPool.Length - 2]], population[matingPool[matingPool.Length - 1]]);
+			offsprings [matingPool.Length - 2] = x.individual_x;
+			offsprings [matingPool.Length - 1] = x.individual_y;
+			if (rng.Next (0, 100) <= this.mutationProbability)
+				mutate (offsprings [matingPool.Length - 2]);
+			if (rng.Next (0, 100) <= this.mutationProbability)
+				mutate (offsprings [matingPool.Length - 1]);
+		}
+
+		return offsprings;
+	}
 
 
 
@@ -128,7 +146,7 @@ public class GeneticAlgorithm {
 		List<int> parent2Subset = parent_2.GetRange (0, randomCutIdx1);
 		parent2Subset.AddRange (parent_2.GetRange (randomCutIdx2 + 1, this.solutionSize - randomCutIdx2 - 1));
 
-		// Initialize the first offspring with the first parent's subtour and the second offspring with the second parent's
+		// Do the two crossovers 
 		List<int> offspring_1 = new List<int>(this.solutionSize);
 		List<int> offspring_2 = new List<int>(this.solutionSize);
 		int curIdx1 = 0, curIdx2 = 0;
@@ -145,8 +163,6 @@ public class GeneticAlgorithm {
 				offspring_1.Add (parent_2 [curIdx2++]);
 			}
 		}
-		Debug.Log (randomCutIdx1);
-		Debug.Log (randomCutIdx2);
 
 		return new IndividualTuple (offspring_1, offspring_2);
 	}
@@ -160,7 +176,7 @@ public class GeneticAlgorithm {
 		int randomIdx2 = rng.Next (0, this.solutionSize - 1);
 		int tmp = individual [randomIdx1];
 		individual [randomIdx1] = individual [randomIdx2];
-		individual [randomIdx2] = individual [randomIdx1];
+		individual [randomIdx2] = tmp;
 	}
 
 
