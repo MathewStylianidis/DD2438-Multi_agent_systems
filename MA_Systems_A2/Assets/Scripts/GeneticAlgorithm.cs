@@ -20,8 +20,9 @@ public class GeneticAlgorithm {
 	private float fitGroupPerc;
 	private int solutionSize;
 	private int mutationProbability;
+	private int maxIterations;
 
-	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, float mutationProbability, bool overselection = false, float fitGroupPerc = 0.04f) {
+	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, float mutationProbability, int maxIterations = 50, bool overselection = false, float fitGroupPerc = 0.04f) {
 		this.M = M;
 		this.lambda = lambda;
 		this.customers = customers;
@@ -32,6 +33,7 @@ public class GeneticAlgorithm {
 		this.fitGroupPerc = fitGroupPerc;
 		this.solutionSize = this.customers + this.vehicles;
 		this.mutationProbability = (int)(mutationProbability * 100);
+		this.maxIterations = maxIterations;
 	}
 
 
@@ -56,40 +58,47 @@ public class GeneticAlgorithm {
 			unfitSelectionProbabilities = calculateRankingProbabilities(seperatingIdx, "Linear");
 		}
 			
+		for(int i = 0; i < this.maxIterations; i++) {
+			// Calculate fitness for each individual
+			float[] populationFitness = calculateFitness (this.population);
+			int[] populationIndices = populationFitness.getIndexList ();
+			// Sort fitness of each individual along with their indices
+			System.Array.Sort (populationFitness, populationIndices);
+			// Reverse since our specific problem (VRP) is a minimization problem
 
-		// Calculate fitness for each individual
-		float[] populationFitness = calculateFitness ();
-		int[] populationIndices = populationFitness.getIndexList ();
-		// Sort fitness of each individual along with their indices
-		System.Array.Sort(populationFitness, populationIndices);
-		// Reverse since our specific problem (VRP) is a minimization problem
-		System.Array.Reverse (populationFitness);
-		System.Array.Reverse (populationIndices);
+			Debug.Log ("BEST FITNESS " + populationFitness [0]);
 
-		// Sample parents from population
-		int[] matingPool;
-		if (!overselection)
-			//Run stochastic universal sampling algorithm to get mating pool (selected parents)
-			matingPool = stochasticUniversalSampling (selectionProbabilities, populationIndices, this.lambda);
-		else {
-			// If overselection is activated
-			int[] fitPopulationIndices = new int[(int)(this.M * this.fitGroupPerc)];
-			int[] unfitPopulationIndices = new int[this.M - (int)(this.M * this.fitGroupPerc)];
-			// Split population in fit and unfit where fit is <fitGroupPerc>% of the initial population
-			System.Array.Copy(populationIndices, 0, unfitPopulationIndices, 0,seperatingIdx);
-			System.Array.Copy(populationIndices, seperatingIdx, fitPopulationIndices, 0, (int)(this.M * this.fitGroupPerc));
-			// Select 80% parents from fit group and 20% from unfit group
-			int[] fitMatingPool = stochasticUniversalSampling (fitSelectionProbabilities, fitPopulationIndices, (int)(0.8f * this.M) );
-			int[] unfitMatingPool = stochasticUniversalSampling (unfitSelectionProbabilities, unfitPopulationIndices, (int)(0.2f * this.M));
-			// Merge fit and unfit parents selected in the same mating pool
-			matingPool = new int[fitPopulationIndices.Length + unfitPopulationIndices.Length];
-			fitMatingPool.CopyTo (matingPool, 0);
-			unfitMatingPool.CopyTo (matingPool, fitMatingPool.Length);
+			// Sample parents from population
+			int[] matingPool;
+			if (!overselection)
+				//Run stochastic universal sampling algorithm to get mating pool (selected parents)
+				matingPool = stochasticUniversalSampling (selectionProbabilities, populationIndices, this.lambda);
+			else {
+				// If overselection is activated
+				int[] fitPopulationIndices = new int[(int)(this.M * this.fitGroupPerc)];
+				int[] unfitPopulationIndices = new int[this.M - (int)(this.M * this.fitGroupPerc)];
+				// Split population in fit and unfit where fit is <fitGroupPerc>% of the initial population
+				System.Array.Copy (populationIndices, 0, unfitPopulationIndices, 0, seperatingIdx);
+				System.Array.Copy (populationIndices, seperatingIdx, fitPopulationIndices, 0, (int)(this.M * this.fitGroupPerc));
+				// Select 80% parents from fit group and 20% from unfit group
+				int[] fitMatingPool = stochasticUniversalSampling (fitSelectionProbabilities, fitPopulationIndices, (int)(0.8f * this.M));
+				int[] unfitMatingPool = stochasticUniversalSampling (unfitSelectionProbabilities, unfitPopulationIndices, (int)(0.2f * this.M));
+				// Merge fit and unfit parents selected in the same mating pool
+				matingPool = GeneticAlgorithmHelper.mergeArrays(fitMatingPool, unfitMatingPool);
+			}
+
+			// Mate the parents selected to get offsprings
+			List<int>[] offsprings = mateParents (matingPool);
+			float[] offspringsFitness = calculateFitness (offsprings);
+
+			// Pick the best from the population and the new offsprings as the new population
+			List<int>[] sortedPopulation = getOrderedPopulation(this.population, populationIndices);
+			List<int>[] intermediatePool = GeneticAlgorithmHelper.mergeArrays (sortedPopulation, offsprings);
+			float[] intermediateFitness = GeneticAlgorithmHelper.mergeArrays (populationFitness, offspringsFitness);
+			int[] intermediatePoolIndices = intermediatePool.getIndexList ();
+			System.Array.Sort (intermediateFitness, intermediatePoolIndices);
+			System.Array.Copy(this.population, 0, getOrderedPopulation (intermediatePool, intermediatePoolIndices), 0, this.population.Length);
 		}
-
-		// Mate the parents selected to get offsprings
-		List<int>[] offsprings = mateParents(matingPool);
-
 	}
 
 
@@ -239,54 +248,42 @@ public class GeneticAlgorithm {
 		return selectProbs;
 	}
 
-	private float[] calculateFitness() {
-		float[] populationFitness = new float[M];
-		for (int i = 0; i < M; i++)
-			populationFitness [i] = calculateIndividualFitness (i);
+	private float[] calculateFitness(List<int>[] population) {
+		float[] populationFitness = new float[population.Length];
+		for (int i = 0; i < population.Length; i++)
+			populationFitness [i] = calculateIndividualFitness (population[i]);
 		return populationFitness;
 	}
 
 
-	private float calculateIndividualFitness(int individualIdx) {
+	private float calculateIndividualFitness(List<int> individual) {
 		float pathCost = 0;
-		int solutionLength = population [individualIdx].Count;
-		int startingIdx = getFirstVehicleIndex (individualIdx);
-		int currentVehicleStartIdx = population [individualIdx] [startingIdx];
+		int solutionLength = individual.Count;
+		int startingIdx = getFirstVehicleIndex (individual);
+		int currentVehicleStartIdx = individual [startingIdx];
 		int currentVehicleGoalIdx = currentVehicleStartIdx + this.vehicles;
 		int prevIdx = currentVehicleStartIdx; //contains the index of the previous node visited in the solution
-		//List<int> indices = new List<int>();
-		//indices.Add (currentVehicleStartIdx);
+
 
 		for (int i = 1; i < solutionLength; i++) {
-			int currentIdx = population [individualIdx] [(startingIdx + i) % solutionLength];
+			int currentIdx = individual [(startingIdx + i) % solutionLength];
 			// If the current node in the solution is not a point of interest
 			if (currentIdx >= this.customers) {
-				//indices.Add (currentVehicleGoalIdx);
-				prevIdx = population [individualIdx] [(startingIdx + i - 1) % solutionLength];
+				prevIdx = individual [(startingIdx + i - 1) % solutionLength];
 				// Add distance from previous node to goal node of this vehicle
 				pathCost += this.distanceMatrix[prevIdx, currentVehicleGoalIdx];
 				// Update vehicle indices
 				currentVehicleStartIdx = currentIdx;
 				currentVehicleGoalIdx = currentVehicleStartIdx + this.vehicles;
-				//indices.Add (currentVehicleStartIdx);
 			} else {
-				//indices.Add (currentIdx);
 				//Add distance from previous node to current one
-				prevIdx = population [individualIdx] [(startingIdx + i - 1) % solutionLength];
+				prevIdx = individual [(startingIdx + i - 1) % solutionLength];
 				pathCost += this.distanceMatrix[prevIdx, currentIdx];
 			}				
 		}
-		//indices.Add (currentVehicleGoalIdx);
-		pathCost += this.distanceMatrix[prevIdx, currentVehicleGoalIdx];
 
-		/*
-		Debug.Log (indices.Count);
-		Debug.Log (this.customers);
-		Debug.Log (this.vehicles);
-		Debug.Log ("HERE IT COMES");
-		for (int i = 0; i < indices.Count; i++)
-			Debug.Log (indices [i]);
-		*/
+		pathCost += this.distanceMatrix[prevIdx, currentVehicleGoalIdx];
+	
 		return pathCost;
 	}
 
@@ -332,13 +329,22 @@ public class GeneticAlgorithm {
 		return a;
 	}
 
-	private int getFirstVehicleIndex(int individualIdx) {
+	private int getFirstVehicleIndex(List<int> individual) {
 		// Get first vehicle index in the individual
-		for (int i = 0; i < population [individualIdx].Count; i++)
+		for (int i = 0; i < individual.Count; i++)
 			// If the index corresponds to a vehicle's starting node
-			if (population [individualIdx] [i] >= this.customers)
+			if (individual [i] >= this.customers)
 				return i;
 		return -1;
+	}
+
+	private List<int>[] getOrderedPopulation(List<int>[] p, int[] populationOrder) {
+		if (p.Length != populationOrder.Length)
+			throw new System.Exception (" Population and population indices defining their order must be of the same dimensions");
+		List<int>[] orderedPopulation = new List<int>[p.Length];
+		for (int i = 0; i < p.Length; i++)
+			orderedPopulation [i] = p [populationOrder [i]];
+		return orderedPopulation;
 	}
 
 	private class IndividualTuple
@@ -378,4 +384,12 @@ public static class GeneticAlgorithmHelper {
 			array [i] = i;
 		return array;
 	}
+
+	public static T[] mergeArrays<T>(T[] x, T[] y) {
+		T[] z = new T[x.Length + y.Length];
+		x.CopyTo (z, 0);
+		y.CopyTo (z, x.Length);
+		return z;
+	}
 }
+
