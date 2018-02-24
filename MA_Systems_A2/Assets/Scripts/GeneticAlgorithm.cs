@@ -47,6 +47,7 @@ public class GeneticAlgorithm {
 
 		// Get parent selection probabilities - They do not depend on fitness values but only on population size and hence can be precomputed
 		double[] selectionProbabilities = calculateRankingProbabilities(population.Length, "Linear");
+		System.Array.Reverse (selectionProbabilities);
 
 		// If overselection is true, split selection probabilities in two
 		double[] fitSelectionProbabilities = null; //user if overselection is true
@@ -64,13 +65,13 @@ public class GeneticAlgorithm {
 			int[] populationIndices = populationFitness.getIndexList ();
 			// Sort fitness of each individual along with their indices
 			System.Array.Sort (populationFitness, populationIndices);
-			// Reverse since our specific problem (VRP) is a minimization problem
 
+			Debug.Log ("WORST FITNESS " + populationFitness [M - 1]);
 			Debug.Log ("BEST FITNESS " + populationFitness [0]);
 
 			// Sample parents from population
 			int[] matingPool;
-			if (!overselection)
+			if (!overselection) 
 				//Run stochastic universal sampling algorithm to get mating pool (selected parents)
 				matingPool = stochasticUniversalSampling (selectionProbabilities, populationIndices, this.lambda);
 			else {
@@ -97,7 +98,7 @@ public class GeneticAlgorithm {
 			float[] intermediateFitness = GeneticAlgorithmHelper.mergeArrays (populationFitness, offspringsFitness);
 			int[] intermediatePoolIndices = intermediatePool.getIndexList ();
 			System.Array.Sort (intermediateFitness, intermediatePoolIndices);
-			System.Array.Copy(this.population, 0, getOrderedPopulation (intermediatePool, intermediatePoolIndices), 0, this.population.Length);
+			System.Array.Copy(getOrderedPopulation (intermediatePool, intermediatePoolIndices), 0, this.population, 0, this.population.Length);
 		}
 	}
 

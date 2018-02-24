@@ -27,10 +27,10 @@ public class WorldController : MonoBehaviour {
 		spawnActors ();
 		if (data.name == "P22") {
 			// Use a genetic algorithm if this is the Vehicle Routing Problem
-			int M = 10001;
-			int lambda = 10001;
+			int M = 10000;
+			int lambda = 10000;
 			float[,] distanceMatrix = calcDistanceMatrix ();
-			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 50, true, 0.04f);
+			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 50, false, 0.04f);
 			ga.generationalGeneticAlgorithm ();
 		}
 	}
