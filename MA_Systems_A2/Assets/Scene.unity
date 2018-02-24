@@ -277,7 +277,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ceca74c248cb24a4ea8182cea46dba53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  data: {fileID: 4900000, guid: 897fbcb9857582a4fb36e5d3a5b9655d, type: 3}
+  data: {fileID: 4900000, guid: 9cfe8b23fbb6ed34aad218c692ed2e83, type: 3}
   agentPrefab: {fileID: 1177329548899570, guid: f0091b1d408c02f4aa665fd56a2db987,
     type: 2}
   world:
@@ -305,6 +305,7 @@ MonoBehaviour:
   agentRadius: 0.5
   objectHeight: 4
   objectThickness: 0.2
+  fieldMaterial: {fileID: 2100000, guid: 066326dda69827642ad629bb41725088, type: 2}
 --- !u!4 &810943123
 Transform:
   m_ObjectHideFlags: 0

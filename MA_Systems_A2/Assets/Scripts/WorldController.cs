@@ -5,6 +5,7 @@ using UnityEngine;
 public class WorldController : MonoBehaviour {
 
 	public TextAsset data;
+	public TextAsset trajectoryData;
 	public GameObject agentPrefab;
 	public World world;
 	public GameObject obstacleParent;
@@ -13,12 +14,12 @@ public class WorldController : MonoBehaviour {
 	public float agentRadius = 0.5f;
 	public float objectHeight = 4f;
 	public float objectThickness = 0.2f;
+	public Material fieldMaterial;
 	private GameObject[] agents;
-
-		
+ 
 	// Use this for initialization
 	void Start () {
-		world = World.FromJson(data.text);
+		world = World.FromJson(data.text, trajectoryData.text);
 		world.currentPositions = (Vector2[]) world.startPositions.Clone ();
 		world.currentAngularVel = new float[world.currentPositions.Length];
 		initializeVelocities ();
@@ -26,15 +27,31 @@ public class WorldController : MonoBehaviour {
 		spawnObstacles ();
 		spawnActors ();
 		if (data.name == "P22") {
-			// Use a genetic algorithm if this is the Vehicle Routing Problem
+			// Use a genetic algorithm for the Vehicle Routing Problem
 			int M = 10000;
 			int lambda = 10000;
 			float[,] distanceMatrix = calcDistanceMatrix ();
 			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 50, false, 0.04f);
 			ga.generationalGeneticAlgorithm ();
 			List<int> solution = ga.getFittestIndividual ();
+		} 
+		else if (data.name == "P25") {
+			// Read trajectory
+			Vector3[] trajectory = new Vector3[world.trajectory.x.Length];
+			for (int i = 0; i < trajectory.Length; i++)
+				trajectory[i] = new Vector3 (world.trajectory.x[i], objectHeight, world.trajectory.y[i]);
 		}
-		world.DebugDraw ();
+		else if (data.name == "P26") {
+			// Formation problems
+			GameObject plane = GameObject.Find ("Plane");
+			Renderer ren = plane.GetComponent<Renderer> ();
+			ren.material = fieldMaterial;
+			// Read trajectory
+			Vector3[] trajectory = new Vector3[world.trajectory.x.Length];
+			for (int i = 0; i < trajectory.Length; i++)
+				trajectory[i] = new Vector3 (world.trajectory.x[i], objectHeight, world.trajectory.y[i]);
+
+		}
 	}
 	
 
@@ -70,8 +87,6 @@ public class WorldController : MonoBehaviour {
 
 	void initializeVelocities() {
 		world.currentVelocities = new Vector2[world.startPositions.Length];
-		Debug.Log (world.goalPositions.Length);
-		Debug.Log (world.startPositions.Length);
 		for (int i = 0; i < world.currentVelocities.Length - 1; i++) {
 			Vector2 x;
 			if (data.name != "P25" && data.name != "P26" && data.name != "P27")
