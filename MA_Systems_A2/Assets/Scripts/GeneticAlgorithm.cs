@@ -21,8 +21,11 @@ public class GeneticAlgorithm {
 	private int solutionSize;
 	private int mutationProbability;
 	private int maxIterations;
+	private float eps;
 
-	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, float mutationProbability, int maxIterations = 50, bool overselection = false, float fitGroupPerc = 0.04f) {
+
+	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, float mutationProbability, int maxIterations = 1000,
+							bool overselection = false, float fitGroupPerc = 0.04f, float eps = 0.01f) {
 		this.M = M;
 		this.lambda = lambda;
 		this.customers = customers;
@@ -34,10 +37,16 @@ public class GeneticAlgorithm {
 		this.solutionSize = this.customers + this.vehicles;
 		this.mutationProbability = (int)(mutationProbability * 100);
 		this.maxIterations = maxIterations;
+		this.eps = eps;
 	}
 
 
-
+	public List<int> getFittestIndividual() 
+	{
+		float[] populationFitness = calculateFitness (this.population);
+		System.Array.Sort (populationFitness, this.population);
+		return this.population [0];
+	}
 
 
 
@@ -58,7 +67,10 @@ public class GeneticAlgorithm {
 			fitSelectionProbabilities = calculateRankingProbabilities((int)(this.M * this.fitGroupPerc), "Linear");
 			unfitSelectionProbabilities = calculateRankingProbabilities(seperatingIdx, "Linear");
 		}
-			
+
+		float bestFitness = float.MaxValue;
+		float prevBestFitness = float.MaxValue;
+		int count = 0;
 		for(int i = 0; i < this.maxIterations; i++) {
 			// Calculate fitness for each individual
 			float[] populationFitness = calculateFitness (this.population);
@@ -66,8 +78,14 @@ public class GeneticAlgorithm {
 			// Sort fitness of each individual along with their indices
 			System.Array.Sort (populationFitness, populationIndices);
 
-			Debug.Log ("WORST FITNESS " + populationFitness [M - 1]);
-			Debug.Log ("BEST FITNESS " + populationFitness [0]);
+			prevBestFitness = bestFitness;
+			bestFitness = populationFitness [0];
+			// check for convergence
+			if (GeneticAlgorithmHelper.abs (populationFitness [0] - prevBestFitness) < this.eps) 
+				count++;
+			if(count >= this.maxIterations * 0.05)
+				break;
+		
 
 			// Sample parents from population
 			int[] matingPool;
@@ -391,6 +409,12 @@ public static class GeneticAlgorithmHelper {
 		x.CopyTo (z, 0);
 		y.CopyTo (z, x.Length);
 		return z;
+	}
+
+	public static float abs(float x) {
+		if (x <= 0)
+			return -x;
+		return x;
 	}
 }
 
