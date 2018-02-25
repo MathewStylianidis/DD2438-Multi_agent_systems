@@ -28,12 +28,21 @@ public class WorldController : MonoBehaviour {
 		spawnActors ();
 
 		if (data.name == "P22") {
+			// Initialize visibility graph
 			initVisibilityGraph ();
 
+			// Execute FloydWarshall algorithm on visibility graph to get shortest paths
+			FloydWarshall fw = new FloydWarshall(world.visibilityGraph);
+			float[,] tmpDistanceMatrix = fw.findShortestPaths ();
+			// Get number of obstacle vertices
+			int obstacleVertCount = world.graphVertices.Count - world.pointsOfInterest.Length - agents.Length * 2;
+			// Remove obstacle vertex rows and columns from the distance matrix as GA does not work with them to find a solution
+			float[,] distanceMatrix = getSubArray(tmpDistanceMatrix, obstacleVertCount);
 			// Use a genetic algorithm for the Vehicle Routing Problem
 			int M = 10000;
 			int lambda = 10000;
-			float[,] distanceMatrix = calcDistanceMatrix ();
+			// Remove rows and columns 
+			return;
 			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 50, false, 0.04f);
 			ga.generationalGeneticAlgorithm ();
 			List<int> solution = ga.getFittestIndividual ();
@@ -226,6 +235,10 @@ public class WorldController : MonoBehaviour {
 			}
 		}
 
+		foreach (var point in world.pointsOfInterest) {
+			vertices.Add (point);
+		}
+
 		foreach (var vertex in world.startPositions) {
 			vertices.Add (vertex);
 		}
@@ -233,11 +246,7 @@ public class WorldController : MonoBehaviour {
 		foreach (var vertex in world.goalPositions) {
 			vertices.Add (vertex);
 		}
-
-		foreach (var point in world.pointsOfInterest) {
-			vertices.Add (point);
-		}
-
+			
 		var visibilityGraph = new float[vertices.Count][];
 		for (var i = 0; i < vertices.Count; i++) {
 			var v1 = vertices [i];
@@ -290,5 +299,18 @@ public class WorldController : MonoBehaviour {
 			this.vertex1 = vertex1;
 			this.vertex2 = vertex2;
 		}
+	}
+		
+
+	/// <summary>
+	/// Removes the first <count> rows and columns from the matrix and returns the result
+	/// </summary>
+	private float[,] getSubArray(float[,] matrix, int count) {
+		int newCount = (int)Mathf.Sqrt(matrix.Length) - count;
+		float[,] distanceMatrix = new float[newCount, newCount];
+		for (int i = 0; i < newCount; i++)
+			for (int j = 0; j < newCount; j++) 
+				distanceMatrix [i, j] = matrix [count + i, count + j];
+		return distanceMatrix;
 	}
 }
