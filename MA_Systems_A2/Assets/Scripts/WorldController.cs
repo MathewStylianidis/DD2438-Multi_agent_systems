@@ -234,6 +234,10 @@ public class WorldController : MonoBehaviour {
 			vertices.Add (vertex);
 		}
 
+		foreach (var point in world.pointsOfInterest) {
+			vertices.Add (point);
+		}
+
 		var visibilityGraph = new float[vertices.Count][];
 		for (var i = 0; i < vertices.Count; i++) {
 			var v1 = vertices [i];
