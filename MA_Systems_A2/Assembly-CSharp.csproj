@@ -53,6 +53,7 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\AgentControllerP21.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\FloydWarshall.cs" />
+     <Compile Include="Assets\Scripts\Auxiliary classes\Visualizer.cs" />
      <Compile Include="Assets\Scripts\GeneticAlgorithm.cs" />
      <Compile Include="Assets\Scripts\world_importing\DeserializationTest.cs" />
      <Compile Include="Assets\Scripts\world_importing\Draw.cs" />

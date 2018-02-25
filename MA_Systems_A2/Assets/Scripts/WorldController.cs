@@ -30,22 +30,24 @@ public class WorldController : MonoBehaviour {
 		if (data.name == "P22") {
 			// Initialize visibility graph
 			initVisibilityGraph ();
-
 			// Execute FloydWarshall algorithm on visibility graph to get shortest paths
 			FloydWarshall fw = new FloydWarshall(world.visibilityGraph);
-			float[,] tmpDistanceMatrix = fw.findShortestPaths ();
+			float[,] floydWarshallDistMatrix = fw.findShortestPaths ();
 			// Get number of obstacle vertices
 			int obstacleVertCount = world.graphVertices.Count - world.pointsOfInterest.Length - agents.Length * 2;
 			// Remove obstacle vertex rows and columns from the distance matrix as GA does not work with them to find a solution
-			float[,] distanceMatrix = getSubArray(tmpDistanceMatrix, obstacleVertCount);
-			// Use a genetic algorithm for the Vehicle Routing Problem
+			float[,] distanceMatrix = getSubArray(floydWarshallDistMatrix, obstacleVertCount);
+
+			// Use the genetic algorithm for the Vehicle Routing Problem
 			int M = 10000;
 			int lambda = 10000;
-			// Remove rows and columns 
-			return;
-			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 50, false, 0.04f);
+			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 200, false, 0.04f);
 			ga.generationalGeneticAlgorithm ();
 			List<int> solution = ga.getFittestIndividual ();
+			solution = GeneticAlgorithmHelper.includeSolutionGoals (solution, world.pointsOfInterest.Length, agents.Length);
+			// Visualize the reconstructed path (solution including intermediate nodes)
+			Visualizer.visualizeVRPsolution(world.graphVertices, solution, agents.Length, obstacleVertCount);
+
 		} 
 		else if (data.name == "P25") {
 			// Read trajectory
@@ -313,4 +315,5 @@ public class WorldController : MonoBehaviour {
 				distanceMatrix [i, j] = matrix [count + i, count + j];
 		return distanceMatrix;
 	}
+
 }

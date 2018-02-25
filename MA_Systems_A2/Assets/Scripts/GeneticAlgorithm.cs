@@ -383,6 +383,55 @@ public class GeneticAlgorithm {
 
 
 public static class GeneticAlgorithmHelper {
+
+	/// <summary>
+	/// Adds the goal nodes to the solution parameter given and returns the result
+	/// </summary>
+	public static List<int> includeSolutionGoals(List<int> solution, int pointsOfInterest, int vehicles) {
+		int solutionLength = solution.Count;
+		int startingIdx = getFirstVehicleIndex (solution, pointsOfInterest);
+		int currentVehicleStartIdx = solution [startingIdx];
+		int currentVehicleGoalIdx = currentVehicleStartIdx + vehicles;
+		int prevIdx = currentVehicleStartIdx; //contains the index of the previous node visited in the solution
+
+		// List for solution including goal nodes
+		List<int> indices = new List<int>();
+		indices.Add (currentVehicleStartIdx);
+		for (int i = 1; i < solutionLength; i++) {
+			int currentIdx = solution [(startingIdx + i) % solutionLength];
+			// If the current node in the solution is not a point of interest
+			if (currentIdx >= pointsOfInterest) {
+				indices.Add (currentVehicleGoalIdx);
+				prevIdx = solution [(startingIdx + i - 1) % solutionLength];
+				// Update vehicle indices
+				currentVehicleStartIdx = currentIdx;
+				currentVehicleGoalIdx = currentVehicleStartIdx + vehicles;
+				indices.Add (currentVehicleStartIdx);
+			} else {
+				//Add distance from previous node to current one
+				prevIdx = solution [(startingIdx + i - 1) % solutionLength];
+				indices.Add (currentIdx);
+			}				
+		}
+
+		indices.Add (currentVehicleGoalIdx);
+		return indices;
+	}
+
+
+	/// <summary>
+	/// Get the first vehicle index in the solution list
+	/// </summary>
+	private static int getFirstVehicleIndex(List<int> solution, int pointsOfInterest) {
+		// Get first vehicle index in the individual
+		for (int i = 0; i < solution.Count; i++)
+			// If the index corresponds to a vehicle's starting node
+			if (solution [i] >= pointsOfInterest)
+				return i;
+		return -1;
+	}
+
+
 	private static System.Random rng = new System.Random(System.Guid.NewGuid().GetHashCode());
 	public static void Shuffle<T>(this IList<T> list) {
 		int n = list.Count;
