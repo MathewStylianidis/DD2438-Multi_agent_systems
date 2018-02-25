@@ -5,7 +5,7 @@ using UnityEngine;
 public class WorldController : MonoBehaviour {
 
 	public TextAsset data;
-	public TextAsset trajectoryData;
+	//public TextAsset trajectoryData;
 	public GameObject agentPrefab;
 	public World world;
 	public GameObject obstacleParent;
@@ -19,14 +19,17 @@ public class WorldController : MonoBehaviour {
  
 	// Use this for initialization
 	void Start () {
-		world = World.FromJson(data.text, trajectoryData.text);
+		world = World.FromJson (data.text); //, trajectoryData.text);
 		world.currentPositions = (Vector2[]) world.startPositions.Clone ();
 		world.currentAngularVel = new float[world.currentPositions.Length];
 		initializeVelocities ();
 		spawnObstacle (world.boundingPolygon, "Bounding polygon", boundingPolygon);
 		spawnObstacles ();
 		spawnActors ();
+
 		if (data.name == "P22") {
+			initVisibilityGraph ();
+
 			// Use a genetic algorithm for the Vehicle Routing Problem
 			int M = 10000;
 			int lambda = 10000;
@@ -209,5 +212,79 @@ public class WorldController : MonoBehaviour {
 		//set obstacleParent as parent obstacle
 	}
 
+	void initVisibilityGraph () {
 
+		var vertices = new List<Vector2> ();
+		var obstEdges = new List<Segment> ();
+
+		foreach (var obstacle in world.obstacles) {
+			var prevVertex = obstacle [obstacle.Length - 1];
+			foreach (var obstVertex in obstacle) {
+				obstEdges.Add (new Segment (prevVertex, obstVertex));
+				vertices.Add (obstVertex);
+				prevVertex = obstVertex;
+			}
+		}
+
+		foreach (var vertex in world.startPositions) {
+			vertices.Add (vertex);
+		}
+
+		foreach (var vertex in world.goalPositions) {
+			vertices.Add (vertex);
+		}
+
+		var visibilityGraph = new float[vertices.Count][];
+		for (var i = 0; i < vertices.Count; i++) {
+			var v1 = vertices [i];
+			visibilityGraph [i] = new float[vertices.Count];
+			for (var j = 0; j < vertices.Count; j++) {
+				if (i == j) {
+					visibilityGraph [i] [j] = 0;
+					continue;
+				}
+
+				var v2 = vertices [j];
+
+				for (var k = 0; k < obstEdges.Count; k++) {
+					if (segmentsIntersect (v1, v2, obstEdges [k].vertex1, obstEdges [k].vertex2)) {
+						visibilityGraph [i] [j] = float.MaxValue;
+						break;
+					}
+					visibilityGraph [i] [j] = dist (v1, v2);
+				}
+			}
+		}
+
+		world.visibilityGraph = visibilityGraph;
+		world.graphVertices = vertices;
+
+	}
+
+	// v11 -> v12 & v21 -> v22
+	private bool segmentsIntersect(Vector2 v11, Vector2 v12, Vector2 v21, Vector2 v22) {
+		
+		var det = (v12.x - v11.x) * (v22.y - v21.y) - (v22.x - v21.x) * (v12.y - v11.y);
+		if (det == 0) {
+			return false;
+		}
+
+		var lambda = ((v22.y - v21.y) * (v22.x - v11.x) + (v21.x - v22.x) * (v22.y - v11.y)) / det;
+		var gamma = ((v11.y - v12.y) * (v22.x - v11.x) + (v12.x - v11.x) * (v22.y - v11.y)) / det;
+		return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
+	}
+
+	private float dist(Vector2 v1, Vector2 v2) {
+		return Mathf.Sqrt ((v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y));
+	}
+
+	class Segment {
+		public readonly Vector2 vertex1;
+		public readonly Vector2 vertex2;
+
+		public Segment(Vector2 vertex1, Vector2 vertex2) {
+			this.vertex1 = vertex1;
+			this.vertex2 = vertex2;
+		}
+	}
 }

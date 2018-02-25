@@ -9,7 +9,7 @@ public class DeserializationTest : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		world = World.FromJson(data.text, data2.text);
+		world = World.FromJson (data.text);//, data2.text);
 	}
 	
 	// Update is called once per frame
