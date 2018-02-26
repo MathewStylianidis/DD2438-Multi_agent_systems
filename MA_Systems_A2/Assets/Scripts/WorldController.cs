@@ -229,30 +229,31 @@ public class WorldController : MonoBehaviour {
 
 	void initVisibilityGraph () {
 
-		var vertices = new List<Vector2> ();
+		var vertices = new List<World.VisibilityVertex> ();
 		var obstEdges = new List<Segment> ();
 
-		foreach (var obstacle in world.obstacles) {
+		for (var i = 0; i < world.obstacles.Count; i++) {
+			var obstacle = world.obstacles[i];
 			var prevVertex = obstacle [obstacle.Length - 1];
 			foreach (var obstVertex in obstacle) {
 				obstEdges.Add (new Segment (prevVertex, obstVertex));
-				vertices.Add (obstVertex);
+				vertices.Add (new World.VisibilityVertex (obstVertex, true, i));
 				prevVertex = obstVertex;
 			}
 		}
 
-		foreach (var point in world.pointsOfInterest) {
-			vertices.Add (point);
-		}
-
 		foreach (var vertex in world.startPositions) {
-			vertices.Add (vertex);
+			vertices.Add (new World.VisibilityVertex(vertex, false));
 		}
 
 		foreach (var vertex in world.goalPositions) {
-			vertices.Add (vertex);
+			vertices.Add (new World.VisibilityVertex(vertex, false));
 		}
-			
+
+		foreach (var point in world.pointsOfInterest) {
+			vertices.Add (new World.VisibilityVertex (point, false));
+		}
+
 		var visibilityGraph = new float[vertices.Count][];
 		for (var i = 0; i < vertices.Count; i++) {
 			var v1 = vertices [i];
@@ -265,12 +266,26 @@ public class WorldController : MonoBehaviour {
 
 				var v2 = vertices [j];
 
-				for (var k = 0; k < obstEdges.Count; k++) {
-					if (segmentsIntersect (v1, v2, obstEdges [k].vertex1, obstEdges [k].vertex2)) {
-						visibilityGraph [i] [j] = float.MaxValue;
-						break;
+				var visible = true;
+
+				// Check if the two vertices are of the same polygon and their middle point is inside the polygon
+				// (this case is not handled by the intersection checking below)
+				if (v1.obstacleVertex && v2.obstacleVertex && v1.obstacleIndex == v2.obstacleIndex &&
+					insidePolygon ((v1.vertex.x + v2.vertex.x) / 2, (v1.vertex.y + v2.vertex.y) / 2, world.obstacles [v1.obstacleIndex])) {
+					visible = false;
+				} else {
+					for (var k = 0; k < obstEdges.Count; k++) {
+						if (segmentsIntersect (v1.vertex, v2.vertex, obstEdges [k].vertex1, obstEdges [k].vertex2)) {
+							visible = false;
+							break;
+						}
 					}
-					visibilityGraph [i] [j] = dist (v1, v2);
+				}
+
+				if (visible) {
+					visibilityGraph [i] [j] = dist (v1.vertex, v2.vertex);
+				} else {
+					visibilityGraph [i] [j] = float.MaxValue;
 				}
 			}
 		}
@@ -295,6 +310,34 @@ public class WorldController : MonoBehaviour {
 
 	private float dist(Vector2 v1, Vector2 v2) {
 		return Mathf.Sqrt ((v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y));
+	}
+
+	// Point (x,y) is inside polygon vs
+	private bool insidePolygon(float x, float y, Vector2[] vs) {
+		// ray-casting algorithm
+
+		double tol = 1e-7;
+		var inside = false;
+		var j = vs.Length - 1;
+		for (var i = 0; i < vs.Length; i++) {
+			var xi = vs [i].x;
+			var yi = vs [i].y;
+			var xj = vs [j].x;
+			var yj = vs [j].y;
+
+			// On an edge
+			if (Mathf.Abs ((xi + xj) / 2 - x) < tol && Mathf.Abs ((yi + yj) / 2 - y) < tol) {
+				return false;
+			}
+
+			var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+			if (intersect) {
+				inside = !inside;
+			}
+			j = i;
+		}
+
+		return inside;
 	}
 
 	class Segment {

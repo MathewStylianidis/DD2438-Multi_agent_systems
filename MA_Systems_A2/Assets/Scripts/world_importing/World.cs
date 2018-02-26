@@ -31,7 +31,7 @@ public class World {
 	/// <summary>
 	/// Vertices of the visibility graph
 	/// </summary>
-	public List<Vector2> graphVertices;
+	public List<VisibilityVertex> graphVertices;
 
 	class TempMap {
 		public float[][] bounding_polygon;
@@ -58,6 +58,23 @@ public class World {
 		public float vehicle_t;
 		public float vehicle_v_max;
 		public float sensor_range;
+	}
+
+	public class VisibilityVertex {
+		public readonly Vector2 vertex;
+		public readonly bool obstacleVertex;
+		public int obstacleIndex { get; set; }
+
+		public VisibilityVertex(Vector2 vertex, bool obstacleVertex) {
+			this.vertex = vertex;
+			this.obstacleVertex = obstacleVertex;
+		}
+
+		public VisibilityVertex(Vector2 vertex, bool obstacleVertex, int obstacleIndex) {
+			this.vertex = vertex;
+			this.obstacleVertex = obstacleVertex;
+			this.obstacleIndex = obstacleIndex;
+		}
 	}
 
 	[System.Serializable]
