@@ -9,7 +9,7 @@ public class Visualizer : MonoBehaviour {
 	/// <summary>
 	/// Visualizes the VRP solution
 	/// </summary>
-	public static void visualizeVRPsolution(List<Vector2> graphVertices, List<int> solution, int vehicles, int obstacleVertexCount) {
+	public static void visualizeVRPsolution(List<World.VisibilityVertex> graphVertices, List<int> solution, int vehicles, int obstacleVertexCount) {
 		int count = 0;
 
 		for (int i = 0; i < solution.Count - 1; i++) {
@@ -19,8 +19,8 @@ public class Visualizer : MonoBehaviour {
 			// Otherwise draw line from node i to i + 1
 			GameObject tmp = new GameObject();
 			LineRenderer lineRenderer = tmp.AddComponent<LineRenderer> ();
-			Vector2 start = graphVertices [solution [i]];
-			Vector2 dest = graphVertices[solution[i + 1]];
+			Vector2 start = graphVertices [solution [i]].vertex;
+			Vector2 dest = graphVertices[solution[i + 1]].vertex;
 			lineRenderer.widthMultiplier = Visualizer.widthMultiplier;
 			lineRenderer.useWorldSpace = true;
 			lineRenderer.SetPosition (0, new Vector3(start.x, 0, start.y));

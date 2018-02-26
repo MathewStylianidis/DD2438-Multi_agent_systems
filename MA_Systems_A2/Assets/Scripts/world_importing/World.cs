@@ -59,6 +59,22 @@ public class World {
 		public float vehicle_v_max;
 		public float sensor_range;
 	}
+		
+	[System.Serializable]
+	public class VehicleInfo {
+		public float length;
+		public float maxAcceleration;
+		public float dt;
+		public float maxOmega;
+		public float maxPhi;
+		public float t;
+		public float maxVelocity;
+	}
+
+	public class TrajectoryMap {
+		public float[] x;
+		public float[] y;
+	}
 
 	public class VisibilityVertex {
 		public readonly Vector2 vertex;
@@ -76,23 +92,6 @@ public class World {
 			this.obstacleIndex = obstacleIndex;
 		}
 	}
-
-	[System.Serializable]
-	public class VehicleInfo {
-		public float length;
-		public float maxAcceleration;
-		public float dt;
-		public float maxOmega;
-		public float maxPhi;
-		public float t;
-		public float maxVelocity;
-	}
-
-	public class TrajectoryMap {
-		public float[] x;
-		public float[] y;
-	}
-
 
 	public static World FromJson (string jsonData) { //, string jsonTrajectoryData) {
 		var tmp = TinyJsonDeserializer.Deserialize(jsonData, typeof(TempMap)) as TempMap;
