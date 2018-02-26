@@ -22,10 +22,10 @@ public class GeneticAlgorithm {
 	private int mutationProbability;
 	private int maxIterations;
 	private float eps;
-
+	private bool alternativeFitness;
 
 	public GeneticAlgorithm(int M, int lambda, int customers, int vehicles, float[,] distanceMatrix, float mutationProbability, int maxIterations = 1000,
-							bool overselection = false, float fitGroupPerc = 0.04f, float eps = 0.01f) {
+							bool overselection = false, float fitGroupPerc = 0.04f, float eps = 0.01f, bool alternativeFitness = false) {
 		this.M = M;
 		this.lambda = lambda;
 		this.customers = customers;
@@ -38,6 +38,7 @@ public class GeneticAlgorithm {
 		this.mutationProbability = (int)(mutationProbability * 100);
 		this.maxIterations = maxIterations;
 		this.eps = eps;
+		this.alternativeFitness = alternativeFitness;
 	}
 
 
@@ -271,11 +272,16 @@ public class GeneticAlgorithm {
 	private float[] calculateFitness(List<int>[] population) {
 		float[] populationFitness = new float[population.Length];
 		for (int i = 0; i < population.Length; i++)
-			populationFitness [i] = calculateIndividualFitness (population[i]);
+			if(!alternativeFitness)
+				populationFitness [i] = calculateIndividualFitness (population[i]); 
+			else
+				populationFitness [i] = alternativeIndividualFitness (population[i]);
+			
 		return populationFitness;
 	}
 
 
+	// Used to minimize total sum of costs of all paths
 	private float calculateIndividualFitness(List<int> individual) {
 		float pathCost = 0;
 		int solutionLength = individual.Count;
@@ -307,7 +313,43 @@ public class GeneticAlgorithm {
 		return pathCost;
 	}
 
+	// Used to minimize the cost of the longest path in the solution
+	private float alternativeIndividualFitness(List<int> individual) {
+		float pathCost = 0;
+		float pathMax = float.MinValue;
+		int solutionLength = individual.Count;
+		int startingIdx = getFirstVehicleIndex (individual);
+		int currentVehicleStartIdx = individual [startingIdx];
+		int currentVehicleGoalIdx = currentVehicleStartIdx + this.vehicles;
+		int prevIdx = currentVehicleStartIdx; //contains the index of the previous node visited in the solution
 
+
+		for (int i = 1; i < solutionLength; i++) {
+			int currentIdx = individual [(startingIdx + i) % solutionLength];
+			// If the current node in the solution is not a point of interest
+			if (currentIdx >= this.customers) {
+				prevIdx = individual [(startingIdx + i - 1) % solutionLength];
+				// Add distance from previous node to goal node of this vehicle
+				pathCost += this.distanceMatrix[prevIdx, currentVehicleGoalIdx];
+				if (pathCost > pathMax)
+					pathMax = pathCost;
+				pathCost = 0;
+				// Update vehicle indices
+				currentVehicleStartIdx = currentIdx;
+				currentVehicleGoalIdx = currentVehicleStartIdx + this.vehicles;
+			} else {
+				//Add distance from previous node to current one
+				prevIdx = individual [(startingIdx + i - 1) % solutionLength];
+				pathCost += this.distanceMatrix[prevIdx, currentIdx];
+			}				
+		}
+
+		pathCost += this.distanceMatrix[prevIdx, currentVehicleGoalIdx];
+		if (pathCost > pathMax)
+			pathMax = pathCost;
+		
+		return pathMax;
+	}
 
 	private void initializePopulation() {
 		// Create a list with the indices of each customer

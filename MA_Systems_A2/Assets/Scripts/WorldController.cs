@@ -41,7 +41,7 @@ public class WorldController : MonoBehaviour {
 			// Use the genetic algorithm for the Vehicle Routing Problem
 			int M = 10000;
 			int lambda = 10000;
-			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 200, false, 0.04f);
+			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 200, false, 0.04f, 0.01f, true);
 			ga.generationalGeneticAlgorithm ();
 			List<int> solution = ga.getFittestIndividual ();
 			solution = GeneticAlgorithmHelper.includeSolutionGoals (solution, world.pointsOfInterest.Length, agents.Length);
