@@ -45,6 +45,10 @@ public class WorldController : MonoBehaviour {
 			ga.generationalGeneticAlgorithm ();
 			List<int> solution = ga.getFittestIndividual ();
 			solution = GeneticAlgorithmHelper.includeSolutionGoals (solution, world.pointsOfInterest.Length, agents.Length);
+			// Reconstruct path including intermediate obstacle vertex nodes
+			for (int i = 0; i < solution.Count; i++)
+				solution [i] += obstacleVertCount;
+			solution = reconstructShortestPath (solution, fw, agents.Length);
 			// Visualize the reconstructed path (solution including intermediate nodes)
 			Visualizer.visualizeVRPsolution(world.graphVertices, solution, agents.Length, obstacleVertCount);
 
@@ -314,6 +318,30 @@ public class WorldController : MonoBehaviour {
 			for (int j = 0; j < newCount; j++) 
 				distanceMatrix [i, j] = matrix [count + i, count + j];
 		return distanceMatrix;
+	}
+
+
+	/// <summary>
+	/// Return the reconstructed shortest path indices given the indices of a path
+	/// as well as the FloydWarshall object used to find the shortest paths.
+	/// </summary>
+	public List<int> reconstructShortestPath(List<int> path, FloydWarshall fw, int vehicles) {
+		List<int> reconstructedPath = new List<int> ();
+		for(int i = 0; i < path.Count - 1; i++) {
+			// If the current node is a goal do not draw a path between it and the next node
+			if (path[i] >= fw.getNodeCount() - vehicles) 
+				continue;
+			// For each pair of nodes i and i + 1 in path add the intermediate nodes		
+			List<int> tmpPath = fw.reconstructShortestPath(path[i], path[i + 1]);
+			reconstructedPath.Add (path[i]);
+			for (int j = 1; j < tmpPath.Count - 1; j++)
+				reconstructedPath.Add (tmpPath [j]);
+			reconstructedPath.Add (path [i + 1]);
+
+		}
+
+
+		return reconstructedPath;
 	}
 
 }

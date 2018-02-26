@@ -387,7 +387,7 @@ public static class GeneticAlgorithmHelper {
 	/// <summary>
 	/// Adds the goal nodes to the solution parameter given and returns the result
 	/// </summary>
-	public static List<int> includeSolutionGoals(List<int> solution, int pointsOfInterest, int vehicles) {
+	public static List<int>	 includeSolutionGoals(List<int> solution, int pointsOfInterest, int vehicles) {
 		int solutionLength = solution.Count;
 		int startingIdx = getFirstVehicleIndex (solution, pointsOfInterest);
 		int currentVehicleStartIdx = solution [startingIdx];

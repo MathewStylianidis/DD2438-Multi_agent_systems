@@ -44,7 +44,35 @@ public class FloydWarshall {
 		return shortestPathDist[nodeCount - 1];
 	}
 
-	 
+
+	/// <summary>
+	/// Get list of indices composing the shortest path between i and j
+	/// </summary>
+	public List<int> reconstructShortestPath(int i, int j) {
+		List<int> sequence = new List<int>();
+
+		if (i == j) {
+			sequence.Add (i);
+			return sequence;
+		}
+			
+		int lastPredecessor = j;
+		while ((lastPredecessor = predecessorMatrix [nodeCount] [i, lastPredecessor]) != -1)
+			sequence.Add (lastPredecessor);
+		sequence.Reverse ();
+
+		if (sequence.Count != 0)
+			sequence.Add (j); 
+		else
+			sequence.Add (-1); // No path
+		
+		return sequence;
+	}
+
+
+	public int getNodeCount() {
+		return nodeCount;
+	}
 
 	private void initializePathMatrix() {
 		for (int i = 0; i < nodeCount; i++)
@@ -62,6 +90,7 @@ public class FloydWarshall {
 				else 
 					this.predecessorMatrix [0] [i,j] = i;
 	}
+
 
 
 }
