@@ -17,7 +17,6 @@ public class WorldController : MonoBehaviour {
 	public Material fieldMaterial;
 	private GameObject[] agents;
  
-	// Use this for initialization
 	void Start () {
 		world = World.FromJson (data.text); //, trajectoryData.text);
 		world.currentPositions = (Vector2[]) world.startPositions.Clone ();
@@ -35,14 +34,12 @@ public class WorldController : MonoBehaviour {
 			float[,] floydWarshallDistMatrix = fw.findShortestPaths ();
 			// Get number of obstacle vertices
 			int obstacleVertCount = world.graphVertices.Count - world.pointsOfInterest.Length - agents.Length * 2;
-			Debug.Log (obstacleVertCount);
 			// Remove obstacle vertex rows and columns from the distance matrix as GA does not work with them to find a solution
 			float[,] distanceMatrix = getSubArray(floydWarshallDistMatrix, obstacleVertCount);
-
 			// Use the genetic algorithm for the Vehicle Routing Problem
 			int M = 10000;
 			int lambda = 10000;
-			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 200, false, 0.04f, 0.01f, false);
+			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 200, false, 0.04f, 0.01f, true);
 			ga.generationalGeneticAlgorithm ();
 			List<int> solution = ga.getFittestIndividual ();
 			solution = GeneticAlgorithmHelper.includeSolutionGoals (solution, world.pointsOfInterest.Length, agents.Length);
@@ -52,7 +49,6 @@ public class WorldController : MonoBehaviour {
 			solution = reconstructShortestPath (solution, fw, agents.Length);
 			// Visualize the reconstructed path (solution including intermediate nodes)
 			Visualizer.visualizeVRPsolution(world.graphVertices, solution, agents.Length, obstacleVertCount);
-
 		} 
 		else if (data.name == "P25") {
 			// Read trajectory
@@ -243,6 +239,10 @@ public class WorldController : MonoBehaviour {
 			}
 		}
 
+		foreach (var point in world.pointsOfInterest) {
+			vertices.Add (new World.VisibilityVertex (point, false));
+		}
+
 		foreach (var vertex in world.startPositions) {
 			vertices.Add (new World.VisibilityVertex(vertex, false));
 		}
@@ -251,9 +251,7 @@ public class WorldController : MonoBehaviour {
 			vertices.Add (new World.VisibilityVertex(vertex, false));
 		}
 
-		foreach (var point in world.pointsOfInterest) {
-			vertices.Add (new World.VisibilityVertex (point, false));
-		}
+	
 
 		var visibilityGraph = new float[vertices.Count][];
 		for (var i = 0; i < vertices.Count; i++) {
@@ -372,18 +370,16 @@ public class WorldController : MonoBehaviour {
 	public List<int> reconstructShortestPath(List<int> path, FloydWarshall fw, int vehicles) {
 		List<int> reconstructedPath = new List<int> ();
 		for(int i = 0; i < path.Count - 1; i++) {
+			reconstructedPath.Add (path[i]);
 			// If the current node is a goal do not draw a path between it and the next node
-			if (path[i] >= fw.getNodeCount() - vehicles) 
+			if (path [i] >= fw.getNodeCount () - vehicles) 
 				continue;
 			// For each pair of nodes i and i + 1 in path add the intermediate nodes		
 			List<int> tmpPath = fw.reconstructShortestPath(path[i], path[i + 1]);
-			reconstructedPath.Add (path[i]);
-			for (int j = 1; j < tmpPath.Count - 1; j++)
+			for (int j = 1; j < tmpPath.Count - 1; j++) 
 				reconstructedPath.Add (tmpPath [j]);
-			reconstructedPath.Add (path [i + 1]);
-
 		}
-
+		reconstructedPath.Add (path[path.Count - 1]);
 
 		return reconstructedPath;
 	}

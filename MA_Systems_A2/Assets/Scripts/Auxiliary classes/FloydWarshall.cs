@@ -63,9 +63,10 @@ public class FloydWarshall {
 
 		if (sequence.Count != 0)
 			sequence.Add (j); 
-		else
+		else {
+			Debug.Log ("2");
 			sequence.Add (-1); // No path
-		
+		}
 		return sequence;
 	}
 

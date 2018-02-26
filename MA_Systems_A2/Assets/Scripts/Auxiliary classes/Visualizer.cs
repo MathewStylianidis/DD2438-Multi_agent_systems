@@ -16,16 +16,18 @@ public class Visualizer : MonoBehaviour {
 			// If we reached a goal then stop drawing the current vehicle's path
 			if (solution[i] >= graphVertices.Count - vehicles)
 				continue;
-			// Otherwise draw line from node i to i + 1
-			GameObject tmp = new GameObject();
+			
+	
+			GameObject tmp = new GameObject ();
 			LineRenderer lineRenderer = tmp.AddComponent<LineRenderer> ();
 			Vector2 start = graphVertices [solution [i]].vertex;
-			Vector2 dest = graphVertices[solution[i + 1]].vertex;
+			Vector2 dest = graphVertices [solution [i + 1]].vertex;
 			lineRenderer.widthMultiplier = Visualizer.widthMultiplier;
 			lineRenderer.useWorldSpace = true;
-			lineRenderer.SetPosition (0, new Vector3(start.x, 0, start.y));
-			lineRenderer.SetPosition (1, new Vector3(dest.x, 0, dest.y));
-			tmp.transform.SetParent (GameObject.Find("Visualizer").transform);
+			lineRenderer.SetPosition (0, new Vector3 (start.x, 0, start.y));
+			lineRenderer.SetPosition (1, new Vector3 (dest.x, 0, dest.y));
+			tmp.transform.SetParent (GameObject.Find ("Visualizer").transform);
+
 		}
 
 
