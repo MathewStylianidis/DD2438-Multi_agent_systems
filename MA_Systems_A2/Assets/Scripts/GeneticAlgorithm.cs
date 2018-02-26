@@ -45,6 +45,7 @@ public class GeneticAlgorithm {
 	{
 		float[] populationFitness = calculateFitness (this.population);
 		System.Array.Sort (populationFitness, this.population);
+		Debug.Log("SOLUTION FITNESS: " + calculateIndividualFitness(this.population[0]));
 		return this.population [0];
 	}
 
@@ -83,8 +84,8 @@ public class GeneticAlgorithm {
 			// check for convergence
 			if (GeneticAlgorithmHelper.abs (populationFitness [0] - prevBestFitness) < this.eps) 
 				count++;
-			if(count >= this.maxIterations * 0.05)
-				break;
+			//if(count >= this.maxIterations * 0.05)
+				//break;
 		
 
 			// Sample parents from population
