@@ -2,6 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+public enum model {
+	KinematicPoint//, DynamicPoint, DifferentialDrive, KinematicCar
+}
+
+
+
 public class WorldController : MonoBehaviour {
 
 	public TextAsset data;
@@ -15,10 +22,16 @@ public class WorldController : MonoBehaviour {
 	public float objectHeight = 4f;
 	public float objectThickness = 0.2f;
 	public Material fieldMaterial;
+	public model modelName;
 	private GameObject[] agents;
+	private BaseModel motionModel; // Motion model to be used
+
+	// Attributes needed for the VRP
 	private List<List<int>> solutionList; // List of list of indices to be visited by each agent in the VRP
-	//private List<Stack<PointInfo>> solutionStacks; // List of stacks with all the path coordinates for each vehicle's simulation
- 
+	private List<List<PointInfo>> solutionCoordinates; // List of lists with the coordinates each agent has to visit
+
+
+
 	void Start () {
 		world = World.FromJson (data.text); //, trajectoryData.text);
 		world.currentPositions = (Vector2[]) world.startPositions.Clone ();
@@ -27,6 +40,8 @@ public class WorldController : MonoBehaviour {
 		spawnObstacle (world.boundingPolygon, "Bounding polygon", boundingPolygon);
 		spawnObstacles ();
 		spawnActors ();
+		initializeMotionModel ();
+
 
 		if (data.name == "P22") {
 			// Initialize visibility graph
@@ -52,7 +67,7 @@ public class WorldController : MonoBehaviour {
 			// Visualize the reconstructed path (solution including intermediate nodes)
 			Visualizer.visualizeVRPsolution(world.graphVertices, solution, agents.Length, obstacleVertCount);
 			solutionList = GeneticAlgorithmHelper.splitSolution(solution, world.graphVertices.Count, agents.Length);
-			//solutionStacks = getSolutionStacks (solutionList);
+			solutionCoordinates = getSolutionCoordinates (solutionList);
 		} 
 		else if (data.name == "P25") {
 			// Read trajectory
@@ -234,6 +249,12 @@ public class WorldController : MonoBehaviour {
 	}
 		
 		
+	void initializeMotionModel()
+	{
+		if (modelName.Equals (model.KinematicPoint))
+			motionModel = new KinematicPoint (world.vehicle.maxVelocity, world.vehicle.dt);
+	}
+
 
 	/// <summary>
 	/// Removes the first <count> rows and columns from the matrix and returns the result
@@ -271,10 +292,38 @@ public class WorldController : MonoBehaviour {
 
 
 	/// <summary>
-	/// Based on the motion model chosen, returns 
-	/// as well as the FloydWarshall object used to find the shortest paths.
+	/// Based on the motion model chosen, returns the list of coordinates each 
+	/// agent has to visit.
 	/// </summary>
-	//private List<Stack<PointInfo>> getSolutionStacks(List<List<int>> solutionList) {
-		
-	//}
+	private List<List<PointInfo>> getSolutionCoordinates(List<List<int>> solutionList) {
+		List<List<PointInfo>> solutionCoords = new List<List<PointInfo>> ();
+
+		// For each agent
+		for (int i = 0; i < solutionList.Count; i++) {
+			solutionCoords.Add(new List<PointInfo> ());
+			float time = 0.0f;
+			Vector3 curVelocity = new Vector3 (world.currentVelocities [i].x, 0, world.currentVelocities [i].y);
+			Vector3 curOrientation = curVelocity.normalized; //should probably be initialized with the orientation to solution j + 1 from j
+			// For each node in his path
+			for (int j = 0; j < solutionList [i].Count - 1; j++) {
+				// Get the coordinates between node j and j + 1
+				Vector3 curPos = new Vector3(world.graphVertices[solutionList[i][j]].vertex.x, 0, world.graphVertices[solutionList[i][j]].vertex.y);
+				Vector3 goalPos = new Vector3 (world.graphVertices[solutionList[i][j + 1]].vertex.x, 0, world.graphVertices[solutionList[i][j + 1]].vertex.y);
+				PointInfo curPointInfo = new PointInfo(curPos, curVelocity, curOrientation, time);
+				List<PointInfo> subpathCoords = motionModel.completePath (curPointInfo, goalPos, world);
+				if (subpathCoords == null)
+					throw new System.Exception ("A path has a point in an obstacle");
+				curVelocity = subpathCoords [subpathCoords.Count - 1].vel;
+				curOrientation = subpathCoords [subpathCoords.Count - 1].orientation;
+				time = subpathCoords [subpathCoords.Count - 1].currentTime;
+				// Add subpath coordinates to this vehicle's list
+				if(j == 0)
+					solutionCoords[i].Add(curPointInfo);
+				solutionCoords[i].AddRange(subpathCoords);
+			}
+		}
+
+	    
+		return solutionCoords;
+	}
 }

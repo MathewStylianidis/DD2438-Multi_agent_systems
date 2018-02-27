@@ -17,7 +17,7 @@ public abstract class BaseModel {
 	/// Gets the coordinates of a trivial path from curPointInfo and goalPoint 
 	/// (I.e. straight line for kinematic point model)
 	/// </summary>
-	public abstract List<PointInfo> completePath (PointInfo curPointInfo, Vector3 goalPoint);
+	public abstract List<PointInfo> completePath (PointInfo curPointInfo, Vector3 goalPoint, World world);
 
 	public BaseModel(float maxVel, float dt) {
 		this.maxVelocity = maxVel;
