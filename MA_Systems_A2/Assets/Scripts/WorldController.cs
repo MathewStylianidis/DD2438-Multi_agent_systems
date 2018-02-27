@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.UI;
 
 public enum model {
 	KinematicPoint//, DynamicPoint, DifferentialDrive, KinematicCar
@@ -11,6 +11,7 @@ public enum model {
 
 public class WorldController : MonoBehaviour {
 
+	public Text timeText;
 	public TextAsset data;
 	//public TextAsset trajectoryData;
 	public GameObject agentPrefab;
@@ -23,10 +24,12 @@ public class WorldController : MonoBehaviour {
 	public float objectThickness = 0.2f;
 	public Material fieldMaterial;
 	public model modelName;
+	public float simulationSpeedFactor = 1.0f;
 	private GameObject[] agents;
 	private BaseModel motionModel; // Motion model to be used
 	private List<List<PointInfo>> solutionCoordinates; // Coordinates of the path of each vehicle for the VRP
 	private List<List<int>> solutionList; // List of indices with the visiting order for each agent
+	private int longestPathIndex;
 	private int obstacleVertCount; 
 
 
@@ -54,7 +57,7 @@ public class WorldController : MonoBehaviour {
 			// Use the genetic algorithm for the Vehicle Routing Problem
 			int M = 10000;
 			int lambda = 10000;
-			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 10, false, 0.04f, 0.01f, true);
+			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 200, false, 0.04f, 0.01f, true);
 			ga.generationalGeneticAlgorithm ();
 			List<int> solution = ga.getFittestIndividual ();
 			solution = GeneticAlgorithmHelper.includeSolutionGoals (solution, world.pointsOfInterest.Length, agents.Length);
@@ -105,6 +108,15 @@ public class WorldController : MonoBehaviour {
 			if (solutionList [i] [0] == obstacleVertCount + world.pointsOfInterest.Length + siblingIdx) 
 				return solutionCoordinates [i];
 		return null;
+	}
+
+	/// <summary>
+	/// Returns true when the index of the agent with the longest path is provided.
+	/// </summary>
+	public bool keepTime(int siblingIdx) {
+		if (solutionList [longestPathIndex] [0] == obstacleVertCount + world.pointsOfInterest.Length + siblingIdx)
+			return true;
+		return false;
 	}
 
 
@@ -307,10 +319,9 @@ public class WorldController : MonoBehaviour {
 	/// </summary>
 	private List<List<PointInfo>> getSolutionCoordinates(List<List<int>> solutionList) {
 		List<List<PointInfo>> solutionCoords = new List<List<PointInfo>> ();
+		int maxPathLength = -1;
 
 		// For each agent
-		Debug.Log(world.currentVelocities.Length);
-		Debug.Log (world.startPositions.Length);
 		for (int i = 0; i < solutionList.Count; i++) {
 			solutionCoords.Add(new List<PointInfo> ());
 			float time = 0.0f;
@@ -332,6 +343,11 @@ public class WorldController : MonoBehaviour {
 				if(j == 0)
 					solutionCoords[i].Add(curPointInfo);
 				solutionCoords[i].AddRange(subpathCoords);
+			}
+
+			if (solutionCoords [i].Count > maxPathLength) {
+				longestPathIndex = i;
+				maxPathLength = solutionCoords [i].Count;
 			}
 		}
 
