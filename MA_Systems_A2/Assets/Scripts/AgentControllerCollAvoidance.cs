@@ -8,7 +8,7 @@ using UnityEngine;
  * Optimal reciprocal collision avoidance for multiple non-holonomic robots. In Distributed Autonomous
  * Robotic Systems (pp. 203-216). Springer, Berlin, Heidelberg.	
  */
-public class AgentControllerP21 : MonoBehaviour {
+public class AgentControllerCollAvoidance : MonoBehaviour {
 
 	public World world;
 	public static float epsilon = 1e-20f;
@@ -24,7 +24,7 @@ public class AgentControllerP21 : MonoBehaviour {
 
 
 
-	public AgentControllerP21(World world, float agentRadius, float lowerBounds) {
+	public AgentControllerCollAvoidance(World world, float agentRadius, float lowerBounds) {
 		this.world = world;
 		this.agentRadius = agentRadius;
 		this.maxTrackingError = agentRadius; //maxTrackingError equal to agent radius guaranteed collision free trajectories

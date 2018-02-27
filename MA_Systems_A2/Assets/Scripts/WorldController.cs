@@ -25,11 +25,9 @@ public class WorldController : MonoBehaviour {
 	public model modelName;
 	private GameObject[] agents;
 	private BaseModel motionModel; // Motion model to be used
-
-	// Attributes needed for the VRP
-	private List<List<int>> solutionList; // List of list of indices to be visited by each agent in the VRP
-	private List<List<PointInfo>> solutionCoordinates; // List of lists with the coordinates each agent has to visit
-
+	private List<List<PointInfo>> solutionCoordinates; // Coordinates of the path of each vehicle for the VRP
+	private List<List<int>> solutionList; // List of indices with the visiting order for each agent
+	private int obstacleVertCount; 
 
 
 	void Start () {
@@ -50,7 +48,7 @@ public class WorldController : MonoBehaviour {
 			FloydWarshall fw = new FloydWarshall(world.visibilityGraph);
 			float[,] floydWarshallDistMatrix = fw.findShortestPaths ();
 			// Get number of obstacle vertices
-			int obstacleVertCount = world.graphVertices.Count - world.pointsOfInterest.Length - agents.Length * 2;
+			obstacleVertCount = world.graphVertices.Count - world.pointsOfInterest.Length - agents.Length * 2;
 			// Remove obstacle vertex rows and columns from the distance matrix as GA does not work with them to find a solution
 			float[,] distanceMatrix = getSubArray(floydWarshallDistMatrix, obstacleVertCount);
 			// Use the genetic algorithm for the Vehicle Routing Problem
@@ -68,6 +66,11 @@ public class WorldController : MonoBehaviour {
 			Visualizer.visualizeVRPsolution(world.graphVertices, solution, agents.Length, obstacleVertCount);
 			solutionList = GeneticAlgorithmHelper.splitSolution(solution, world.graphVertices.Count, agents.Length);
 			solutionCoordinates = getSolutionCoordinates (solutionList);
+			for(int agentIdx = 0; agentIdx < agents.Length; agentIdx++)
+					agents [agentIdx].AddComponent<AgentControllerVRP> ();
+
+			//give the solution coordinates to each respective agent and set the agent controllers in motion 
+
 		} 
 		else if (data.name == "P25") {
 			// Read trajectory
@@ -90,13 +93,20 @@ public class WorldController : MonoBehaviour {
 	
 
 	void Update () {
-		if (data.name == "P22") {
-			//Simulate VRP solution
-			for (int i = 0; i < agents.Length; i++) {
-				//agents[i].transform.
-			}
-		}
 	}
+
+
+	/// <summary>
+	/// Given the sibling index of the agent get its respective route to follow
+	/// </summary>
+	public List<PointInfo> getRoute(int siblingIdx) {
+		for (int i = 0; i < solutionList.Count; i++)
+			// If the first node on the i_th path is this agent's starting position
+			if (solutionList [i] [0] == obstacleVertCount + world.pointsOfInterest.Length + siblingIdx) 
+				return solutionCoordinates [i];
+		return null;
+	}
+
 
 	// Gets distance matrix between all critical nodes
 	private float[,] calcDistanceMatrix () {
@@ -124,7 +134,7 @@ public class WorldController : MonoBehaviour {
 		return nodeArray;
 	}
 
-	void initializeVelocities() {
+	private void initializeVelocities() {
 		world.currentVelocities = new Vector2[world.startPositions.Length];
 		for (int i = 0; i < world.currentVelocities.Length - 1; i++) {
 			Vector2 x;
@@ -137,7 +147,7 @@ public class WorldController : MonoBehaviour {
 	}
 
 
-	void spawnActors() {
+	private void spawnActors() {
 
 		if (world.startPositions.Length != 0 && world.enemyPositions.Length != 0) {
 			//Spawn actors in a way suitable for the shooting problem
@@ -154,30 +164,30 @@ public class WorldController : MonoBehaviour {
 		}
 	}
 
-	void spawnActor(Vector2 position, Vector2 goal, int agentIdx) {
+	private void spawnActor(Vector2 position, Vector2 goal, int agentIdx) {
 		agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
 		scaleAgent (agents[agentIdx]);
 		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
 		agents [agentIdx].transform.LookAt(new Vector3(goal.x, objectHeight, goal.y));
 		agents [agentIdx].transform.parent = agentParent.transform;
+		agents [agentIdx].transform.SetSiblingIndex (agentIdx);
 		agents [agentIdx].name = "AgentNo_" + agentIdx;
 		if (data.name == "P21")
-			agents [agentIdx].AddComponent<AgentControllerP21> ();
+			agents [agentIdx].AddComponent<AgentControllerCollAvoidance> ();
 	}
 
 	// Overloaded method for the problems that include formation
-	void spawnActor(Vector2 position, int agentIdx) {
+	private void spawnActor(Vector2 position, int agentIdx) {
 		agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
 		scaleAgent (agents[agentIdx]);
 		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
 		agents [agentIdx].transform.LookAt(agents[agentIdx].transform.position + (Vector3.right));
 		agents [agentIdx].transform.parent = agentParent.transform;
+		agents [agentIdx].transform.SetSiblingIndex (agentIdx);
 		agents [agentIdx].name = "AgentNo_" + agentIdx;
-		if (data.name == "P21")
-			agents [agentIdx].AddComponent<AgentControllerP21> ();
 	}
 
-	void scaleAgent( GameObject agent) {
+	private void scaleAgent( GameObject agent) {
 		//MeshRenderer renderer = agent.GetComponent<MeshRenderer> ();
 		Vector3[] vertices = agent.GetComponent<MeshFilter> ().mesh.vertices;
 		float maxX, minX, maxY, minY, maxZ, minZ;
@@ -216,13 +226,13 @@ public class WorldController : MonoBehaviour {
 		agent.GetComponent<MeshFilter>().mesh.vertices = vertices;
 	}
 
-	void spawnObstacles() {
+	private void spawnObstacles() {
 		//Spawn all the obstacles
 		for (int i = 0; i < world.obstacles.Count; i++)
 			spawnObstacle (world.obstacles [i], "obstacle_" + i, obstacleParent);
 	}
 
-	void spawnObstacle(Vector2[] obstacle, string name, GameObject parent) {
+	private void spawnObstacle(Vector2[] obstacle, string name, GameObject parent) {
 		//For each vertex spawn a wall between itself and the next vertex
 		for (int i = 0; i < obstacle.Length - 1; i++) {
 			Vector3 v1 = new Vector3(obstacle[i][0], objectHeight/2, obstacle[i][1]);
@@ -234,7 +244,7 @@ public class WorldController : MonoBehaviour {
 		spawnWall (new Vector3(obstacle[0][0], objectHeight/2, obstacle[0][1]), new Vector3(obstacle[obstacle.Length - 1][0],  objectHeight/2, obstacle[obstacle.Length - 1][1]), name + "_Side" + (obstacle.Length - 1), parent);
 	}
 
-	void spawnWall(Vector3 v1, Vector3 v2, string name, GameObject parent) {
+	private void spawnWall(Vector3 v1, Vector3 v2, string name, GameObject parent) {
 		//Spawn wall given two vertices and its name
 		float width = Vector3.Distance(v1, v2);
 		Vector3 polygonSide = v2 - v1;
@@ -249,7 +259,7 @@ public class WorldController : MonoBehaviour {
 	}
 		
 		
-	void initializeMotionModel()
+	private void initializeMotionModel()
 	{
 		if (modelName.Equals (model.KinematicPoint))
 			motionModel = new KinematicPoint (world.vehicle.maxVelocity, world.vehicle.dt);
@@ -310,7 +320,7 @@ public class WorldController : MonoBehaviour {
 				Vector3 curPos = new Vector3(world.graphVertices[solutionList[i][j]].vertex.x, 0, world.graphVertices[solutionList[i][j]].vertex.y);
 				Vector3 goalPos = new Vector3 (world.graphVertices[solutionList[i][j + 1]].vertex.x, 0, world.graphVertices[solutionList[i][j + 1]].vertex.y);
 				PointInfo curPointInfo = new PointInfo(curPos, curVelocity, curOrientation, time);
-				List<PointInfo> subpathCoords = motionModel.completePath (curPointInfo, goalPos, world);
+				List<PointInfo> subpathCoords = motionModel.completePath (curPointInfo, goalPos, world, false);
 				if (subpathCoords == null)
 					throw new System.Exception ("A path has a point in an obstacle");
 				curVelocity = subpathCoords [subpathCoords.Count - 1].vel;
@@ -326,4 +336,7 @@ public class WorldController : MonoBehaviour {
 	    
 		return solutionCoords;
 	}
+
+
+
 }

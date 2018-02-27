@@ -51,7 +51,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\AgentControllerP21.cs" />
+     <Compile Include="Assets\Scripts\AgentControllerCollAvoidance.cs" />
+     <Compile Include="Assets\Scripts\AgentControllerVRP.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\FloydWarshall.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\Raycasting.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\VisibilityGraph.cs" />
