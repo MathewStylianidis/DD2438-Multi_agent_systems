@@ -16,6 +16,8 @@ public class WorldController : MonoBehaviour {
 	public float objectThickness = 0.2f;
 	public Material fieldMaterial;
 	private GameObject[] agents;
+	private List<List<int>> solutionList; // List of list of indices to be visited by each agent in the VRP
+	//private List<Stack<PointInfo>> solutionStacks; // List of stacks with all the path coordinates for each vehicle's simulation
  
 	void Start () {
 		world = World.FromJson (data.text); //, trajectoryData.text);
@@ -28,7 +30,7 @@ public class WorldController : MonoBehaviour {
 
 		if (data.name == "P22") {
 			// Initialize visibility graph
-			initVisibilityGraph ();
+			VisibilityGraph.initVisibilityGraph (world);
 			// Execute FloydWarshall algorithm on visibility graph to get shortest paths
 			FloydWarshall fw = new FloydWarshall(world.visibilityGraph);
 			float[,] floydWarshallDistMatrix = fw.findShortestPaths ();
@@ -49,6 +51,8 @@ public class WorldController : MonoBehaviour {
 			solution = reconstructShortestPath (solution, fw, agents.Length);
 			// Visualize the reconstructed path (solution including intermediate nodes)
 			Visualizer.visualizeVRPsolution(world.graphVertices, solution, agents.Length, obstacleVertCount);
+			solutionList = GeneticAlgorithmHelper.splitSolution(solution, world.graphVertices.Count, agents.Length);
+			//solutionStacks = getSolutionStacks (solutionList);
 		} 
 		else if (data.name == "P25") {
 			// Read trajectory
@@ -71,7 +75,12 @@ public class WorldController : MonoBehaviour {
 	
 
 	void Update () {
-		
+		if (data.name == "P22") {
+			//Simulate VRP solution
+			for (int i = 0; i < agents.Length; i++) {
+				//agents[i].transform.
+			}
+		}
 	}
 
 	// Gets distance matrix between all critical nodes
@@ -223,131 +232,7 @@ public class WorldController : MonoBehaviour {
 		wall.transform.parent = parent.transform;
 		//set obstacleParent as parent obstacle
 	}
-
-	void initVisibilityGraph () {
-
-		var vertices = new List<World.VisibilityVertex> ();
-		var obstEdges = new List<Segment> ();
-
-		for (var i = 0; i < world.obstacles.Count; i++) {
-			var obstacle = world.obstacles[i];
-			var prevVertex = obstacle [obstacle.Length - 1];
-			foreach (var obstVertex in obstacle) {
-				obstEdges.Add (new Segment (prevVertex, obstVertex));
-				vertices.Add (new World.VisibilityVertex (obstVertex, true, i));
-				prevVertex = obstVertex;
-			}
-		}
-
-		foreach (var point in world.pointsOfInterest) {
-			vertices.Add (new World.VisibilityVertex (point, false));
-		}
-
-		foreach (var vertex in world.startPositions) {
-			vertices.Add (new World.VisibilityVertex(vertex, false));
-		}
-
-		foreach (var vertex in world.goalPositions) {
-			vertices.Add (new World.VisibilityVertex(vertex, false));
-		}
-
-	
-
-		var visibilityGraph = new float[vertices.Count][];
-		for (var i = 0; i < vertices.Count; i++) {
-			var v1 = vertices [i];
-			visibilityGraph [i] = new float[vertices.Count];
-			for (var j = 0; j < vertices.Count; j++) {
-				if (i == j) {
-					visibilityGraph [i] [j] = 0;
-					continue;
-				}
-
-				var v2 = vertices [j];
-
-				var visible = true;
-
-				// Check if the two vertices are of the same polygon and their middle point is inside the polygon
-				// (this case is not handled by the intersection checking below)
-				if (v1.obstacleVertex && v2.obstacleVertex && v1.obstacleIndex == v2.obstacleIndex &&
-					insidePolygon ((v1.vertex.x + v2.vertex.x) / 2, (v1.vertex.y + v2.vertex.y) / 2, world.obstacles [v1.obstacleIndex])) {
-					visible = false;
-				} else {
-					for (var k = 0; k < obstEdges.Count; k++) {
-						if (segmentsIntersect (v1.vertex, v2.vertex, obstEdges [k].vertex1, obstEdges [k].vertex2)) {
-							visible = false;
-							break;
-						}
-					}
-				}
-
-				if (visible) {
-					visibilityGraph [i] [j] = dist (v1.vertex, v2.vertex);
-				} else {
-					visibilityGraph [i] [j] = float.MaxValue;
-				}
-			}
-		}
-
-		world.visibilityGraph = visibilityGraph;
-		world.graphVertices = vertices;
-
-	}
-
-	// v11 -> v12 & v21 -> v22
-	private bool segmentsIntersect(Vector2 v11, Vector2 v12, Vector2 v21, Vector2 v22) {
 		
-		var det = (v12.x - v11.x) * (v22.y - v21.y) - (v22.x - v21.x) * (v12.y - v11.y);
-		if (det == 0) {
-			return false;
-		}
-
-		var lambda = ((v22.y - v21.y) * (v22.x - v11.x) + (v21.x - v22.x) * (v22.y - v11.y)) / det;
-		var gamma = ((v11.y - v12.y) * (v22.x - v11.x) + (v12.x - v11.x) * (v22.y - v11.y)) / det;
-		return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
-	}
-
-	private float dist(Vector2 v1, Vector2 v2) {
-		return Mathf.Sqrt ((v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y));
-	}
-
-	// Point (x,y) is inside polygon vs
-	private bool insidePolygon(float x, float y, Vector2[] vs) {
-		// ray-casting algorithm
-
-		double tol = 1e-7;
-		var inside = false;
-		var j = vs.Length - 1;
-		for (var i = 0; i < vs.Length; i++) {
-			var xi = vs [i].x;
-			var yi = vs [i].y;
-			var xj = vs [j].x;
-			var yj = vs [j].y;
-
-			// On an edge
-			if (Mathf.Abs ((xi + xj) / 2 - x) < tol && Mathf.Abs ((yi + yj) / 2 - y) < tol) {
-				return false;
-			}
-
-			var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-			if (intersect) {
-				inside = !inside;
-			}
-			j = i;
-		}
-
-		return inside;
-	}
-
-	class Segment {
-		public readonly Vector2 vertex1;
-		public readonly Vector2 vertex2;
-
-		public Segment(Vector2 vertex1, Vector2 vertex2) {
-			this.vertex1 = vertex1;
-			this.vertex2 = vertex2;
-		}
-	}
 		
 
 	/// <summary>
@@ -384,4 +269,12 @@ public class WorldController : MonoBehaviour {
 		return reconstructedPath;
 	}
 
+
+	/// <summary>
+	/// Based on the motion model chosen, returns 
+	/// as well as the FloydWarshall object used to find the shortest paths.
+	/// </summary>
+	//private List<Stack<PointInfo>> getSolutionStacks(List<List<int>> solutionList) {
+		
+	//}
 }

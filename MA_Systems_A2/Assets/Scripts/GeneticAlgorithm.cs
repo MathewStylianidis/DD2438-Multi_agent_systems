@@ -463,6 +463,30 @@ public static class GeneticAlgorithmHelper {
 
 
 	/// <summary>
+	/// Given a VRP solution, distribute the paths in the solution to different lists and return a list with those lists.
+	/// </summary>
+	public static List<List<int>> splitSolution(List<int> solution, int totalNodes, int vehicles) {
+		List<List<int>> solutionList = new List<List<int>>();
+
+		if (solution.Count == 0)
+			throw new System.Exception ("Empty solution");
+
+		int pathIdx = 0;
+		solutionList.Add (new List<int> ());
+		for (int i = 1; i < solution.Count; i++) {
+			if (solution [i] >= totalNodes - vehicles * 2 && solution [i] < totalNodes - vehicles) {
+				pathIdx++;
+				solutionList.Add (new List<int> ());
+				continue;
+			}
+			solutionList [pathIdx].Add (solution [i]);
+		}
+
+		return solutionList;
+	}
+
+
+	/// <summary>
 	/// Get the first vehicle index in the solution list
 	/// </summary>
 	private static int getFirstVehicleIndex(List<int> solution, int pointsOfInterest) {
