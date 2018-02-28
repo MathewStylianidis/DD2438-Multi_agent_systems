@@ -51,6 +51,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\ImportedAssets\ForceField\Script\RenderDepth.cs" />
      <Compile Include="Assets\Scripts\AgentControllerCollAvoidance.cs" />
      <Compile Include="Assets\Scripts\AgentControllerVRP.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\FloydWarshall.cs" />
@@ -67,6 +68,7 @@
      <Compile Include="Assets\Scripts\world_importing\WindowsStoreCompatibility.cs" />
      <Compile Include="Assets\Scripts\world_importing\World.cs" />
      <Compile Include="Assets\Scripts\WorldController.cs" />
+     <None Include="Assets\ImportedAssets\ForceField\Shader\ForceField.shader" />
      <None Include="Assets\Scripts\Backup\GABackup.txt" />
  <Reference Include="UnityEngine.UI">
  <HintPath>D:/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>

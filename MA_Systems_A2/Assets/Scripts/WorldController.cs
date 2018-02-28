@@ -11,6 +11,8 @@ public enum model {
 
 public class WorldController : MonoBehaviour {
 
+	public Button startButton;
+	public GameObject pointOfInterestModel;
 	public Text timeText;
 	public TextAsset data;
 	//public TextAsset trajectoryData;
@@ -34,6 +36,9 @@ public class WorldController : MonoBehaviour {
 
 
 	void Start () {
+		Button btn = startButton.GetComponent<Button>();
+		btn.onClick.AddListener(TaskOnClick);
+
 		world = World.FromJson (data.text); //, trajectoryData.text);
 		world.currentPositions = (Vector2[]) world.startPositions.Clone ();
 		world.currentAngularVel = new float[world.currentPositions.Length];
@@ -43,8 +48,9 @@ public class WorldController : MonoBehaviour {
 		spawnActors ();
 		initializeMotionModel ();
 
-
 		if (data.name == "P22") {
+			// Spawns objects that visualize the points of interest
+			spawnPointOfInterestObjects ();
 			// Initialize visibility graph
 			VisibilityGraph.initVisibilityGraph (world);
 			// Execute FloydWarshall algorithm on visibility graph to get shortest paths
@@ -71,11 +77,6 @@ public class WorldController : MonoBehaviour {
 			for (int i = 0; i < solutionList.Count; i++) 
 				solutionList[i] = reconstructShortestPath (solutionList [i], fw, agents.Length);
 			solutionCoordinates = getSolutionCoordinates (solutionList);
-			for(int agentIdx = 0; agentIdx < agents.Length; agentIdx++)
-					agents [agentIdx].AddComponent<AgentControllerVRP> ();
-
-			//give the solution coordinates to each respective agent and set the agent controllers in motion 
-
 		} 
 		else if (data.name == "P25") {
 			// Read trajectory
@@ -100,6 +101,14 @@ public class WorldController : MonoBehaviour {
 	void Update () {
 	}
 
+
+	void TaskOnClick()
+	{
+		if (data.name == "P22") {
+			for (int agentIdx = 0; agentIdx < agents.Length; agentIdx++)
+				agents [agentIdx].AddComponent<AgentControllerVRP> ();
+		}
+	}
 
 	/// <summary>
 	/// Given the sibling index of the agent get its respective route to follow
@@ -272,7 +281,14 @@ public class WorldController : MonoBehaviour {
 		//set obstacleParent as parent obstacle
 	}
 		
-		
+	private void spawnPointOfInterestObjects() {
+		for (int i = 0; i < world.pointsOfInterest.Length; i++) {
+			GameObject gameObject = Instantiate(pointOfInterestModel);
+			gameObject.transform.position = new Vector3 (world.pointsOfInterest [i].x, 0, world.pointsOfInterest [i].y);
+		}
+	}	
+
+
 	private void initializeMotionModel()
 	{
 		if (modelName.Equals (model.KinematicPoint))

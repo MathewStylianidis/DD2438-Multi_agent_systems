@@ -15,6 +15,7 @@ public class AgentControllerVRP : MonoBehaviour {
 	private bool keepTime = false;
 	private Text timeText;
 	private float simulationSpeedFactor = 1.0f;
+	private Vector2[] pointsOfInterest;
 
 	// Use this for initialization
 	void Start () {
@@ -23,6 +24,7 @@ public class AgentControllerVRP : MonoBehaviour {
 			WorldController worldController = gameController.GetComponent<WorldController> ();
 			vehicle_dt = worldController.world.vehicle.dt;
 			if (worldController != null) {
+				pointsOfInterest = worldController.world.pointsOfInterest;
 				route = worldController.getRoute (this.transform.GetSiblingIndex());
 				lastPos = route [0];
 				// Check if this agent has the longest path and should update the timer
@@ -53,4 +55,5 @@ public class AgentControllerVRP : MonoBehaviour {
 				timeText.text = "Time: " + System.Math.Round(lastPos.currentTime + accumulatedDeltaTime, 4);
 		}
 	}
+		
 }
