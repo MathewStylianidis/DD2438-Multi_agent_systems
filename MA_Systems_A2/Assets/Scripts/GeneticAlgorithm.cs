@@ -474,6 +474,7 @@ public static class GeneticAlgorithmHelper {
 		int pathIdx = 0;
 		solutionList.Add (new List<int> ());
 		solutionList [0].Add (solution [0]);
+	
 		for (int i = 1; i < solution.Count; i++) {
 			if (solution [i] >= totalNodes - vehicles * 2 && solution [i] < totalNodes - vehicles) {
 				pathIdx++;
@@ -483,7 +484,7 @@ public static class GeneticAlgorithmHelper {
 			}
 			solutionList [pathIdx].Add (solution [i]);
 		}
-
+			
 		return solutionList;
 	}
 

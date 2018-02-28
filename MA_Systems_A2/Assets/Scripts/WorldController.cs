@@ -64,10 +64,12 @@ public class WorldController : MonoBehaviour {
 			// Reconstruct path including intermediate obstacle vertex nodes
 			for (int i = 0; i < solution.Count; i++)
 				solution [i] += obstacleVertCount;
-			solution = reconstructShortestPath (solution, fw, agents.Length);
+			List<int> reconstructedSolution = reconstructShortestPath (solution, fw, agents.Length);
 			// Visualize the reconstructed path (solution including intermediate nodes)
-			Visualizer.visualizeVRPsolution(world.graphVertices, solution, agents.Length, obstacleVertCount);
+			Visualizer.visualizeVRPsolution(world.graphVertices, reconstructedSolution, agents.Length, obstacleVertCount); 
 			solutionList = GeneticAlgorithmHelper.splitSolution(solution, world.graphVertices.Count, agents.Length);
+			for (int i = 0; i < solutionList.Count; i++) 
+				solutionList[i] = reconstructShortestPath (solutionList [i], fw, agents.Length);
 			solutionCoordinates = getSolutionCoordinates (solutionList);
 			for(int agentIdx = 0; agentIdx < agents.Length; agentIdx++)
 					agents [agentIdx].AddComponent<AgentControllerVRP> ();

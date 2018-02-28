@@ -74,6 +74,7 @@ public class VisibilityGraph {
 
 	}
 
+
 	class Segment {
 		public readonly Vector2 vertex1;
 		public readonly Vector2 vertex2;
