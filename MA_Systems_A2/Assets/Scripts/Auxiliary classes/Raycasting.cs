@@ -31,7 +31,8 @@ public class Raycasting {
 			var yj = vs [j].y;
 
 			// On an edge
-			if (Mathf.Abs ((xi + xj) / 2 - x) < tol && Mathf.Abs ((yi + yj) / 2 - y) < tol) {
+			if (Mathf.Abs((y - yi)/(yj - yi) - (x - xi)/(xj - xi)) < tol) {
+			//if (Mathf.Abs ((xi + xj) / 2 - x) < tol && Mathf.Abs ((yi + yj) / 2 - y) < tol) {
 				return false;
 			}
 
