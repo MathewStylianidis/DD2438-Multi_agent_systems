@@ -40,8 +40,6 @@ public class WorldController : MonoBehaviour {
 		btn.onClick.AddListener(TaskOnClick);
 
 		world = World.FromJson (data.text, trajectoryData.text);
-		world.currentPositions = (Vector2[]) world.startPositions.Clone ();
-		world.currentAngularVel = new float[world.currentPositions.Length];
 		initializeVelocities ();
 		spawnObstacle (world.boundingPolygon, "Bounding polygon", boundingPolygon);
 		spawnObstacles ();
@@ -165,7 +163,7 @@ public class WorldController : MonoBehaviour {
 			if (data.name != "P25" && data.name != "P26" && data.name != "P27")
 				x = world.goalPositions [i] - world.startPositions [i];
 			else
-				x = Vector2.up;
+				x = Vector2.up; // Should look towards formation position
 			world.currentVelocities [i] = x.normalized * world.vehicle.maxVelocity;
 		}
 	}
@@ -177,22 +175,41 @@ public class WorldController : MonoBehaviour {
 			//Spawn actors in a way suitable for the shooting problem
 		} else if (world.startPositions.Length != 0 && world.goalPositions.Length != 0) {
 			//Spawn actors in a way suitable for all the other problems
+			world.currentAngularVel = new float[world.startPositions.Length];
+			world.currentPositions = (Vector2[]) world.startPositions.Clone ();
 			agents = new GameObject[world.startPositions.Length];
-			for (int i = 0; i < world.startPositions.Length; i++)
-				spawnActor (world.startPositions [i], world.goalPositions [i], i); 
+			for (int i = 0; i < world.startPositions.Length; i++) {
+				Vector3 orientation = new Vector3 (world.goalPositions [i].x, objectHeight, world.goalPositions [i].y).normalized;
+				spawnActor (world.startPositions [i], orientation, i); 
+			}
 		} else if (world.startPositions.Length != 0 && world.formationPositions.Length != 0) {
-			//P25 and P26 problems
-			agents = new GameObject[world.formationPositions.Length];
-			for (int i = 0; i < world.formationPositions.Length; i++)
-				spawnActor (world.formationPositions [i], i); 
+			// Actor spawning for P25 and P26 problems
+			if (data.name == "P25") {
+				world.currentAngularVel = new float[world.startPositions.Length + 1];
+				world.currentPositions = new Vector2[world.startPositions.Length + 1];
+				agents = new GameObject[world.startPositions.Length + 1];
+				// Initialize leader
+
+				Vector3 orientation = UtilityClass.rads2Vec(world.trajectory.theta[0]);
+				Vector2 pos = new Vector2 (world.trajectory.x [0], world.trajectory.y [0]);
+				spawnActor (pos , orientation, 0);
+				world.currentPositions[0] = pos;
+				// Initialize followers
+				for (int i = 0; i < world.startPositions.Length; i++) {
+					orientation = Vector3.left; //change so that they look towards their formation position
+					spawnActor (world.startPositions [i], orientation, i + 1);
+					world.currentPositions [i + 1] = world.startPositions [i];
+				}
+			}
+			
 		}
 	}
 
-	private void spawnActor(Vector2 position, Vector2 goal, int agentIdx) {
+	private void spawnActor(Vector2 position, Vector3 orientation, int agentIdx) {
 		agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
-		scaleAgent (agents[agentIdx]);
+		scaleAgent (agents[agentIdx]); 
 		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
-		agents [agentIdx].transform.LookAt(new Vector3(goal.x, objectHeight, goal.y));
+		agents [agentIdx].transform.LookAt(agents [agentIdx].transform.position  + orientation);
 		agents [agentIdx].transform.parent = agentParent.transform;
 		agents [agentIdx].transform.SetSiblingIndex (agentIdx);
 		agents [agentIdx].name = "AgentNo_" + agentIdx;
@@ -200,16 +217,6 @@ public class WorldController : MonoBehaviour {
 			agents [agentIdx].AddComponent<AgentControllerCollAvoidance> ();
 	}
 
-	// Overloaded method for the problems that include formation
-	private void spawnActor(Vector2 position, int agentIdx) {
-		agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
-		scaleAgent (agents[agentIdx]);
-		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
-		agents [agentIdx].transform.LookAt(agents[agentIdx].transform.position + (Vector3.right));
-		agents [agentIdx].transform.parent = agentParent.transform;
-		agents [agentIdx].transform.SetSiblingIndex (agentIdx);
-		agents [agentIdx].name = "AgentNo_" + agentIdx;
-	}
 
 	private void scaleAgent( GameObject agent) {
 		//MeshRenderer renderer = agent.GetComponent<MeshRenderer> ();
