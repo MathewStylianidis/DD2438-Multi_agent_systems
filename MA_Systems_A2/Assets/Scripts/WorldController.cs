@@ -15,7 +15,7 @@ public class WorldController : MonoBehaviour {
 	public GameObject pointOfInterestModel;
 	public Text timeText;
 	public TextAsset data;
-	//public TextAsset trajectoryData;
+	public TextAsset trajectoryData;
 	public GameObject agentPrefab;
 	public World world;
 	public GameObject obstacleParent;
@@ -39,7 +39,7 @@ public class WorldController : MonoBehaviour {
 		Button btn = startButton.GetComponent<Button>();
 		btn.onClick.AddListener(TaskOnClick);
 
-		world = World.FromJson (data.text); //, trajectoryData.text);
+		world = World.FromJson (data.text, trajectoryData.text);
 		world.currentPositions = (Vector2[]) world.startPositions.Clone ();
 		world.currentAngularVel = new float[world.currentPositions.Length];
 		initializeVelocities ();
@@ -81,8 +81,9 @@ public class WorldController : MonoBehaviour {
 		else if (data.name == "P25") {
 			// Read trajectory
 			Vector3[] trajectory = new Vector3[world.trajectory.x.Length];
-			for (int i = 0; i < trajectory.Length; i++)
-				trajectory[i] = new Vector3 (world.trajectory.x[i], objectHeight, world.trajectory.y[i]);
+			for (int i = 0; i < trajectory.Length; i++) 
+				trajectory [i] = new Vector3 (world.trajectory.x [i], objectHeight, world.trajectory.y [i]);
+			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
 		}
 		else if (data.name == "P26") {
 			// Formation problems

@@ -72,6 +72,8 @@ public class World {
 	}
 
 	public class TrajectoryMap {
+		public float[] t;
+		public float[] theta;
 		public float[] x;
 		public float[] y;
 	}
@@ -93,7 +95,7 @@ public class World {
 		}
 	}
 
-	public static World FromJson (string jsonData) { //, string jsonTrajectoryData) {
+	public static World FromJson (string jsonData, string jsonTrajectoryData) {
 		var tmp = TinyJsonDeserializer.Deserialize(jsonData, typeof(TempMap)) as TempMap;
 		var map = new World();
 		map.goalPositions = (tmp.goal_positions ?? new float[0][]).Select(p => new Vector2(p[0], p[1])).ToArray();
@@ -117,10 +119,12 @@ public class World {
 			maxVelocity = tmp.vehicle_v_max
 		};
 
-		//map.trajectory = new TrajectoryMap();
-		//var tmp2 = TinyJsonDeserializer.Deserialize(jsonTrajectoryData, typeof(TrajectoryMap)) as TrajectoryMap;
-		//map.trajectory.x = tmp2.x;
-		//map.trajectory.y = tmp2.y;
+		map.trajectory = new TrajectoryMap();
+		var tmp2 = TinyJsonDeserializer.Deserialize(jsonTrajectoryData, typeof(TrajectoryMap)) as TrajectoryMap;
+		map.trajectory.t = tmp2.t;
+		map.trajectory.theta = tmp2.theta;
+		map.trajectory.x = tmp2.x;
+		map.trajectory.y = tmp2.y;
 
 		return map;
 	}

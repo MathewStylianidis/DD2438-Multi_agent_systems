@@ -33,4 +33,23 @@ public class Visualizer : MonoBehaviour {
 
 	}
 
+
+	/// <summary>
+	/// Visualizes a trajectory given by x and y
+	/// </summary>
+	public static void visualizeTrajectory(float[] x, float[] y) {
+		Vector3 prevPoint = new Vector3 (x [0], 0, y [0]);
+		for (int i = 1; i < x.Length; i++) {
+			Vector3 newPoint = new Vector3 (x [i], 0, y [i]);
+			GameObject tmp = new GameObject ();
+			LineRenderer lineRenderer = tmp.AddComponent<LineRenderer> ();
+			lineRenderer.widthMultiplier = Visualizer.widthMultiplier;
+			lineRenderer.useWorldSpace = true;
+			lineRenderer.SetPosition (0, prevPoint);
+			lineRenderer.SetPosition (1, newPoint);
+			prevPoint = newPoint;
+			tmp.transform.SetParent (GameObject.Find ("Visualizer").transform);
+		}
+	}
+
 }
