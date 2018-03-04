@@ -38,7 +38,7 @@ public class FormationController : MonoBehaviour {
 		// Read positioning of the formations
 		this.formationPositions = getRelativeFormationPositions(formationPositions);	
 		// Get starting absolute positions and relative to the leader positions.
-		//this.desiredRelativePositions = getDesiredPositions (false);
+		this.desiredRelativePositions = getDesiredPositions (false);
 		this.desiredAbsolutePositions = getDesiredPositions ();
 		// Visualize starting desired positions
 		Visualizer.visualizePoints(this.desiredAbsolutePositions);
@@ -65,7 +65,7 @@ public class FormationController : MonoBehaviour {
 		Vector2[] desiredPositions = new Vector2[agents.Length];
 		Vector3 leaderPosition = agents [0].transform.position;
 		Vector2 leaderPosition2D = new Vector2(leaderPosition.x, leaderPosition.z);
-		float[][] rotMatrix = UtilityClass.getRotationYMatrix(this.trajectoryOrientation[0] - 90.0f * Mathf.Deg2Rad);
+		float[][] rotMatrix = UtilityClass.getRotationYMatrix(agents [0].transform.rotation.eulerAngles.y - 90.0f * Mathf.Deg2Rad);
 		for (int i = 0; i < agents.Length; i++) {
 			desiredPositions [i] = UtilityClass.rotateVector(rotMatrix, this.formationPositions [i]);
 			if (absolute) 
