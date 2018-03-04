@@ -14,5 +14,28 @@ public class UtilityClass {
 	public static Vector3 rads2Vec(float rads) {
 		return new Vector3 (Mathf.Cos(rads), 0f, Mathf.Sin(rads));
 	}
+
+	/// <summary>
+	/// Gets matrix for rotation of <rads> around x
+	/// </summary>
+	public static float[][] getRotationYMatrix(float rads) {
+		float[][] rotMatrix = new float[2][];
+		for (int i = 0; i < 2; i++)
+			rotMatrix [i] = new float[2];
+		rotMatrix [0] [0] = rotMatrix [1] [1] = Mathf.Cos (rads);
+		rotMatrix [1] [0] = Mathf.Sin (rads);
+		rotMatrix [0] [1] = -Mathf.Sin (rads);
+		return rotMatrix;		
+	}
+
+	/// <summary>
+	/// Rotates Vector2 given a rotation matrix
+	/// </summary>
+	public static Vector2 rotateVector(float[][] rotMatrix, Vector2 vector) {
+		Vector2 rotatedVector = new Vector2 (0f, 0f);
+		rotatedVector.x = rotMatrix [0] [0] * vector.x + rotMatrix [0] [1] * vector.y;
+		rotatedVector.y = rotMatrix [1] [0] * vector.x + rotMatrix [1] [1] * vector.y;
+		return rotatedVector;
+	} 
 	 
 }

@@ -59,6 +59,7 @@
      <Compile Include="Assets\Scripts\Auxiliary classes\UtilityClass.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\VisibilityGraph.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\Visualizer.cs" />
+     <Compile Include="Assets\Scripts\FormationController.cs" />
      <Compile Include="Assets\Scripts\GeneticAlgorithm.cs" />
      <Compile Include="Assets\Scripts\Motion models\BaseModel.cs" />
      <Compile Include="Assets\Scripts\Motion models\KinematicPoint.cs" />

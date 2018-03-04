@@ -47,41 +47,13 @@ public class WorldController : MonoBehaviour {
 		initializeMotionModel ();
 
 		if (data.name == "P22") {
-			// Spawns objects that visualize the points of interest
-			spawnPointOfInterestObjects ();
-			// Initialize visibility graph
-			VisibilityGraph.initVisibilityGraph (world);
-			// Execute FloydWarshall algorithm on visibility graph to get shortest paths
-			FloydWarshall fw = new FloydWarshall(world.visibilityGraph);
-			float[,] floydWarshallDistMatrix = fw.findShortestPaths ();
-			// Get number of obstacle vertices
-			obstacleVertCount = world.graphVertices.Count - world.pointsOfInterest.Length - agents.Length * 2;
-			// Remove obstacle vertex rows and columns from the distance matrix as GA does not work with them to find a solution
-			float[,] distanceMatrix = getSubArray(floydWarshallDistMatrix, obstacleVertCount);
-			// Use the genetic algorithm for the Vehicle Routing Problem
-			int M = 10000;
-			int lambda = 10000;
-			GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 200, false, 0.04f, 0.01f, true);
-			ga.generationalGeneticAlgorithm ();
-			List<int> solution = ga.getFittestIndividual ();
-			solution = GeneticAlgorithmHelper.includeSolutionGoals (solution, world.pointsOfInterest.Length, agents.Length);
-			// Reconstruct path including intermediate obstacle vertex nodes
-			for (int i = 0; i < solution.Count; i++)
-				solution [i] += obstacleVertCount;
-			List<int> reconstructedSolution = reconstructShortestPath (solution, fw, agents.Length);
-			// Visualize the reconstructed path (solution including intermediate nodes)
-			Visualizer.visualizeVRPsolution(world.graphVertices, reconstructedSolution, agents.Length, obstacleVertCount); 
-			solutionList = GeneticAlgorithmHelper.splitSolution(solution, world.graphVertices.Count, agents.Length);
-			for (int i = 0; i < solutionList.Count; i++) 
-				solutionList[i] = reconstructShortestPath (solutionList [i], fw, agents.Length);
-			solutionCoordinates = getSolutionCoordinates (solutionList);
+			solveVRP (world);
 		} 
 		else if (data.name == "P25") {
-			// Read trajectory
-			Vector3[] trajectory = new Vector3[world.trajectory.x.Length];
-			for (int i = 0; i < trajectory.Length; i++) 
-				trajectory [i] = new Vector3 (world.trajectory.x [i], objectHeight, world.trajectory.y [i]);
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
+			GameObject tmp = new GameObject ("FormationController");
+			tmp.AddComponent<FormationController> ();
+			tmp.GetComponent<FormationController> ().initializeController (agents, world.trajectory, world.formationPositions);
 		}
 		else if (data.name == "P26") {
 			// Formation problems
@@ -379,6 +351,39 @@ public class WorldController : MonoBehaviour {
 
 	    
 		return solutionCoords;
+	}
+
+
+
+	private void solveVRP(World world) {
+		// Spawns objects that visualize the points of interest
+		spawnPointOfInterestObjects ();
+		// Initialize visibility graph
+		VisibilityGraph.initVisibilityGraph (world);
+		// Execute FloydWarshall algorithm on visibility graph to get shortest paths
+		FloydWarshall fw = new FloydWarshall(world.visibilityGraph);
+		float[,] floydWarshallDistMatrix = fw.findShortestPaths ();
+		// Get number of obstacle vertices
+		obstacleVertCount = world.graphVertices.Count - world.pointsOfInterest.Length - agents.Length * 2;
+		// Remove obstacle vertex rows and columns from the distance matrix as GA does not work with them to find a solution
+		float[,] distanceMatrix = getSubArray(floydWarshallDistMatrix, obstacleVertCount);
+		// Use the genetic algorithm for the Vehicle Routing Problem
+		int M = 10000;
+		int lambda = 10000;
+		GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 200, false, 0.04f, 0.01f, true);
+		ga.generationalGeneticAlgorithm ();
+		List<int> solution = ga.getFittestIndividual ();
+		solution = GeneticAlgorithmHelper.includeSolutionGoals (solution, world.pointsOfInterest.Length, agents.Length);
+		// Reconstruct path including intermediate obstacle vertex nodes
+		for (int i = 0; i < solution.Count; i++)
+			solution [i] += obstacleVertCount;
+		List<int> reconstructedSolution = reconstructShortestPath (solution, fw, agents.Length);
+		// Visualize the reconstructed path (solution including intermediate nodes)
+		Visualizer.visualizeVRPsolution(world.graphVertices, reconstructedSolution, agents.Length, obstacleVertCount); 
+		solutionList = GeneticAlgorithmHelper.splitSolution(solution, world.graphVertices.Count, agents.Length);
+		for (int i = 0; i < solutionList.Count; i++) 
+			solutionList[i] = reconstructShortestPath (solutionList [i], fw, agents.Length);
+		solutionCoordinates = getSolutionCoordinates (solutionList);
 	}
 
 
