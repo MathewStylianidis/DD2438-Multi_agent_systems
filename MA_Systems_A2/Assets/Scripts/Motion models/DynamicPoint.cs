@@ -32,10 +32,10 @@ public class DynamicPoint : BaseModel {
 		float radius2 = Mathf.Pow(goalPointInfo.vel.magnitude, 2) / aMax;
 		List<List<PointInfo>> pathLists = new List<List<PointInfo>>();
 		pathLists.Add(RL(curPointInfo, goalPointInfo, radius1, radius2, world, collisionCheck));
-		//pathLists.Add(RR(curPointNode, goal, radius1, radius2));
-		//pathLists.Add(LR(curPointNode, goal, radius1, radius2));
-		//pathLists.Add(LL(curPointNode, goal, radius1, radius2));
-		Debug.Log(pathLists[0].Count);
+		pathLists.Add(RR(curPointInfo, goalPointInfo, radius1, radius2, world, collisionCheck));
+		pathLists.Add(LR(curPointInfo, goalPointInfo, radius1, radius2, world, collisionCheck));
+		pathLists.Add(LL(curPointInfo, goalPointInfo, radius1, radius2, world, collisionCheck));
+
 		int minIdx = 0;
 		int minSize = int.MaxValue;
 		for (int i = 0; i < pathLists.Count; i++)
@@ -199,13 +199,16 @@ public class DynamicPoint : BaseModel {
 			theta = theta - 2 * Mathf.PI;
 		return Mathf.Abs(theta * radius);
 	}
-	/*
-	private List<Node> LR(Node curPointNode, pointInfo goal, float radius1, float radius2)
+
+
+
+
+	private List<PointInfo> LR(PointInfo curPointInfo, PointInfo goalPointInfo, float radius1, float radius2, World world, bool collisionCheck)
 	{
-		Vector3 dir = Vector3.Cross(Vector3.up, curPointNode.info.vel).normalized;
-		Vector3 p1 = curPointNode.info.pos - dir * radius1;
-		Vector3 dir2 = Vector3.Cross(Vector3.up, goal.vel).normalized;
-		Vector3 p2 = goal.pos + dir2 * radius2;
+		Vector3 dir = Vector3.Cross(Vector3.up, curPointInfo.vel).normalized;
+		Vector3 p1 = curPointInfo.pos - dir * radius1;
+		Vector3 dir2 = Vector3.Cross(Vector3.up, goalPointInfo.vel).normalized;
+		Vector3 p2 = goalPointInfo.pos + dir2 * radius2;
 
 		float D = (p2 - p1).magnitude;
 		float alpha = radius1 + radius2;
@@ -215,16 +218,15 @@ public class DynamicPoint : BaseModel {
 			baseAngle = -baseAngle;
 		Vector3 tp1 = p1 + new Vector3(Mathf.Cos(theta + baseAngle), 0, Mathf.Sin(theta + baseAngle)) * radius1;
 		Vector3 tp2 = p2 - new Vector3(Mathf.Cos(theta + baseAngle), 0, Mathf.Sin(theta + baseAngle)) * radius2;
-
-		return dubinPath(curPointNode, goal, radius1, radius2, tp1, tp2, p1, p2, false, true);
+		return dubinPath(curPointInfo, goalPointInfo, radius1, radius2, tp1, tp2, p1, p2, true, false, world, collisionCheck);
 	}
 
-	private List<Node> RR(Node curPointNode, pointInfo goal, float radius1, float radius2)
+	private List<PointInfo> RR(PointInfo curPointInfo, PointInfo goalPointInfo, float radius1, float radius2, World world, bool collisionCheck)
 	{
-		Vector3 dir = Vector3.Cross(Vector3.up, curPointNode.info.vel).normalized;
-		Vector3 p1 = curPointNode.info.pos + dir * radius1;
-		Vector3 dir2 = Vector3.Cross(Vector3.up, goal.vel).normalized;
-		Vector3 p2 = goal.pos + dir2 * radius2;
+		Vector3 dir = Vector3.Cross(Vector3.up, curPointInfo.vel).normalized;
+		Vector3 p1 = curPointInfo.pos + dir * radius1;
+		Vector3 dir2 = Vector3.Cross(Vector3.up, goalPointInfo.vel).normalized;
+		Vector3 p2 = goalPointInfo.pos + dir2 * radius2;
 
 		float D = (p2 - p1).magnitude;
 		float H = Mathf.Sqrt(Mathf.Pow(D,2) - Mathf.Pow(radius1-radius2,2));
@@ -235,16 +237,15 @@ public class DynamicPoint : BaseModel {
 			baseAngle = -baseAngle;
 		Vector3 tp1 = p1 + new Vector3(Mathf.Cos(theta+ baseAngle), 0, Mathf.Sin(theta+ baseAngle)) * radius1;
 		Vector3 tp2 = p2 + new Vector3(Mathf.Cos(theta+ baseAngle), 0, Mathf.Sin(theta+ baseAngle)) * radius2;
-
-		return dubinPath(curPointNode, goal, radius1, radius2, tp1, tp2, p1, p2, true, true);
+		return dubinPath(curPointInfo, goalPointInfo, radius1, radius2, tp1, tp2, p1, p2, true, false, world, collisionCheck);
 	}
 
-	private List<Node> LL(Node curPointNode, pointInfo goal, float radius1, float radius2)
+	private List<PointInfo> LL(PointInfo curPointInfo, PointInfo goalPointInfo, float radius1, float radius2, World world, bool collisionCheck)
 	{
-		Vector3 dir = Vector3.Cross(Vector3.up, curPointNode.info.vel).normalized;
-		Vector3 p1 = curPointNode.info.pos - dir * radius1;
-		Vector3 dir2 = Vector3.Cross(Vector3.up, goal.vel).normalized;
-		Vector3 p2 = goal.pos - dir2 * radius2;
+		Vector3 dir = Vector3.Cross(Vector3.up, curPointInfo.vel).normalized;
+		Vector3 p1 = curPointInfo.pos - dir * radius1;
+		Vector3 dir2 = Vector3.Cross(Vector3.up, goalPointInfo.vel).normalized;
+		Vector3 p2 = goalPointInfo.pos - dir2 * radius2;
 
 		float D = (p2 - p1).magnitude;
 		float H = Mathf.Sqrt(Mathf.Pow(D, 2) - Mathf.Pow(radius1 - radius2, 2));
@@ -255,8 +256,7 @@ public class DynamicPoint : BaseModel {
 			baseAngle = -baseAngle;
 		Vector3 tp1 = p1 + new Vector3(Mathf.Cos(-theta + baseAngle), 0, Mathf.Sin(-theta + baseAngle)) * radius1;
 		Vector3 tp2 = p2 + new Vector3(Mathf.Cos(-theta + baseAngle), 0, Mathf.Sin(-theta + baseAngle)) * radius2;
-
-		return dubinPath(curPointNode, goal, radius1, radius2, tp1, tp2, p1, p2, false, false);
+		return dubinPath(curPointInfo, goalPointInfo, radius1, radius2, tp1, tp2, p1, p2, true, false, world, collisionCheck);
 	}
-*/
+
 }
