@@ -62,6 +62,7 @@ public class Visualizer : MonoBehaviour {
 			lineRenderer.useWorldSpace = true;
 			lineRenderer.SetPosition (0, point);
 			lineRenderer.SetPosition (1, point + Vector3.forward * 0.1f);
+			tmp.transform.SetParent (GameObject.Find ("Visualizer").transform);
 
 		}
 	}

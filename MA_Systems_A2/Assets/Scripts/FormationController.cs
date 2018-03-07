@@ -4,21 +4,20 @@ using UnityEngine;
 
 public class FormationController : MonoBehaviour {
 
-	GameObject[] agents; // Agents in the formation
-	Vector3[] trajectory; // Trajectory coordinates
-	float[] trajectoryOrientation; // Orientation of virtual structure in each step of the trajectory
-	float[] trajectoryTimestamps; // Timestamp <t> at each step of the trajectory
-	Vector2[] formationPositions; // The formation positions of each agent assuming the first agent is the leader at 0.0
-	Vector2[] desiredRelativePositions; // True desired positions relative to the leader's position and orientation
-	Vector2[] desiredAbsolutePositions; // True desired world positions for the whole formation
+	private GameObject[] agents; // Agents in the formation
+	private Vector3[] trajectory; // Trajectory coordinates
+	private float[] trajectoryOrientation; // Orientation of virtual structure in each step of the trajectory
+	private float[] trajectoryTimestamps; // Timestamp <t> at each step of the trajectory
+	private Vector2[] formationPositions; // The formation positions of each agent assuming the first agent is the leader at 0.0
+	private Vector2[] desiredRelativePositions; // True desired positions relative to the leader's position and orientation
+	private Vector2[] desiredAbsolutePositions; // True desired world positions for the whole formation
+
 
 	void Start () {
-		
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		
 	}
 
 	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions) {
@@ -42,7 +41,8 @@ public class FormationController : MonoBehaviour {
 		this.desiredAbsolutePositions = getDesiredPositions ();
 		// Visualize starting desired positions
 		Visualizer.visualizePoints(this.desiredAbsolutePositions);
-
+		// Set a controller within each agent
+		agents[0].AddComponent<LeaderController>();
 	}
 
 	/// <summary>
@@ -74,6 +74,9 @@ public class FormationController : MonoBehaviour {
 		return desiredPositions;
 	}
 
-	//Formation controller should call visualizer to visualize the set of points that represent the formation
+
+	public Vector3[] getTrajectory() { return this.trajectory;	}
+	public float[] getTrajectoryOrientation() { return this.trajectoryOrientation; }
+	public float[] getTrajectoryTimestamps() { return this.trajectoryTimestamps; }
 
 }
