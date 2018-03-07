@@ -13,10 +13,12 @@ public class DynamicPoint : BaseModel {
 	public override PointInfo moveTowards (PointInfo curPointInfo, Vector3 goalPoint)
 	{
 		Vector3 path = goalPoint - curPointInfo.pos;
-		Vector3 deltaVel = path.normalized * aMax * dt;
+		float currentAcceleration = aMax;
+		Vector3 deltaVel = path.normalized * currentAcceleration * dt;
 		Vector3 newVel = Vector3.ClampMagnitude (curPointInfo.vel + deltaVel, maxVelocity);
 		float xMove = newVel.x * dt;
 		float yMove = newVel.z * dt;
+
 		Vector3 newPosition = new Vector3 (curPointInfo.pos.x + xMove, curPointInfo.pos.y, curPointInfo.pos.z + yMove);
 		Vector3 newOrientation = path.normalized;
 		float xVel = (float)System.Math.Round((System.Double)xMove/dt, 2, System.MidpointRounding.AwayFromZero);
@@ -218,7 +220,7 @@ public class DynamicPoint : BaseModel {
 			baseAngle = -baseAngle;
 		Vector3 tp1 = p1 + new Vector3(Mathf.Cos(theta + baseAngle), 0, Mathf.Sin(theta + baseAngle)) * radius1;
 		Vector3 tp2 = p2 - new Vector3(Mathf.Cos(theta + baseAngle), 0, Mathf.Sin(theta + baseAngle)) * radius2;
-		return dubinPath(curPointInfo, goalPointInfo, radius1, radius2, tp1, tp2, p1, p2, true, false, world, collisionCheck);
+		return dubinPath(curPointInfo, goalPointInfo, radius1, radius2, tp1, tp2, p1, p2, false, true, world, collisionCheck);
 	}
 
 	private List<PointInfo> RR(PointInfo curPointInfo, PointInfo goalPointInfo, float radius1, float radius2, World world, bool collisionCheck)
@@ -237,7 +239,7 @@ public class DynamicPoint : BaseModel {
 			baseAngle = -baseAngle;
 		Vector3 tp1 = p1 + new Vector3(Mathf.Cos(theta+ baseAngle), 0, Mathf.Sin(theta+ baseAngle)) * radius1;
 		Vector3 tp2 = p2 + new Vector3(Mathf.Cos(theta+ baseAngle), 0, Mathf.Sin(theta+ baseAngle)) * radius2;
-		return dubinPath(curPointInfo, goalPointInfo, radius1, radius2, tp1, tp2, p1, p2, true, false, world, collisionCheck);
+		return dubinPath(curPointInfo, goalPointInfo, radius1, radius2, tp1, tp2, p1, p2, true, true, world, collisionCheck);
 	}
 
 	private List<PointInfo> LL(PointInfo curPointInfo, PointInfo goalPointInfo, float radius1, float radius2, World world, bool collisionCheck)
@@ -256,7 +258,7 @@ public class DynamicPoint : BaseModel {
 			baseAngle = -baseAngle;
 		Vector3 tp1 = p1 + new Vector3(Mathf.Cos(-theta + baseAngle), 0, Mathf.Sin(-theta + baseAngle)) * radius1;
 		Vector3 tp2 = p2 + new Vector3(Mathf.Cos(-theta + baseAngle), 0, Mathf.Sin(-theta + baseAngle)) * radius2;
-		return dubinPath(curPointInfo, goalPointInfo, radius1, radius2, tp1, tp2, p1, p2, true, false, world, collisionCheck);
+		return dubinPath(curPointInfo, goalPointInfo, radius1, radius2, tp1, tp2, p1, p2, false, false, world, collisionCheck);
 	}
 
 }

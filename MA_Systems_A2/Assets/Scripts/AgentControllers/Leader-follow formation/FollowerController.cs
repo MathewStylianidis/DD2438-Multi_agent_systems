@@ -72,16 +72,27 @@ public class FollowerController : MonoBehaviour {
 		}
 	}
 
-
+	int j = 0;
 	private PointInfo getNextPosition(PointInfo lastPos, World world) {
 		
 		Vector3 goalPoint = new Vector3(formationControl.getDesiredPosition (agentIdx).x, agentHeight, formationControl.getDesiredPosition (agentIdx).y);
-		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, formationControl.getLeaderOrientation(), lastPos.currentTime + vehicle_dt);
-		return motionModel.moveTowards(lastPos, goalPoint);
+		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.right, formationControl.getLeaderOrientation(), lastPos.currentTime + vehicle_dt);
+		//return motionModel.moveTowards(lastPos, goalPoint);
 		List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
-		Debug.Log (lastPos.pos);
-		Debug.Log(path[0].pos);
-		if (path.Count > 1)
+		if (j == 0 && agentIdx == 1) 
+		{
+			for (int i = 1; i < path.Count; i++) {
+				GameObject tmp = new GameObject ();
+				LineRenderer lineRenderer = tmp.AddComponent<LineRenderer> ();
+				lineRenderer.widthMultiplier = Visualizer.widthMultiplier;
+				lineRenderer.useWorldSpace = true;
+				lineRenderer.SetPosition (0, path[i - 1].pos);
+				lineRenderer.SetPosition (1, path[i].pos);
+				tmp.transform.SetParent (GameObject.Find ("Visualizer").transform);
+			}
+		}
+		j++;
+		if (path.Count > 0)
 			return path [0];
 		else
 			return null;
