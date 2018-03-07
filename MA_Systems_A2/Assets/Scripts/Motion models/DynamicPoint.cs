@@ -57,7 +57,8 @@ public class DynamicPoint : BaseModel {
 			float trueMaxVel = maxVelocity;
 			maxVelocity = curPointInfo.vel.magnitude;
 			while (true) {				
-				maxVelocity -= aMax;
+				float acceleration = curVelDistance / (dt * dt);
+				maxVelocity -= acceleration;
 				if (maxVelocity <= 0f)
 					break;
 				curPointInfo = moveTowards (curPointInfo, goalPointInfo.pos);
