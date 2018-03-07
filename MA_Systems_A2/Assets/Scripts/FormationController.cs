@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class FormationController : MonoBehaviour {
 
+	public float agentHeight;
 	private GameObject[] agents; // Agents in the formation
 	private Vector3[] trajectory; // Trajectory coordinates
 	private float[] trajectoryOrientation; // Orientation of virtual structure in each step of the trajectory
@@ -30,12 +31,13 @@ public class FormationController : MonoBehaviour {
 			return desiredRelativePositions[agentIdx];
 	}
 
-	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions) {
+	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight) {
+		this.agentHeight = agentHeight;
 		this.agents = agents;
 		// Get trajectory coordinates
 		this.trajectory = new Vector3[trajectory.x.Length];
 		for (int i = 0; i < trajectory.x.Length; i++) 
-			this.trajectory [i] = new Vector3 (trajectory.x [i], 0f, trajectory.y [i]);
+			this.trajectory [i] = new Vector3 (trajectory.x [i], agentHeight, trajectory.y [i]);
 		// Get trajectory orientations
 		this.trajectoryOrientation = new float[trajectory.theta.Length];
 		for (int i = 0; i < trajectory.theta.Length; i++) 

@@ -12,9 +12,9 @@ public class FollowerController : MonoBehaviour {
 	private float simulationSpeedFactor = 1.0f;
 	private int routeIdx = 1;
 	private float vehicle_dt;
-	private float objectHeight;
+	private float agentHeight;
 	private BaseModel motionModel;
-	private Vector3 lastPos;
+	private PointInfo lastPosInfo;
 	private PointInfo nextPosInfo;
 	private FormationController formationControl;
 	private int agentIdx;
@@ -32,7 +32,6 @@ public class FollowerController : MonoBehaviour {
 				// Check if this agent has the longest path and should update the timer
 				simulationSpeedFactor = worldController.simulationSpeedFactor;
 				motionModel = worldController.getMotionModel ();
-				objectHeight = worldController.objectHeight; 
 			}
 			GameObject formationController = GameObject.Find ("FormationController");
 			formationControl = formationController.GetComponent<FormationController> ();
@@ -40,8 +39,10 @@ public class FollowerController : MonoBehaviour {
 				trajectory = formationControl.getTrajectory ();
 				trajectoryOrientation = formationControl.getTrajectoryOrientation ();
 				trajectoryTimestamps = formationControl.getTrajectoryTimestamps ();
-				lastPos = this.transform.position;
-				nextPosInfo = getNextPosition (lastPos, world);
+				Vector3 currentVelocity = new Vector3 (world.currentVelocities [agentIdx - 1].x, 0f, world.currentVelocities [agentIdx - 1].y);
+				lastPosInfo = new PointInfo (this.transform.position, currentVelocity, currentVelocity.normalized, 0f);
+				nextPosInfo = getNextPosition (lastPosInfo, world);
+				agentHeight = formationControl.agentHeight;
 			}
 		}
 	}
@@ -56,23 +57,27 @@ public class FollowerController : MonoBehaviour {
 				// Do completePath and get the first node only or do move forwards (maybe do it depending on how close you are)
 				// Get current desired position
 				transform.position = nextPosInfo.pos;
-				lastPos = nextPosInfo.pos;
-				PointInfo tmp = getNextPosition (lastPos, world);
-				if (tmp != null)
+				lastPosInfo = nextPosInfo;
+				PointInfo tmp = getNextPosition (lastPosInfo, world);
+
+				if (tmp != null) {
+					world.currentVelocities [agentIdx - 1] = tmp.vel;
 					nextPosInfo = tmp;
-				if(routeIdx < trajectory.Length)
-					transform.LookAt (lastPos + UtilityClass.rads2Vec (trajectoryOrientation[routeIdx]));
+				}
+				if (routeIdx < trajectory.Length) {
+					transform.LookAt (lastPosInfo.pos + nextPosInfo.orientation);
+					world.currentVelocities [agentIdx - 1] = Vector3.zero;
+				}
 			} else 
-				transform.position = lastPos + (nextPosInfo.pos - lastPos) * Time.deltaTime / vehicle_dt;	
+				transform.position = lastPosInfo.pos + (nextPosInfo.pos - lastPosInfo.pos) * Time.deltaTime / vehicle_dt;	
 		}
 	}
 
 
-	private PointInfo getNextPosition(Vector3 lastPos, World world) {
-		
-		PointInfo curPointInfo = new PointInfo (lastPos, world.currentVelocities[agentIdx - 1], world.currentVelocities[agentIdx - 1].normalized, 0f);
-		Vector3 goalPoint = new Vector3(formationControl.getDesiredPosition (agentIdx).x, objectHeight, formationControl.getDesiredPosition (agentIdx).y);
-		List<PointInfo> path = motionModel.completePath (curPointInfo, goalPoint, world, false);
+	private PointInfo getNextPosition(PointInfo lastPos, World world) {
+		Vector3 goalPoint = new Vector3(formationControl.getDesiredPosition (agentIdx).x, agentHeight, formationControl.getDesiredPosition (agentIdx).y);
+		return motionModel.moveTowards (lastPos, goalPoint);
+		List<PointInfo> path = motionModel.completePath (lastPos, goalPoint, world, false);
 		if (path.Count > 0)
 			return path [0];
 		else

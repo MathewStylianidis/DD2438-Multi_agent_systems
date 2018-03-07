@@ -4,24 +4,28 @@ using UnityEngine;
 
 public class DynamicPoint : BaseModel {
 
-	public DynamicPoint(float velocityMax, float dt) :base(velocityMax, dt) {}
+	private float aMax;
+
+	public DynamicPoint(float velocityMax, float dt, float aMax) :base(velocityMax, dt) {
+		this.aMax = aMax;
+	}
 
 	public override PointInfo moveTowards (PointInfo curPointInfo, Vector3 goalPoint)
 	{
 		Vector3 path = goalPoint - curPointInfo.pos;
-		float dist = path.magnitude; // distance from current point to goal
-		float max_dt_dist = maxVelocity * dt; // distance that can be travelled in dt 
-		float part_dist = max_dt_dist / dist;
-		float time = dt;
-		// If we can travel more in dt than the distance left to the goal, then adjust part_dist and time needed to travel
-		if (part_dist >= 1.0) {
-			part_dist = 1f;
-			time /= part_dist;
-		}
-		Vector3 newPath = path * part_dist; // Get the proportion of the path to the goal to be travelled
-		float xVel = (float)System.Math.Round((System.Double)newPath.x/dt, 2, System.MidpointRounding.AwayFromZero);
-		float zVel = (float)System.Math.Round((System.Double)newPath.z/dt, 2, System.MidpointRounding.AwayFromZero);
-		return new PointInfo (curPointInfo.pos + newPath, new Vector3(xVel, 0, zVel), Vector3.Normalize(path), curPointInfo.currentTime + time	);
+		Vector3 deltaVel = path.normalized * aMax * dt;
+		Vector3 newVel = Vector3.ClampMagnitude (curPointInfo.vel + deltaVel, maxVelocity);
+
+		Debug.Log (curPointInfo.vel);
+		Debug.Log (aMax);
+		Debug.Log (newVel);
+		float xMove = newVel.x * dt;
+		float yMove = newVel.z * dt;
+		Vector3 newPosition = new Vector3 (curPointInfo.pos.x + xMove, curPointInfo.pos.y, curPointInfo.pos.z + yMove);
+		Vector3 newOrientation = path.normalized;
+		float xVel = (float)System.Math.Round((System.Double)xMove/dt, 2, System.MidpointRounding.AwayFromZero);
+		float zVel = (float)System.Math.Round((System.Double)yMove/dt, 2, System.MidpointRounding.AwayFromZero);
+		return new PointInfo (newPosition, new Vector3(xVel, 0f, zVel), newOrientation, curPointInfo.currentTime + dt);
 	}
 
 	public override List<PointInfo> completePath (PointInfo curPointInfo, Vector3 goalPoint, World world, bool collisionCheck = true)

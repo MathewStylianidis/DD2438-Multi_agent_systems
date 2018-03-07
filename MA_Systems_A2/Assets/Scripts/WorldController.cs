@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public enum model {
-	KinematicPoint//, DynamicPoint, DifferentialDrive, KinematicCar
+	KinematicPoint, DynamicPoint //, DifferentialDrive, KinematicCar
 }
 
 
@@ -53,7 +53,7 @@ public class WorldController : MonoBehaviour {
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
 			GameObject tmp = new GameObject ("FormationController");
 			tmp.AddComponent<FormationController> ();
-			tmp.GetComponent<FormationController> ().initializeController (agents, world.trajectory, world.formationPositions);
+			tmp.GetComponent<FormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
 		}
 		else if (data.name == "P26") {
 			// Formation problems
@@ -165,7 +165,6 @@ public class WorldController : MonoBehaviour {
 				world.currentPositions = new Vector2[world.startPositions.Length + 1];
 				agents = new GameObject[world.startPositions.Length + 1];
 				// Initialize leader
-
 				Vector3 orientation = UtilityClass.rads2Vec(world.trajectory.theta[0]);
 				Vector2 pos = new Vector2 (world.trajectory.x [0], world.trajectory.y [0]);
 				spawnActor (pos , orientation, 0);
@@ -277,6 +276,8 @@ public class WorldController : MonoBehaviour {
 	{
 		if (modelName.Equals (model.KinematicPoint))
 			motionModel = new KinematicPoint (world.vehicle.maxVelocity, world.vehicle.dt);
+		else if(modelName.Equals(model.DynamicPoint))
+			motionModel = new DynamicPoint (world.vehicle.maxVelocity, world.vehicle.dt, world.vehicle.maxAcceleration);
 	}
 
 
