@@ -53,8 +53,8 @@
   <ItemGroup>
      <Compile Include="Assets\ImportedAssets\ForceField\Script\RenderDepth.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\AgentControllerCollAvoidance.cs" />
-     <Compile Include="Assets\Scripts\AgentControllers\AgentControllerFormation.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\AgentControllerVRP.cs" />
+     <Compile Include="Assets\Scripts\AgentControllers\FollowerController.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\LeaderController.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\FloydWarshall.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\Raycasting.cs" />
@@ -64,6 +64,7 @@
      <Compile Include="Assets\Scripts\FormationController.cs" />
      <Compile Include="Assets\Scripts\GeneticAlgorithm.cs" />
      <Compile Include="Assets\Scripts\Motion models\BaseModel.cs" />
+     <Compile Include="Assets\Scripts\Motion models\DynamicPoint.cs" />
      <Compile Include="Assets\Scripts\Motion models\KinematicPoint.cs" />
      <Compile Include="Assets\Scripts\Motion models\PointInfo.cs" />
      <Compile Include="Assets\Scripts\world_importing\DeserializationTest.cs" />

@@ -16,8 +16,18 @@ public class FormationController : MonoBehaviour {
 	void Start () {
 	}
 	
-	// Update is called once per frame
+
 	void Update () {
+		this.desiredRelativePositions = getDesiredPositions (false);
+		this.desiredAbsolutePositions = getDesiredPositions ();
+		Visualizer.visualizePoints(this.desiredAbsolutePositions);
+	}
+
+	public Vector2 getDesiredPosition(int agentIdx, bool absolute = true) {
+		if(absolute)
+			return desiredAbsolutePositions[agentIdx];
+		else
+			return desiredRelativePositions[agentIdx];
 	}
 
 	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions) {
@@ -43,6 +53,8 @@ public class FormationController : MonoBehaviour {
 		Visualizer.visualizePoints(this.desiredAbsolutePositions);
 		// Set a controller within each agent
 		agents[0].AddComponent<LeaderController>();
+		for (int i = 1; i < agents.Length; i++)
+			agents [i].AddComponent<FollowerController> ();
 	}
 
 	/// <summary>
@@ -65,7 +77,7 @@ public class FormationController : MonoBehaviour {
 		Vector2[] desiredPositions = new Vector2[agents.Length];
 		Vector3 leaderPosition = agents [0].transform.position;
 		Vector2 leaderPosition2D = new Vector2(leaderPosition.x, leaderPosition.z);
-		float[][] rotMatrix = UtilityClass.getRotationYMatrix(agents [0].transform.rotation.eulerAngles.y - 90.0f * Mathf.Deg2Rad);
+		float[][] rotMatrix = UtilityClass.getRotationYMatrix(-agents [0].transform.rotation.eulerAngles.y * Mathf.Deg2Rad);
 		for (int i = 0; i < agents.Length; i++) {
 			desiredPositions [i] = UtilityClass.rotateVector(rotMatrix, this.formationPositions [i]);
 			if (absolute) 

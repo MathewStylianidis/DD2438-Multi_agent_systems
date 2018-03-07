@@ -81,6 +81,10 @@ public class WorldController : MonoBehaviour {
 		}
 	}
 
+	public BaseModel getMotionModel() {
+		return this.motionModel;
+	}
+
 	/// <summary>
 	/// Given the sibling index of the agent get its respective route to follow
 	/// </summary>
@@ -91,7 +95,7 @@ public class WorldController : MonoBehaviour {
 				return solutionCoordinates [i];
 		return null;
 	}
-
+		
 	/// <summary>
 	/// Returns true when the index of the agent with the longest path is provided.
 	/// </summary>
@@ -130,7 +134,7 @@ public class WorldController : MonoBehaviour {
 
 	private void initializeVelocities() {
 		world.currentVelocities = new Vector2[world.startPositions.Length];
-		for (int i = 0; i < world.currentVelocities.Length - 1; i++) {
+		for (int i = 0; i < world.currentVelocities.Length; i++) {
 			Vector2 x;
 			if (data.name != "P25" && data.name != "P26" && data.name != "P27")
 				x = world.goalPositions [i] - world.startPositions [i];

@@ -19,11 +19,13 @@ public class AgentControllerVRP : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+
+		// Get car model from world controller
 		GameObject gameController = GameObject.Find ("GameController");
 		if (gameController != null) {
 			WorldController worldController = gameController.GetComponent<WorldController> ();
-			vehicle_dt = worldController.world.vehicle.dt;
 			if (worldController != null) {
+				vehicle_dt = worldController.world.vehicle.dt;
 				pointsOfInterest = worldController.world.pointsOfInterest;
 				route = worldController.getRoute (this.transform.GetSiblingIndex());
 				lastPos = route [0];
