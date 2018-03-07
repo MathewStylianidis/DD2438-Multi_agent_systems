@@ -53,7 +53,7 @@ public class WorldController : MonoBehaviour {
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
 			GameObject tmp = new GameObject ("FormationController");
 			tmp.AddComponent<FormationController> ();
-			tmp.GetComponent<FormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y);
+			tmp.GetComponent<FormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
 		}
 		else if (data.name == "P26") {
 			// Formation problems
@@ -374,9 +374,9 @@ public class WorldController : MonoBehaviour {
 		// Remove obstacle vertex rows and columns from the distance matrix as GA does not work with them to find a solution
 		float[,] distanceMatrix = getSubArray(floydWarshallDistMatrix, obstacleVertCount);
 		// Use the genetic algorithm for the Vehicle Routing Problem
-		int M = 10000;
-		int lambda = 10000;
-		GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 200, false, 0.04f, 0.01f, true);
+		int M = 15000;
+		int lambda = 15000;
+		GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 500, false, 0.04f, 0.01f, true);
 		ga.generationalGeneticAlgorithm ();
 		List<int> solution = ga.getFittestIndividual ();
 		solution = GeneticAlgorithmHelper.includeSolutionGoals (solution, world.pointsOfInterest.Length, agents.Length);

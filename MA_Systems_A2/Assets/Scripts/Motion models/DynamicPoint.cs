@@ -26,8 +26,58 @@ public class DynamicPoint : BaseModel {
 		return new PointInfo (newPosition, new Vector3(xVel, 0f, zVel), newOrientation, curPointInfo.currentTime + dt);
 	}
 
+	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
+	{
+		List<PointInfo> pointList = new List<PointInfo> ();
+		Vector3 path = goalPointInfo.pos - curPointInfo.pos;
+		float dist = path.magnitude;
+		float tmpVel = 0.0f;
+		int maxVelDtCount = 0;
+		float maxVelDistance = 0f;
+		int curVelDtCount = 0;
+		float curVelDistance = 0f;
+
+		// Get number of steps needed to deccelerate from max velocity
+		while (tmpVel <= maxVelocity) {
+			tmpVel += aMax;
+			maxVelDistance += tmpVel * dt;
+			maxVelDtCount++;
+		}
+		// Get number of steps needed to decelerate from current velocity
+		tmpVel = 0.0f;
+		while (tmpVel <= curPointInfo.vel.magnitude) {
+			tmpVel += aMax;
+			curVelDistance += tmpVel * dt;
+			curVelDtCount++;
+		}
+
+		// If our current distance from the goal is less than the distance needed to decelerate from max velocity to 0 velocity
+		if (dist < maxVelDistance) {
+			// Drop velocity with maximum accelerection to the opposite direction so that velocity is 0 when the goal is reached
+			float trueMaxVel = maxVelocity;
+			maxVelocity = curPointInfo.vel.magnitude;
+			while (true) {				
+				maxVelocity -= aMax;
+				if (maxVelocity <= 0f)
+					break;
+				curPointInfo = moveTowards (curPointInfo, goalPointInfo.pos);
+				pointList.Add (curPointInfo);	
+			}
+			pointList.Add (goalPointInfo);	
+			maxVelocity = trueMaxVel;
+		} else {
+			// Accelerate with max acceleration toward goal until the distance from the goal is enough to decelerate to 0 velocity
+			pointList.Add(moveTowards(curPointInfo,goalPointInfo.pos));
+			// Decelerate to 0 velocity
+		}
+
+	
+		return pointList;
+	}
 
 
+
+	/*
 	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
 	{
 		float radius1 = Mathf.Pow(curPointInfo.vel.magnitude,2) / aMax;
@@ -55,16 +105,14 @@ public class DynamicPoint : BaseModel {
 		Vector3 p1 = curPointInfo.pos + dir * radius1;
 		Vector3 dir2 = Vector3.Cross(Vector3.up, goalPointInfo.vel).normalized;
 		Vector3 p2 = goalPointInfo.pos - dir2 * radius2;
-
 		float D = (p2 - p1).magnitude;
 		float alpha = radius1 + radius2;
 		float theta = Mathf.Acos(alpha / D);
 		float baseAngle = Vector3.Angle(Vector3.right, p2 - p1) * Mathf.Deg2Rad;
 		if ((p2 - p1).z < 0)
 			baseAngle = -baseAngle;
-		Vector3 tp1 = p1 + new Vector3(Mathf.Cos(theta + baseAngle), 0, Mathf.Sin(theta + baseAngle)) * radius1;
-		Vector3 tp2 = p2 - new Vector3(Mathf.Cos(theta + baseAngle), 0, Mathf.Sin(theta + baseAngle)) * radius2;
-
+		Vector3 tp1 = p1 + new Vector3(Mathf.Cos(theta + baseAngle), 0f, Mathf.Sin(theta + baseAngle)) * radius1;
+		Vector3 tp2 = p2 - new Vector3(Mathf.Cos(theta + baseAngle), 0f, Mathf.Sin(theta + baseAngle)) * radius2;
 
 		//GameObject tmp = new GameObject ();
 		//LineRenderer lineRenderer = tmp.AddComponent<LineRenderer> ();
@@ -80,10 +128,10 @@ public class DynamicPoint : BaseModel {
 
 
 
-
 	private List<PointInfo> dubinPath(PointInfo curPointInfo, PointInfo goalPointInfo, float radius1, float radius2, Vector3 tp1, Vector3 tp2, Vector3 p1, Vector3 p2, bool rightStart, bool rightGoal, World world, bool collisionCheck)
 	{
 		Vector3 tangentLine = tp2 - tp1;
+		float epsilon = 1e-10f;
 
 		if(collisionCheck && (Raycasting.insideObstacle (tp1.x, tp1.z, world.obstacles) || Raycasting.insideObstacle (tp2.x, tp2.z, world.obstacles)))
 			return null;
@@ -102,23 +150,23 @@ public class DynamicPoint : BaseModel {
 			baseAngle = -baseAngle;
 
 		int rotateRight = rightStart ? -1 : 1;
-
-		for (int i = 1; i < moveCount; i++)
-		{
-			Vector3 aDir = (p1 - parent.pos).normalized;
-			float x = p1.x + radius1 * Mathf.Cos(baseAngle + rotateRight * i * angleStep);
-			float z = p1.z + radius1 * Mathf.Sin(baseAngle + rotateRight * i * angleStep);
-			Vector3 newPosition = new Vector3(x, parent.pos.y, z);
-			if(collisionCheck && (Raycasting.insideObstacle (newPosition.x, newPosition.z, world.obstacles)))
-				return null;
-			float xVel = (float)System.Math.Round((System.Double)(x - parent.pos.x ) / dt, 2, System.MidpointRounding.AwayFromZero);
-			float zVel = (float)System.Math.Round((System.Double)(z - parent.pos.z) / dt, 2, System.MidpointRounding.AwayFromZero);
-			pointList.Add(new PointInfo(newPosition, new Vector3(xVel, 0, zVel), aDir, parent.currentTime + dt));
-			parent = pointList[pointList.Count - 1];
-		}
+		if(moveCount > 0)
+			for (int i = 1; i < moveCount; i++)
+			{
+				Vector3 aDir = (p1 - parent.pos).normalized;
+				float x = p1.x + radius1 * Mathf.Cos(baseAngle + rotateRight * i * angleStep);
+				float z = p1.z + radius1 * Mathf.Sin(baseAngle + rotateRight * i * angleStep);
+				Vector3 newPosition = new Vector3(x, parent.pos.y, z);
+				if(collisionCheck && (Raycasting.insideObstacle (newPosition.x, newPosition.z, world.obstacles)))
+					return null;
+				float xVel = (float)System.Math.Round((System.Double)(x - parent.pos.x ) / dt, 2, System.MidpointRounding.AwayFromZero);
+				float zVel = (float)System.Math.Round((System.Double)(z - parent.pos.z) / dt, 2, System.MidpointRounding.AwayFromZero);
+				pointList.Add(new PointInfo(newPosition, new Vector3(xVel, 0, zVel), aDir, parent.currentTime + dt));
+				parent = pointList[pointList.Count - 1];
+			}
 		pointList.Add(new PointInfo(tp1, curPointInfo.vel.magnitude * tangentLine.normalized, tangentLine.normalized, parent.currentTime + dt));
 		parent = pointList[pointList.Count - 1];
-
+		//Debug.Log (tp1);
 		float movingDtsDacc = (goalPointInfo.vel - parent.vel).magnitude / aMax;
 		float moveCountDacc = (int)Mathf.Ceil(movingDtsDacc);
 
@@ -136,7 +184,7 @@ public class DynamicPoint : BaseModel {
 
 		movingDts = (tangentLine.magnitude - dist) / (parent.vel.magnitude * dt);
 		moveCount = (int)Mathf.Ceil(movingDts);
-
+		//Debug.Log ("2");
 		// Move on tangent line
 		for (int i = 1; i < moveCount; i++)
 		{
@@ -145,10 +193,12 @@ public class DynamicPoint : BaseModel {
 				return null;
 			pointList.Add(new PointInfo(newPosition, tangentLine.normalized * parent.vel.magnitude, tangentLine.normalized, parent.currentTime + dt));
 			parent = pointList[pointList.Count - 1];
+
 		}
 		pointList.Add(new PointInfo(tp2 - (tangentLine.normalized * dist), tangentLine.normalized * parent.vel.magnitude, tangentLine.normalized, parent.currentTime + dt));
 		parent = pointList[pointList.Count - 1];
-
+		//Debug.Log (tp2 - (tangentLine.normalized * dist));
+		//Debug.Log ("3");
 		for (int i = 1; i < moveCountDacc; i++)
 		{
 			vel = (parent.vel.magnitude + coefficient* aMax) * dt;
@@ -161,7 +211,7 @@ public class DynamicPoint : BaseModel {
 		// Add tp2 to list
 		pointList.Add(new PointInfo(tp2, goalPointInfo.vel.magnitude * tangentLine.normalized, tangentLine.normalized, parent.currentTime + dt));
 		parent = pointList[pointList.Count - 1];
-
+		 
 
 		arcLength = getArcLength(tp2 - p2, goalPointInfo.pos - p2, rightGoal, radius2);
 		movingDts = arcLength / (dt * goalPointInfo.vel.magnitude);
@@ -172,6 +222,7 @@ public class DynamicPoint : BaseModel {
 		if ((tp2 - p2).z < 0)
 			baseAngle = -baseAngle;
 		rotateRight = rightGoal ? -1 : 1;
+		//Debug.Log ("3");
 		for (int i = 1; i < moveCount; i++)
 		{
 			Vector3 aDir = (p2 - parent.pos).normalized;
@@ -184,10 +235,13 @@ public class DynamicPoint : BaseModel {
 			float zVel = (float)System.Math.Round((System.Double)(z - parent.pos.z) / dt, 2, System.MidpointRounding.AwayFromZero);
 			pointList.Add(new PointInfo(newPosition, new Vector3(xVel, 0, zVel), aDir, parent.currentTime + dt));
 			parent = pointList[pointList.Count - 1];
+			if (float.IsNaN (newPosition.x))
+				Debug.Log ("4");
 		}
 
 		//Add tp1 to list
 		pointList.Add(goalPointInfo);
+		//Debug.Log (goalPointInfo.pos);
 		return pointList;
 	}
 
@@ -260,5 +314,5 @@ public class DynamicPoint : BaseModel {
 		Vector3 tp2 = p2 + new Vector3(Mathf.Cos(-theta + baseAngle), 0, Mathf.Sin(-theta + baseAngle)) * radius2;
 		return dubinPath(curPointInfo, goalPointInfo, radius1, radius2, tp1, tp2, p1, p2, false, false, world, collisionCheck);
 	}
-
+	*/
 }
