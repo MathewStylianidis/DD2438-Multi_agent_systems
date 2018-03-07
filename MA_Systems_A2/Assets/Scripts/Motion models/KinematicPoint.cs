@@ -24,11 +24,11 @@ public class KinematicPoint : BaseModel {
 		return new PointInfo (curPointInfo.pos + newPath, new Vector3(xVel, 0, zVel), Vector3.Normalize(path), curPointInfo.currentTime + time	);
 	}
 
-	public override List<PointInfo> completePath (PointInfo curPointInfo, Vector3 goalPoint, World world, bool collisionCheck = true)
+	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
 	{
 		List<PointInfo> path = new List<PointInfo> ();
-		while (Vector3.Distance (goalPoint, curPointInfo.pos) != 0) {
-			curPointInfo = moveTowards (curPointInfo, goalPoint);
+		while (Vector3.Distance (goalPointInfo.pos, curPointInfo.pos) != 0) {
+			curPointInfo = moveTowards (curPointInfo, goalPointInfo.pos);
 			if (collisionCheck && Raycasting.insideObstacle (curPointInfo.pos.x, curPointInfo.pos.z, world.obstacles))
 				return null;
 			path.Add (curPointInfo);

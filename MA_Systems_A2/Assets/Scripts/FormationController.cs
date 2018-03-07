@@ -92,5 +92,7 @@ public class FormationController : MonoBehaviour {
 	public Vector3[] getTrajectory() { return this.trajectory;	}
 	public float[] getTrajectoryOrientation() { return this.trajectoryOrientation; }
 	public float[] getTrajectoryTimestamps() { return this.trajectoryTimestamps; }
+	public Vector3 getLeaderOrientation() { return UtilityClass.rads2Vec (getLeaderRotation());}
+	public float getLeaderRotation() { return agents [0].transform.rotation.eulerAngles.y * Mathf.Deg2Rad; }
 
 }

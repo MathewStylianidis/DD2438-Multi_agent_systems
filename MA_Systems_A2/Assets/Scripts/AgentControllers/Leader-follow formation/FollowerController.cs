@@ -49,7 +49,6 @@ public class FollowerController : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-
 		if (formationControl != null && routeIdx < trajectory.Length) {
 			accumulatedDeltaTime += Time.deltaTime * simulationSpeedFactor;
 			if (accumulatedDeltaTime >= vehicle_dt) {
@@ -75,10 +74,14 @@ public class FollowerController : MonoBehaviour {
 
 
 	private PointInfo getNextPosition(PointInfo lastPos, World world) {
+		
 		Vector3 goalPoint = new Vector3(formationControl.getDesiredPosition (agentIdx).x, agentHeight, formationControl.getDesiredPosition (agentIdx).y);
-		return motionModel.moveTowards (lastPos, goalPoint);
-		List<PointInfo> path = motionModel.completePath (lastPos, goalPoint, world, false);
-		if (path.Count > 0)
+		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, formationControl.getLeaderOrientation(), lastPos.currentTime + vehicle_dt);
+		return motionModel.moveTowards(lastPos, goalPoint);
+		List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
+		Debug.Log (lastPos.pos);
+		Debug.Log(path[0].pos);
+		if (path.Count > 1)
 			return path [0];
 		else
 			return null;

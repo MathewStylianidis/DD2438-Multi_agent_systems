@@ -53,7 +53,7 @@ public class WorldController : MonoBehaviour {
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
 			GameObject tmp = new GameObject ("FormationController");
 			tmp.AddComponent<FormationController> ();
-			tmp.GetComponent<FormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
+			tmp.GetComponent<FormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y);
 		}
 		else if (data.name == "P26") {
 			// Formation problems
@@ -139,7 +139,7 @@ public class WorldController : MonoBehaviour {
 			if (data.name != "P25" && data.name != "P26" && data.name != "P27")
 				x = world.goalPositions [i] - world.startPositions [i];
 			else
-				x = Vector2.up; // Should look towards formation position
+				x = Vector3.left ; // Should look towards formation position
 			world.currentVelocities [i] = x.normalized * world.vehicle.maxVelocity;
 		}
 	}
@@ -336,7 +336,8 @@ public class WorldController : MonoBehaviour {
 				Vector3 curPos = new Vector3(world.graphVertices[solutionList[i][j]].vertex.x, 0, world.graphVertices[solutionList[i][j]].vertex.y);
 				Vector3 goalPos = new Vector3 (world.graphVertices[solutionList[i][j + 1]].vertex.x, 0, world.graphVertices[solutionList[i][j + 1]].vertex.y);
 				PointInfo curPointInfo = new PointInfo(curPos, curVelocity, curOrientation, time);
-				List<PointInfo> subpathCoords = motionModel.completePath (curPointInfo, goalPos, world, false);
+				PointInfo goalPointInfo = new PointInfo (goalPos, Vector3.zero, Vector3.zero, time + world.vehicle.dt);
+				List<PointInfo> subpathCoords = motionModel.completePath (curPointInfo, goalPointInfo, world, false);
 				if (subpathCoords == null)
 					throw new System.Exception ("A path has a point in an obstacle");
 				curVelocity = subpathCoords [subpathCoords.Count - 1].vel;
