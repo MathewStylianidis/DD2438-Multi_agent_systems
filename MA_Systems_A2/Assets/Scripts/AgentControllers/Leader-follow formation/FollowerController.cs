@@ -86,9 +86,10 @@ public class FollowerController : MonoBehaviour {
 		List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
 		if (path.Count > 0) {
 			return path [0];
-		}
-		else 
+		} else {
+			Debug.Log (1);
 			return null;
+		}
 		
 	}
 }

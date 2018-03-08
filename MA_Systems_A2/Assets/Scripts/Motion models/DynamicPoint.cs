@@ -28,6 +28,7 @@ public class DynamicPoint : BaseModel {
 
 	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
 	{
+		float tolerance = 0.01f;
 		List<PointInfo> pointList = new List<PointInfo> ();
 		Vector3 path = goalPointInfo.pos - curPointInfo.pos;
 		float dist = path.magnitude;
@@ -36,6 +37,13 @@ public class DynamicPoint : BaseModel {
 		float maxVelDistance = 0f;
 		int curVelDtCount = 0;
 		float curVelDistance = 0f;
+		PointInfo nextPointInfo = moveTowards(curPointInfo, goalPointInfo.pos);
+
+		if (curPointInfo.pos == goalPointInfo.pos || Vector3.Distance(nextPointInfo.pos, goalPointInfo.pos) < tolerance) {
+			pointList.Add (goalPointInfo);
+			return pointList;
+		}
+
 
 		// Get number of steps needed to deccelerate from max velocity
 		while (tmpVel <= maxVelocity) {
@@ -51,25 +59,40 @@ public class DynamicPoint : BaseModel {
 			curVelDtCount++;
 		}
 
+		float tmp = maxVelocity;
+		Debug.Log (dist);
+		Debug.Log (maxVelocity);
+		maxVelocity = maxVelocity / (1 + 1.5f /(dist + 1e-40f));
+		Debug.Log(maxVelocity);
+		pointList.Add (moveTowards(curPointInfo,goalPointInfo.pos));
+		maxVelocity = tmp;
+
+
+		float nextDistance = (nextPointInfo.pos - goalPointInfo.pos).magnitude;
 		// If our current distance from the goal is less than the distance needed to decelerate from max velocity to 0 velocity
-		if (dist < maxVelDistance) {
-			// Drop velocity with maximum accelerection to the opposite direction so that velocity is 0 when the goal is reached
-			float trueMaxVel = maxVelocity;
-			maxVelocity = curPointInfo.vel.magnitude;
-			while (true) {				
-				float acceleration = curVelDistance / (dt * dt);
-				maxVelocity -= acceleration;
-				if (maxVelocity <= 0f)
-					break;
-				curPointInfo = moveTowards (curPointInfo, goalPointInfo.pos);
-				pointList.Add (curPointInfo);	
-			}
-			pointList.Add (goalPointInfo);	
-			maxVelocity = trueMaxVel;
+		if (nextDistance <= maxVelDistance) {
+			
+
+			/*
+
+			// If the current velocity is not aligned with the goal then apply acceleration to the opposite direction to kill the velocity
+			Vector3 acceleration = curPointInfo.vel / curVelDtCount;
+			Vector3 pV = (acceleration * curVelDtCount * curVelDtCount) / 2;
+			Vector3 vP = (goalPointInfo.pos - (curPointInfo.vel + curPointInfo.pos)) / curVelDtCount;
+			Vector3 aP = 2 * vP / curVelDtCount;
+			Vector3 a0 = aP + 2 * aP;
+			Vector3 deltaVel = a0 * dt;
+			Vector3 newVel = Vector3.ClampMagnitude (curPointInfo.vel + deltaVel, maxVelocity);
+			float xMove = newVel.x * dt;
+			float yMove = newVel.z * dt;
+			Vector3 newPosition = new Vector3 (curPointInfo.pos.x + xMove, curPointInfo.pos.y, curPointInfo.pos.z + yMove);
+			Vector3 newOrientation = path.normalized;
+			float xVel = (float)System.Math.Round((System.Double)xMove/dt, 2, System.MidpointRounding.AwayFromZero);
+			float zVel = (float)System.Math.Round((System.Double)yMove/dt, 2, System.MidpointRounding.AwayFromZero);
+			pointList.Add(new PointInfo (newPosition, new Vector3(xVel, 0f, zVel), newOrientation, curPointInfo.currentTime + dt));
+			*/
 		} else {
-			// Accelerate with max acceleration toward goal until the distance from the goal is enough to decelerate to 0 velocity
 			pointList.Add(moveTowards(curPointInfo,goalPointInfo.pos));
-			// Decelerate to 0 velocity
 		}
 
 	
