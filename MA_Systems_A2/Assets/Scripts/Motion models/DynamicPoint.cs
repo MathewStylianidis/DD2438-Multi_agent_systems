@@ -32,33 +32,13 @@ public class DynamicPoint : BaseModel {
 		List<PointInfo> pointList = new List<PointInfo> ();
 		Vector3 path = goalPointInfo.pos - curPointInfo.pos;
 		float dist = path.magnitude;
-		float tmpVel = 0.0f;
-		int maxVelDtCount = 0;
-		float maxVelDistance = 0f;
-		int curVelDtCount = 0;
-		float curVelDistance = 0f;
 		PointInfo nextPointInfo = moveTowards(curPointInfo, goalPointInfo.pos);
 
 		if (curPointInfo.pos == goalPointInfo.pos || Vector3.Distance(nextPointInfo.pos, goalPointInfo.pos) < tolerance) {
 			pointList.Add (goalPointInfo);
 			return pointList;
 		}
-
-
-		// Get number of steps needed to deccelerate from max velocity
-		while (tmpVel <= maxVelocity) {
-			tmpVel += aMax;
-			maxVelDistance += tmpVel * dt;
-			maxVelDtCount++;
-		}
-		// Get number of steps needed to decelerate from current velocity
-		tmpVel = 0.0f;
-		while (tmpVel <= curPointInfo.vel.magnitude) {
-			tmpVel += aMax;
-			curVelDistance += tmpVel * dt;
-			curVelDtCount++;
-		}
-
+			
 		float tmp = maxVelocity;
 		Debug.Log (dist);
 		Debug.Log (maxVelocity);
@@ -67,35 +47,6 @@ public class DynamicPoint : BaseModel {
 		pointList.Add (moveTowards(curPointInfo,goalPointInfo.pos));
 		maxVelocity = tmp;
 
-
-		float nextDistance = (nextPointInfo.pos - goalPointInfo.pos).magnitude;
-		// If our current distance from the goal is less than the distance needed to decelerate from max velocity to 0 velocity
-		if (nextDistance <= maxVelDistance) {
-			
-
-			/*
-
-			// If the current velocity is not aligned with the goal then apply acceleration to the opposite direction to kill the velocity
-			Vector3 acceleration = curPointInfo.vel / curVelDtCount;
-			Vector3 pV = (acceleration * curVelDtCount * curVelDtCount) / 2;
-			Vector3 vP = (goalPointInfo.pos - (curPointInfo.vel + curPointInfo.pos)) / curVelDtCount;
-			Vector3 aP = 2 * vP / curVelDtCount;
-			Vector3 a0 = aP + 2 * aP;
-			Vector3 deltaVel = a0 * dt;
-			Vector3 newVel = Vector3.ClampMagnitude (curPointInfo.vel + deltaVel, maxVelocity);
-			float xMove = newVel.x * dt;
-			float yMove = newVel.z * dt;
-			Vector3 newPosition = new Vector3 (curPointInfo.pos.x + xMove, curPointInfo.pos.y, curPointInfo.pos.z + yMove);
-			Vector3 newOrientation = path.normalized;
-			float xVel = (float)System.Math.Round((System.Double)xMove/dt, 2, System.MidpointRounding.AwayFromZero);
-			float zVel = (float)System.Math.Round((System.Double)yMove/dt, 2, System.MidpointRounding.AwayFromZero);
-			pointList.Add(new PointInfo (newPosition, new Vector3(xVel, 0f, zVel), newOrientation, curPointInfo.currentTime + dt));
-			*/
-		} else {
-			pointList.Add(moveTowards(curPointInfo,goalPointInfo.pos));
-		}
-
-	
 		return pointList;
 	}
 
