@@ -40,10 +40,8 @@ public class DynamicPoint : BaseModel {
 		}
 			
 		float tmp = maxVelocity;
-		Debug.Log (dist);
-		Debug.Log (maxVelocity);
 		maxVelocity = maxVelocity / (1 + 1.5f /(dist + 1e-40f));
-		Debug.Log(maxVelocity);
+		maxVelocity = tmp - aMax > maxVelocity ? tmp - aMax : maxVelocity;
 		pointList.Add (moveTowards(curPointInfo,goalPointInfo.pos));
 		maxVelocity = tmp;
 
