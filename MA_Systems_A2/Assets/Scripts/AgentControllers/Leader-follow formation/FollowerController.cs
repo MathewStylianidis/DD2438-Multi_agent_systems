@@ -87,7 +87,6 @@ public class FollowerController : MonoBehaviour {
 		if (path.Count > 0) {
 			return path [0];
 		} else {
-			Debug.Log (1);
 			return null;
 		}
 		

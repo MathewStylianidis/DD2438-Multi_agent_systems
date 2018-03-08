@@ -21,7 +21,7 @@ public class FormationController : MonoBehaviour {
 	void Update () {
 		this.desiredRelativePositions = getDesiredPositions (false);
 		this.desiredAbsolutePositions = getDesiredPositions ();
-		//Visualizer.visualizePoints(this.desiredAbsolutePositions);
+		Visualizer.visualizePoints(this.desiredAbsolutePositions);
 	}
 
 	public Vector2 getDesiredPosition(int agentIdx, bool absolute = true) {
