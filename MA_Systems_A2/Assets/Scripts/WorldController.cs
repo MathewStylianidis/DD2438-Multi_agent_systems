@@ -60,11 +60,10 @@ public class WorldController : MonoBehaviour {
 			GameObject plane = GameObject.Find ("Plane");
 			Renderer ren = plane.GetComponent<Renderer> ();
 			ren.material = fieldMaterial;
-			// Read trajectory
-			Vector3[] trajectory = new Vector3[world.trajectory.x.Length];
-			for (int i = 0; i < trajectory.Length; i++)
-				trajectory[i] = new Vector3 (world.trajectory.x[i], objectHeight, world.trajectory.y[i]);
-
+			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
+			GameObject tmp = new GameObject ("FormationController");
+			//tmp.AddComponent<FormationController> ();
+			//tmp.GetComponent<FormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
 		}
 	}
 	
@@ -165,18 +164,27 @@ public class WorldController : MonoBehaviour {
 				world.currentPositions = new Vector2[world.startPositions.Length + 1];
 				agents = new GameObject[world.startPositions.Length + 1];
 				// Initialize leader
-				Vector3 orientation = UtilityClass.rads2Vec(world.trajectory.theta[0]);
+				Vector3 orientation = UtilityClass.rads2Vec (world.trajectory.theta [0]);
 				Vector2 pos = new Vector2 (world.trajectory.x [0], world.trajectory.y [0]);
-				spawnActor (pos , orientation, 0);
-				world.currentPositions[0] = pos;
+				spawnActor (pos, orientation, 0);
+				world.currentPositions [0] = pos;
 				// Initialize followers
 				for (int i = 0; i < world.startPositions.Length; i++) {
 					orientation = Vector3.left; //change so that they look towards their formation position
 					spawnActor (world.startPositions [i], orientation, i + 1);
 					world.currentPositions [i + 1] = world.startPositions [i];
 				}
+			} else if (data.name == "P26") {
+				world.currentAngularVel = new float[world.startPositions.Length];
+				world.currentPositions = new Vector2[world.startPositions.Length];
+				agents = new GameObject[world.startPositions.Length];
+				// Initialize players
+				for (int i = 0; i < world.startPositions.Length; i++) {
+					Vector3 orientation = Vector3.left; //change so that they look towards their formation position
+					spawnActor (world.startPositions [i], orientation, i);
+					world.currentPositions [i] = world.startPositions [i];
+				}
 			}
-			
 		}
 	}
 

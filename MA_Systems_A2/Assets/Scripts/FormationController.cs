@@ -52,7 +52,8 @@ public class FormationController : MonoBehaviour {
 		this.desiredRelativePositions = getDesiredPositions (false);
 		this.desiredAbsolutePositions = getDesiredPositions ();
 		// Visualize starting desired positions
-		Visualizer.visualizePoints(this.desiredAbsolutePositions);
+		Visualizer.visualizePoints(this.desiredRelativePositions);
+		//Visualizer.visualizePoints(this.desiredAbsolutePositions);
 		// Set a controller within each agent
 		agents[0].AddComponent<LeaderController>();
 		for (int i = 1; i < agents.Length; i++)
@@ -92,7 +93,7 @@ public class FormationController : MonoBehaviour {
 	public Vector3[] getTrajectory() { return this.trajectory;	}
 	public float[] getTrajectoryOrientation() { return this.trajectoryOrientation; }
 	public float[] getTrajectoryTimestamps() { return this.trajectoryTimestamps; }
-	public Vector3 getLeaderOrientation() { Debug.Log (90.0f - agents [0].transform.rotation.eulerAngles.y);  return UtilityClass.rads2Vec (getLeaderRotation());}
+	public Vector3 getLeaderOrientation() { return UtilityClass.rads2Vec (getLeaderRotation());}
 	public float getLeaderRotation() { return (90.0f - agents [0].transform.rotation.eulerAngles.y) * Mathf.Deg2Rad; }
 
 }
