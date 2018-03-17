@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class VirtualStructure : MonoBehaviour {
+public class VirtualStructure : BaseFormationController {
 
 	public static Vector2 getCenter(Vector2[] agentsPos) {
 		// Return null if there are less than 2 agents in the structure
