@@ -4,12 +4,23 @@ using UnityEngine;
 
 public class VirtualStructure : BaseFormationController {
 
+	class VirtualStructureRectangle {
+		public Vector2[] Edges;
+
+		public VirtualStructureRectangle(float deltaX, float deltaY) {
+			
+		}
+	}
+		
+	VirtualStructureRectangle formationRectangle;
+
 	void Update () {
 		this.desiredRelativePositions = getDesiredPositions (agents.Length - 1, false);
 		this.desiredAbsolutePositions = getDesiredPositions (agents.Length - 1);
 		//Visualizer.visualizePoints(this.desiredAbsolutePositions);
 	}
-	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight) {
+
+	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight, float deltaX, float deltaY) {
 		this.agentHeight = agentHeight;
 		this.agents = agents;
 		// Get trajectory coordinates
@@ -36,6 +47,7 @@ public class VirtualStructure : BaseFormationController {
 		agents [0].AddComponent<LeaderController> ();
 		for (int i = 1; i < agents.Length; i++)
 			agents [i].AddComponent<FootballPlayerController> ();
+		formationRectangle = new  VirtualStructureRectangle (deltaX, deltaY);
 	}
 
 

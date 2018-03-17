@@ -475,11 +475,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startButton: {fileID: 1875005645}
-  pointOfInterestModel: {fileID: 1371991534854146, guid: 60af354a4c4e345449409e042c27c5ce,
-    type: 2}
   timeText: {fileID: 925281167}
-  data: {fileID: 4900000, guid: 9cfe8b23fbb6ed34aad218c692ed2e83, type: 3}
-  trajectoryData: {fileID: 4900000, guid: 2dbe7357c651f7e4cae78bf87830b167, type: 3}
+  data: {fileID: 4900000, guid: 7c510cb51ed229b42aa80c4aba657298, type: 3}
   agentPrefab: {fileID: 1177329548899570, guid: f0091b1d408c02f4aa665fd56a2db987,
     type: 2}
   world:
@@ -510,6 +507,11 @@ MonoBehaviour:
   fieldMaterial: {fileID: 2100000, guid: 066326dda69827642ad629bb41725088, type: 2}
   modelName: 1
   simulationSpeedFactor: 15
+  pointOfInterestModel: {fileID: 1371991534854146, guid: 60af354a4c4e345449409e042c27c5ce,
+    type: 2}
+  trajectoryData: {fileID: 4900000, guid: 2dbe7357c651f7e4cae78bf87830b167, type: 3}
+  deltaX: 5
+  deltaY: 5
 --- !u!4 &810943123
 Transform:
   m_ObjectHideFlags: 0

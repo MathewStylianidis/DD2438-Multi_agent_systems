@@ -11,11 +11,10 @@ public enum model {
 
 public class WorldController : MonoBehaviour {
 
+	// General use variables
 	public Button startButton;
-	public GameObject pointOfInterestModel;
 	public Text timeText;
 	public TextAsset data;
-	public TextAsset trajectoryData;
 	public GameObject agentPrefab;
 	public World world;
 	public GameObject obstacleParent;
@@ -29,17 +28,32 @@ public class WorldController : MonoBehaviour {
 	public float simulationSpeedFactor = 1.0f;
 	private GameObject[] agents;
 	private BaseModel motionModel; // Motion model to be used
+
+	// VRP variables
+	public GameObject pointOfInterestModel;
 	private List<List<PointInfo>> solutionCoordinates; // Coordinates of the path of each vehicle for the VRP
 	private List<List<int>> solutionList; // List of indices with the visiting order for each agent
 	private int longestPathIndex;
 	private int obstacleVertCount; 
+
+	// Formation problem variables
+	public TextAsset trajectoryData;
+	public float deltaX = 5.0f; // Determines the expansion of the virtual formation rectangle on the x axis (sports formation)
+	public float deltaY = 5.0f; // Determines the expansion of the virtual formation rectangle on the y axis (sports formation)
+
+
+
 
 
 	void Start () {
 		Button btn = startButton.GetComponent<Button>();
 		btn.onClick.AddListener(TaskOnClick);
 
-		world = World.FromJson (data.text, trajectoryData.text);
+		if (data.name == "P25" || data.name == "P26")
+			world = World.FromJson (data.text, trajectoryData.text);
+		else
+			world = World.FromJson (data.text);
+
 		initializeVelocities ();
 		spawnObstacle (world.boundingPolygon, "Bounding polygon", boundingPolygon);
 		spawnObstacles ();
@@ -67,7 +81,7 @@ public class WorldController : MonoBehaviour {
 			for (int i = 0; i < formationPositions.Length - 1; i++)
 				formationPositions [i] = world.formationPositions [i];
 			formationPositions [formationPositions.Length - 1] = agents [agents.Length - 1].transform.position; //position of virtual center
-			agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.trajectory, formationPositions, agents [0].transform.localScale.y / 2);
+			agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.trajectory, formationPositions, agents [0].transform.localScale.y / 2, deltaX, deltaY);
 		}
 	}
 	

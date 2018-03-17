@@ -95,6 +95,33 @@ public class World {
 		}
 	}
 
+	public static World FromJson (string jsonData) {
+		var tmp = TinyJsonDeserializer.Deserialize(jsonData, typeof(TempMap)) as TempMap;
+		var map = new World();
+		map.goalPositions = (tmp.goal_positions ?? new float[0][]).Select(p => new Vector2(p[0], p[1])).ToArray();
+		map.startPositions = (tmp.start_positions ?? new float[0][]).Select(p => new Vector2(p[0], p[1])).ToArray();
+		map.enemyPositions = (tmp.enemy_positions ?? new float[0][]).Select(p => new Vector2(p[0], p[1])).ToArray();
+		map.formationPositions = (tmp.formation_positions ?? new float[0][]).Select(p => new Vector2(p[0], p[1])).ToArray();
+		map.pointsOfInterest = (tmp.points_of_interest ?? new float[0][]).Select(p => new Vector2(p[0], p[1])).ToArray();
+		map.boundingPolygon = tmp.bounding_polygon.Select(p => new Vector2(p[0], p[1])).ToArray();
+		map.obstacles = new [] {
+			tmp.obstacle_1, tmp.obstacle_2, tmp.obstacle_3, tmp.obstacle_4, tmp.obstacle_5,
+			tmp.obstacle_6, tmp.obstacle_7, tmp.obstacle_8, tmp.obstacle_9, tmp.obstacle_10, 
+		}.Where(x => x != null).Select(o => o.Select(p => new Vector2(p[0], p[1])).ToArray()).ToList();
+		map.sensorRange = tmp.sensor_range;
+		map.vehicle = new VehicleInfo {
+			length = tmp.vehicle_L,
+			maxAcceleration = tmp.vehicle_a_max,
+			dt = tmp.vehicle_dt,
+			maxOmega = tmp.vehicle_omega_max,
+			maxPhi = tmp.vehicle_phi_max,
+			t = tmp.vehicle_t,
+			maxVelocity = tmp.vehicle_v_max
+		};
+				
+		return map;
+	}
+
 	public static World FromJson (string jsonData, string jsonTrajectoryData) {
 		var tmp = TinyJsonDeserializer.Deserialize(jsonData, typeof(TempMap)) as TempMap;
 		var map = new World();
