@@ -16,7 +16,7 @@ public class FollowerController : MonoBehaviour {
 	private BaseModel motionModel;
 	private PointInfo lastPosInfo;
 	private PointInfo nextPosInfo;
-	private FormationController formationControl;
+	private LeaderFormationController formationControl;
 	private int agentIdx;
 
 
@@ -33,8 +33,8 @@ public class FollowerController : MonoBehaviour {
 				simulationSpeedFactor = worldController.simulationSpeedFactor;
 				motionModel = worldController.getMotionModel ();
 			}
-			GameObject formationController = GameObject.Find ("FormationController");
-			formationControl = formationController.GetComponent<FormationController> ();
+			GameObject formationController = GameObject.Find ("LeaderFormationController");
+			formationControl = formationController.GetComponent<LeaderFormationController> ();
 			if(formationControl != null) {
 				agentHeight = formationControl.agentHeight;
 				trajectory = formationControl.getTrajectory ();

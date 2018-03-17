@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FormationController : MonoBehaviour {
+public class LeaderFormationController : MonoBehaviour {
 
 	public float agentHeight;
 	private GameObject[] agents; // Agents in the formation

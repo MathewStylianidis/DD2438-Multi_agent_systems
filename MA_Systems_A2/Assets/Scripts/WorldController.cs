@@ -51,9 +51,9 @@ public class WorldController : MonoBehaviour {
 		} 
 		else if (data.name == "P25") {
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
-			GameObject tmp = new GameObject ("FormationController");
-			tmp.AddComponent<FormationController> ();
-			tmp.GetComponent<FormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
+			GameObject tmp = new GameObject ("LeaderFormationController");
+			tmp.AddComponent<LeaderFormationController> ();
+			tmp.GetComponent<LeaderFormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
 		}
 		else if (data.name == "P26") {
 			// Formation problems
@@ -61,9 +61,8 @@ public class WorldController : MonoBehaviour {
 			Renderer ren = plane.GetComponent<Renderer> ();
 			ren.material = fieldMaterial;
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
-			GameObject tmp = new GameObject ("FormationController");
-			//tmp.AddComponent<FormationController> ();
-			//tmp.GetComponent<FormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
+			agentParent.AddComponent<VirtualStructure> ();
+			//agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
 		}
 	}
 	
@@ -175,22 +174,28 @@ public class WorldController : MonoBehaviour {
 					world.currentPositions [i + 1] = world.startPositions [i];
 				}
 			} else if (data.name == "P26") {
-				world.currentAngularVel = new float[world.startPositions.Length];
-				world.currentPositions = new Vector2[world.startPositions.Length];
-				agents = new GameObject[world.startPositions.Length];
+				world.currentAngularVel = new float[world.startPositions.Length + 1];
+				world.currentPositions = new Vector2[world.startPositions.Length + 1];
+				agents = new GameObject[world.startPositions.Length + 1];
 				// Initialize players
 				for (int i = 0; i < world.startPositions.Length; i++) {
 					Vector3 orientation = Vector3.left; //change so that they look towards their formation position
 					spawnActor (world.startPositions [i], orientation, i);
 					world.currentPositions [i] = world.startPositions [i];
 				}
+				// Initialize virtual structure center
+				world.currentPositions[world.currentPositions.Length - 1] = VirtualStructure.getCenter(world.formationPositions);
+				spawnActor (world.currentPositions [world.currentPositions.Length - 1], Vector3.forward, agents.Length - 1, false);
 			}
 		}
 	}
 
-	private void spawnActor(Vector2 position, Vector3 orientation, int agentIdx) {
-		agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
-		scaleAgent (agents[agentIdx]); 
+	private void spawnActor(Vector2 position, Vector3 orientation, int agentIdx, bool addPrefab = true) {
+		if (addPrefab) {
+			agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
+			scaleAgent (agents [agentIdx]); 
+		} else
+			agents [agentIdx] = new GameObject ();
 		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
 		agents [agentIdx].transform.LookAt(agents [agentIdx].transform.position  + orientation);
 		agents [agentIdx].transform.parent = agentParent.transform;

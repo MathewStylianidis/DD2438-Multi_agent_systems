@@ -23,8 +23,8 @@ public class LeaderController : MonoBehaviour {
 				// Check if this agent has the longest path and should update the timer
 				simulationSpeedFactor = worldController.simulationSpeedFactor;
 			}
-			GameObject formationController = GameObject.Find ("FormationController");
-			FormationController formationScript = formationController.GetComponent<FormationController> ();
+			GameObject formationController = GameObject.Find ("LeaderFormationController");
+			LeaderFormationController formationScript = formationController.GetComponent<LeaderFormationController> ();
 			if(gameController != null) {
 				trajectory = formationScript.getTrajectory ();
 				trajectoryOrientation = formationScript.getTrajectoryOrientation ();
