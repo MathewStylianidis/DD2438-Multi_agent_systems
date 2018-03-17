@@ -5,14 +5,48 @@ using UnityEngine;
 public class VirtualStructure : BaseFormationController {
 
 	class VirtualStructureRectangle {
-		public Vector2[] Edges;
+		public PointInfo[] vertices;
 
-		public VirtualStructureRectangle(float deltaX, float deltaY) {
-			
+		public PointInfo[] getEdges() {return this.vertices;}
+
+		public Vector2[] getEdgeVectors() {
+			Vector2[] vectors = new Vector2[vertices.Length];
+			for (int i = 0; i < vertices.Length; i++)
+				vectors [i] = new Vector2(vertices [i].pos.x, vertices[i].pos.z);
+			return vectors;
+		}
+
+		public VirtualStructureRectangle(Vector2[] formationPositions, Vector2[] boundingPoly, float deltaX, float deltaY, float agentHeight) {
+			Vector2 center = getCenter(formationPositions);
+			float[] formationMinMaxes = getMinMaxes(formationPositions);
+			float[] fieldMinMaxes = getMinMaxes(boundingPoly);
+			float fieldSideX = Mathf.Abs(fieldMinMaxes[2] - fieldMinMaxes[0]);
+			float fieldSideY = Mathf.Abs(fieldMinMaxes[3] - fieldMinMaxes[1]);
+			float formationSideX = Mathf.Abs(formationMinMaxes[2] - formationMinMaxes[0]);
+			float formationSideY = Mathf.Abs(formationMinMaxes[3] - formationMinMaxes[1]);
+			if(fieldSideX < formationSideX || fieldSideY < formationSideY)
+				throw new System.Exception("The formation size is too large to fit in the field");
+			float newFormationSideX = formationSideX + deltaX;
+			float newFormationSideY = formationSideY + deltaY;
+			if(fieldSideX < newFormationSideX || fieldSideY < newFormationSideY)
+				throw new System.Exception("The virtual formation rectangle is too large to fit in the field");
+			vertices = new PointInfo[4];
+			// Upper left 
+			vertices[0] = new PointInfo(new Vector3(center.x - newFormationSideX/2, agentHeight, center.y + newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
+			// Upper right 
+			vertices[1] = new PointInfo(new Vector3(center.x + newFormationSideX/2, agentHeight, center.y + newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
+			// Bottom left
+			vertices[2] = new PointInfo(new Vector3(center.x - newFormationSideX/2, agentHeight, center.y - newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
+			// Bottom right 
+			vertices[3] = new PointInfo(new Vector3(center.x + newFormationSideX/2, agentHeight, center.y - newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
 		}
 	}
-		
+			
 	VirtualStructureRectangle formationRectangle;
+
+
+
+
 
 	void Update () {
 		this.desiredRelativePositions = getDesiredPositions (agents.Length - 1, false);
@@ -20,7 +54,7 @@ public class VirtualStructure : BaseFormationController {
 		//Visualizer.visualizePoints(this.desiredAbsolutePositions);
 	}
 
-	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight, float deltaX, float deltaY) {
+	public void initializeController(GameObject[] agents, Vector2[] boundingPoly, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight, float deltaX, float deltaY) {
 		this.agentHeight = agentHeight;
 		this.agents = agents;
 		// Get trajectory coordinates
@@ -47,28 +81,34 @@ public class VirtualStructure : BaseFormationController {
 		agents [0].AddComponent<LeaderController> ();
 		for (int i = 1; i < agents.Length; i++)
 			agents [i].AddComponent<FootballPlayerController> ();
-		formationRectangle = new  VirtualStructureRectangle (deltaX, deltaY);
+		formationRectangle = new  VirtualStructureRectangle (formationPositions, boundingPoly, deltaX, deltaY, agentHeight);
 	}
 
 
-	public static Vector2 getCenter(Vector2[] agentsPos) {
+	public static Vector2 getCenter(Vector2[] formationPositions) {
+		float[] minMaxes = getMinMaxes (formationPositions);
+		return new Vector2 ((minMaxes[0] +  minMaxes[2]) / 2, (minMaxes[1] + minMaxes[3]) / 2);
+	}
+
+	/// <summary>
+	/// Returns an float array with the minimum x and y as well as the maximum x and y
+	/// in the formationPositions, in this order.
+	/// </summary>
+	public static float[] getMinMaxes(Vector2[] formationPositions) {
 		// Return null if there are less than 2 agents in the structure
-		if (agentsPos.Length < 2)
+		if (formationPositions.Length < 2)
 			throw new System.Exception("agentsPos parameter should have more than 1 element.");
-		
-		float xMax, xMin, yMax, yMin;
-		xMax = yMax = float.MinValue;
-		xMin = yMin = float.MaxValue;
-		for (int i = 0; i < agentsPos.Length; i++) {
-			if (agentsPos [i].x < xMin)
-				xMin = agentsPos [i].x;
-			else if (agentsPos [i].x > xMax)
-				xMax = agentsPos [i].x;
-			if (agentsPos [i].y < yMin)
-				yMin = agentsPos [i].y;
-			else if (agentsPos [i].y > yMax)
-				yMax = agentsPos [i].y;
+		float[] minMaxes = {float.MaxValue, float.MaxValue, float.MinValue, float.MinValue};
+		for (int i = 0; i < formationPositions.Length; i++) {
+			if (formationPositions [i].x < minMaxes[0])
+				minMaxes[0] = formationPositions [i].x;
+			else if (formationPositions [i].x > minMaxes[2])
+				minMaxes[2] = formationPositions [i].x;
+			if (formationPositions [i].y < minMaxes[1])
+				minMaxes[1] = formationPositions [i].y;
+			else if (formationPositions [i].y > minMaxes[3])
+				minMaxes[3] = formationPositions [i].y;
 		}
-		return new Vector2 ((xMax + xMin) / 2, (yMax + yMin) / 2);
+		return minMaxes;
 	}
 }

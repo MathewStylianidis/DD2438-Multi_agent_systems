@@ -81,7 +81,7 @@ public class WorldController : MonoBehaviour {
 			for (int i = 0; i < formationPositions.Length - 1; i++)
 				formationPositions [i] = world.formationPositions [i];
 			formationPositions [formationPositions.Length - 1] = agents [agents.Length - 1].transform.position; //position of virtual center
-			agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.trajectory, formationPositions, agents [0].transform.localScale.y / 2, deltaX, deltaY);
+			agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.boundingPolygon, world.trajectory, formationPositions, agents [0].transform.localScale.y / 2, deltaX, deltaY);
 		}
 	}
 	
@@ -160,7 +160,7 @@ public class WorldController : MonoBehaviour {
 			if (data.name != "P25" && data.name != "P26" && data.name != "P27")
 				x = world.goalPositions [i] - world.startPositions [i];
 			else
-				x = Vector3.left ; // Should look towards formation position
+				x = Vector3.zero ; // Should look towards formation position
 			world.currentVelocities [i] = x.normalized * world.vehicle.maxVelocity;
 		}
 	}
