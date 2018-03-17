@@ -13,6 +13,8 @@ public class BaseFormationController : MonoBehaviour {
 	protected Vector2[] desiredRelativePositions; // True desired positions relative to the leader's position and orientation
 	protected Vector2[] desiredAbsolutePositions; // True desired world positions for the whole formation
 
+	public GameObject[] getAgents() {return agents;}
+
 	public Vector2 getDesiredPosition(int agentIdx, bool absolute = true) {
 		if(absolute)
 			return desiredAbsolutePositions[agentIdx];
@@ -37,11 +39,11 @@ public class BaseFormationController : MonoBehaviour {
 	/// a given agent's coordinates and starting orientation.
 	/// </summary>
 	protected Vector2[] getDesiredPositions(int agentReferenceIndex, bool absolute = true) {
-		Vector2[] desiredPositions = new Vector2[agents.Length];
+		Vector2[] desiredPositions = new Vector2[this.relativeFormationPositions.Length];
 		Vector3 leaderPosition = agents [agentReferenceIndex].transform.position;
 		Vector2 leaderPosition2D = new Vector2(leaderPosition.x, leaderPosition.z);
 		float[][] rotMatrix = UtilityClass.getRotationYMatrix(-agents [agentReferenceIndex].transform.rotation.eulerAngles.y * Mathf.Deg2Rad);
-		for (int i = 0; i < agents.Length; i++) {
+		for (int i = 0; i < this.relativeFormationPositions.Length; i++) {
 			desiredPositions [i] = UtilityClass.rotateVector(rotMatrix, this.relativeFormationPositions [i]);
 			if (absolute) 
 				desiredPositions [i] += leaderPosition2D;

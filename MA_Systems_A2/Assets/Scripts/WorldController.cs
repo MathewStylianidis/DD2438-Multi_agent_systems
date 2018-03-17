@@ -64,9 +64,9 @@ public class WorldController : MonoBehaviour {
 			agentParent.AddComponent<VirtualStructure> ();
 			// Add virtual center to formation positions
 			Vector2[] formationPositions = new Vector2[world.formationPositions.Length + 1];
-			formationPositions [0] = agents [agents.Length - 1].transform.position; //position of virtual center
-			for (int i = 1; i < formationPositions.Length; i++)
-				formationPositions [i] = world.formationPositions [i - 1];
+			for (int i = 0; i < formationPositions.Length - 1; i++)
+				formationPositions [i] = world.formationPositions [i];
+			formationPositions [formationPositions.Length - 1] = agents [agents.Length - 1].transform.position; //position of virtual center
 			agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.trajectory, formationPositions, agents [0].transform.localScale.y / 2);
 		}
 	}
@@ -136,7 +136,11 @@ public class WorldController : MonoBehaviour {
 	}
 
 	private void initializeVelocities() {
-		world.currentVelocities = new Vector2[world.startPositions.Length];
+		if(data.name != "P26")
+			world.currentVelocities = new Vector2[world.startPositions.Length];
+		else // Sports formation need one extra velocity for the virtual structure center
+			world.currentVelocities = new Vector2[world.startPositions.Length + 1];
+		
 		for (int i = 0; i < world.currentVelocities.Length; i++) {
 			Vector2 x;
 			if (data.name != "P25" && data.name != "P26" && data.name != "P27")

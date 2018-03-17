@@ -25,7 +25,7 @@ public class VirtualStructure : BaseFormationController {
 		for (int i = 0; i < trajectory.t.Length; i++)
 			this.trajectoryTimestamps [i] = trajectory.t [i];
 		// set formationPositions in parent class to relative positions from the virtual center
-		setRelativeFormationPositions(formationPositions, 0);	
+		setRelativeFormationPositions(formationPositions, formationPositions.Length - 1);	
 		// Get starting absolute positions and relative to the leader positions.
 		this.desiredRelativePositions = getDesiredPositions (agents.Length - 1, false);
 		this.desiredAbsolutePositions = getDesiredPositions (agents.Length - 1);

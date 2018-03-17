@@ -48,11 +48,6 @@ public class FootballPlayerController : MonoBehaviour {
 			accumulatedDeltaTime += Time.deltaTime * simulationSpeedFactor;
 			if (accumulatedDeltaTime >= vehicle_dt) {
 				accumulatedDeltaTime = 0.0f;
-				// Do completePath and get the first node only or do move forwards (maybe do it depending on how close you are)
-				// Get current desired position
-				if (agentIdx == 1) {
-
-				}
 				transform.position = nextPosInfo.pos;
 				lastPosInfo = nextPosInfo;
 				PointInfo tmp = getNextPosition (lastPosInfo, world);
@@ -73,8 +68,9 @@ public class FootballPlayerController : MonoBehaviour {
 	}
 
 	private PointInfo getNextPosition(PointInfo lastPos, World world) {		
-		Vector3 goalPoint = new Vector3(virtualStructure.getDesiredPosition (agentIdx).x, agentHeight, virtualStructure.getDesiredPosition (agentIdx).y);
-		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, virtualStructure.getAgentOrientation(0), lastPos.currentTime + vehicle_dt);
+		// Get next desired position (agentIdx - 1 is used because the opponent player is part of the framework but is not included in the formation)
+		Vector3 goalPoint = new Vector3(virtualStructure.getDesiredPosition (agentIdx - 1).x, agentHeight, virtualStructure.getDesiredPosition (agentIdx - 1).y);
+		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, virtualStructure.getAgentOrientation(virtualStructure.getAgents().Length - 1), lastPos.currentTime + vehicle_dt);
 		List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
 		if (path.Count > 0) {
 			return path [0];
