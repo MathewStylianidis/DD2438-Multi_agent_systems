@@ -24,7 +24,17 @@ public class LeaderController : MonoBehaviour {
 				simulationSpeedFactor = worldController.simulationSpeedFactor;
 			}
 			GameObject formationController = GameObject.Find ("LeaderFormationController");
-			LeaderFormationController formationScript = formationController.GetComponent<LeaderFormationController> ();
+			BaseFormationController formationScript;
+			if (formationController != null)
+				// If there is a leader formation controller object then it is a leader-follow problem
+				formationScript = formationController.GetComponent<LeaderFormationController> ();
+			else {
+				GameObject agentsObj = GameObject.Find ("Agents");
+				if (agentsObj == null)
+					throw new System.Exception ("No Agents parent object exists over the agents in the scene.");
+				// Otherwise, it is a virtual structure problem (sports formation)
+				formationScript = agentsObj.GetComponent<VirtualStructure> ();
+			}
 			if(gameController != null) {
 				trajectory = formationScript.getTrajectory ();
 				trajectoryOrientation = formationScript.getTrajectoryOrientation ();

@@ -62,7 +62,7 @@ public class WorldController : MonoBehaviour {
 			ren.material = fieldMaterial;
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
 			agentParent.AddComponent<VirtualStructure> ();
-			//agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
+			agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
 		}
 	}
 	
@@ -174,14 +174,19 @@ public class WorldController : MonoBehaviour {
 					world.currentPositions [i + 1] = world.startPositions [i];
 				}
 			} else if (data.name == "P26") {
-				world.currentAngularVel = new float[world.startPositions.Length + 1];
-				world.currentPositions = new Vector2[world.startPositions.Length + 1];
-				agents = new GameObject[world.startPositions.Length + 1];
+				world.currentAngularVel = new float[world.startPositions.Length + 2];
+				world.currentPositions = new Vector2[world.startPositions.Length + 2];
+				agents = new GameObject[world.startPositions.Length + 2];
+				// Initialize opponent football player
+				Vector3 orientation = UtilityClass.rads2Vec (world.trajectory.theta [0]);
+				Vector2 pos = new Vector2 (world.trajectory.x [0], world.trajectory.y [0]);
+				spawnActor (pos, orientation, 0);
+				world.currentPositions [0] = pos;
 				// Initialize players
 				for (int i = 0; i < world.startPositions.Length; i++) {
-					Vector3 orientation = Vector3.left; //change so that they look towards their formation position
-					spawnActor (world.startPositions [i], orientation, i);
-					world.currentPositions [i] = world.startPositions [i];
+					orientation = Vector3.left; //change so that they look towards their formation position
+					spawnActor (world.startPositions [i], orientation, i + 1);
+					world.currentPositions [i + 1] = world.startPositions [i];
 				}
 				// Initialize virtual structure center
 				world.currentPositions[world.currentPositions.Length - 1] = VirtualStructure.getCenter(world.formationPositions);
