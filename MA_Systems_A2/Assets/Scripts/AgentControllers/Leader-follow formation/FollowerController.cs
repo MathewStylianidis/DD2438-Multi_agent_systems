@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class FollowerController : MonoBehaviour {
 
+	private int leaderIndex = 0;
 	private World world;
 	private float accumulatedDeltaTime = 0.0f;
 	private float simulationSpeedFactor = 1.0f;
@@ -75,7 +76,7 @@ public class FollowerController : MonoBehaviour {
 
 	private PointInfo getNextPosition(PointInfo lastPos, World world) {		
 		Vector3 goalPoint = new Vector3(formationControl.getDesiredPosition (agentIdx).x, agentHeight, formationControl.getDesiredPosition (agentIdx).y);
-		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.right, formationControl.getLeaderOrientation(), lastPos.currentTime + vehicle_dt);
+		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, formationControl.getAgentOrientation(leaderIndex), lastPos.currentTime + vehicle_dt);
 		List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
 		if (path.Count > 0) {
 			return path [0];

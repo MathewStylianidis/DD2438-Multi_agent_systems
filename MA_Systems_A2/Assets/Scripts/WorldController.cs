@@ -62,7 +62,12 @@ public class WorldController : MonoBehaviour {
 			ren.material = fieldMaterial;
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
 			agentParent.AddComponent<VirtualStructure> ();
-			agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
+			// Add virtual center to formation positions
+			Vector2[] formationPositions = new Vector2[world.formationPositions.Length + 1];
+			formationPositions [0] = agents [agents.Length - 1].transform.position; //position of virtual center
+			for (int i = 1; i < formationPositions.Length; i++)
+				formationPositions [i] = world.formationPositions [i - 1];
+			agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.trajectory, formationPositions, agents [0].transform.localScale.y / 2);
 		}
 	}
 	

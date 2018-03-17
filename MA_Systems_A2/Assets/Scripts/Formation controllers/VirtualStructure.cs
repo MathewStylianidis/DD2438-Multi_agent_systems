@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class VirtualStructure : BaseFormationController {
 
+	void Update () {
+		this.desiredRelativePositions = getDesiredPositions (agents.Length - 1, false);
+		this.desiredAbsolutePositions = getDesiredPositions (agents.Length - 1);
+		//Visualizer.visualizePoints(this.desiredAbsolutePositions);
+	}
 	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight) {
 		this.agentHeight = agentHeight;
 		this.agents = agents;
@@ -19,18 +24,18 @@ public class VirtualStructure : BaseFormationController {
 		this.trajectoryTimestamps = new float[trajectory.t.Length];
 		for (int i = 0; i < trajectory.t.Length; i++)
 			this.trajectoryTimestamps [i] = trajectory.t [i];
-		// Read positioning of the formations
-		//this.formationPositions = getRelativeFormationPositions(formationPositions);	
+		// set formationPositions in parent class to relative positions from the virtual center
+		setRelativeFormationPositions(formationPositions, 0);	
 		// Get starting absolute positions and relative to the leader positions.
-		//this.desiredRelativePositions = getDesiredPositions (false);
-		//this.desiredAbsolutePositions = getDesiredPositions ();
+		this.desiredRelativePositions = getDesiredPositions (agents.Length - 1, false);
+		this.desiredAbsolutePositions = getDesiredPositions (agents.Length - 1);
 		// Visualize starting desired positions
 		//Visualizer.visualizePoints(this.desiredRelativePositions);
 		//Visualizer.visualizePoints(this.desiredAbsolutePositions);
 		// Set a controller within each agent
 		agents [0].AddComponent<LeaderController> ();
-		//for (int i = 1; i < agents.Length; i++)
-			//agents [i].AddComponent<FollowerController> ();
+		for (int i = 1; i < agents.Length; i++)
+			agents [i].AddComponent<FootballPlayerController> ();
 	}
 
 

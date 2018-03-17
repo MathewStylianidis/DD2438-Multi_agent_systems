@@ -9,8 +9,8 @@ public class LeaderFormationController : BaseFormationController {
 	
 
 	void Update () {
-		this.desiredRelativePositions = getDesiredPositions (false);
-		this.desiredAbsolutePositions = getDesiredPositions ();
+		this.desiredRelativePositions = getDesiredPositions (0, false);
+		this.desiredAbsolutePositions = getDesiredPositions (0);
 		//Visualizer.visualizePoints(this.desiredAbsolutePositions);
 	}
 		
@@ -29,11 +29,11 @@ public class LeaderFormationController : BaseFormationController {
 		this.trajectoryTimestamps = new float[trajectory.t.Length];
 		for (int i = 0; i < trajectory.t.Length; i++)
 			this.trajectoryTimestamps [i] = trajectory.t [i];
-		// Read positioning of the formations
-		this.formationPositions = getRelativeFormationPositions(formationPositions);	
+		// set formationPositions in parent class to relative positions from the leader
+		setRelativeFormationPositions(formationPositions, 0);	
 		// Get starting absolute positions and relative to the leader positions.
-		this.desiredRelativePositions = getDesiredPositions (false);
-		this.desiredAbsolutePositions = getDesiredPositions ();
+		this.desiredRelativePositions = getDesiredPositions (0, false);
+		this.desiredAbsolutePositions = getDesiredPositions (0);
 		// Visualize starting desired positions
 		Visualizer.visualizePoints(this.desiredRelativePositions);
 		//Visualizer.visualizePoints(this.desiredAbsolutePositions);

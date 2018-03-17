@@ -62,9 +62,9 @@
      <Compile Include="Assets\Scripts\AgentControllers\Leader-follow formation\LeaderController.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\Sports formation\FootballPlayerController.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\VRP\AgentControllerVRP.cs" />
-     <Compile Include="Assets\Scripts\Formaton controllers\BaseFormationController.cs" />
-     <Compile Include="Assets\Scripts\Formaton controllers\LeaderFormationController.cs" />
-     <Compile Include="Assets\Scripts\Formaton controllers\VirtualStructure.cs" />
+     <Compile Include="Assets\Scripts\Formation controllers\BaseFormationController.cs" />
+     <Compile Include="Assets\Scripts\Formation controllers\LeaderFormationController.cs" />
+     <Compile Include="Assets\Scripts\Formation controllers\VirtualStructure.cs" />
      <Compile Include="Assets\Scripts\GeneticAlgorithm.cs" />
      <Compile Include="Assets\Scripts\Motion models\BaseModel.cs" />
      <Compile Include="Assets\Scripts\Motion models\DynamicPoint.cs" />
