@@ -29,7 +29,7 @@ public class BaseFormationController : MonoBehaviour {
 	protected void setRelativeFormationPositions(Vector2[] formationPositions, int agentReferenceIndex) {
 		Vector2 referencePosition = formationPositions [agentReferenceIndex];
 		Vector2[] translatedFormationPositions = new Vector2[formationPositions.Length];
-		for (int i = 0; i < formationPositions.Length; i++)
+		for (int i = 0; i < formationPositions.Length; i++) 
 			translatedFormationPositions [i] = formationPositions [i] - referencePosition;			
 		this.relativeFormationPositions = translatedFormationPositions;
 	}
