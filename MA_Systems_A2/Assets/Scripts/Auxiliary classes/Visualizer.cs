@@ -38,9 +38,9 @@ public class Visualizer : MonoBehaviour {
 	/// Visualizes a trajectory given by x and y
 	/// </summary>
 	public static void visualizeTrajectory(float[] x, float[] y) {
-		Vector3 prevPoint = new Vector3 (x [0], 0, y [0]);
+		Vector3 prevPoint = new Vector3 (x [0], 0.1f, y [0]);
 		for (int i = 1; i < x.Length; i++) {
-			Vector3 newPoint = new Vector3 (x [i], 0, y [i]);
+			Vector3 newPoint = new Vector3 (x [i], 0.1f, y [i]);
 			GameObject tmp = new GameObject ();
 			LineRenderer lineRenderer = tmp.AddComponent<LineRenderer> ();
 			lineRenderer.widthMultiplier = Visualizer.widthMultiplier;
@@ -55,7 +55,7 @@ public class Visualizer : MonoBehaviour {
 
 	public static void visualizePoints(Vector2[] points) {
 		for (int i = 0; i < points.Length; i++) {
-			Vector3 point = new Vector3 (points [i].x, 0f, points [i].y);
+			Vector3 point = new Vector3 (points [i].x, 0.1f, points [i].y);
 			GameObject tmp = new GameObject ();
 			LineRenderer lineRenderer = tmp.AddComponent<LineRenderer> ();
 			lineRenderer.widthMultiplier = Visualizer.widthMultiplier;

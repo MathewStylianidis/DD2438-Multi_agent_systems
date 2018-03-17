@@ -53,15 +53,15 @@
   <ItemGroup>
      <Compile Include="Assets\ImportedAssets\ForceField\Script\RenderDepth.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\AgentControllerCollAvoidance.cs" />
-     <Compile Include="Assets\Scripts\AgentControllers\Auxiliary classes\FloydWarshall.cs" />
-     <Compile Include="Assets\Scripts\AgentControllers\Auxiliary classes\Raycasting.cs" />
-     <Compile Include="Assets\Scripts\AgentControllers\Auxiliary classes\UtilityClass.cs" />
-     <Compile Include="Assets\Scripts\AgentControllers\Auxiliary classes\VisibilityGraph.cs" />
-     <Compile Include="Assets\Scripts\AgentControllers\Auxiliary classes\Visualizer.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\Leader-follow formation\FollowerController.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\Leader-follow formation\LeaderController.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\Sports formation\FootballPlayerController.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\VRP\AgentControllerVRP.cs" />
+     <Compile Include="Assets\Scripts\Auxiliary classes\FloydWarshall.cs" />
+     <Compile Include="Assets\Scripts\Auxiliary classes\Raycasting.cs" />
+     <Compile Include="Assets\Scripts\Auxiliary classes\UtilityClass.cs" />
+     <Compile Include="Assets\Scripts\Auxiliary classes\VisibilityGraph.cs" />
+     <Compile Include="Assets\Scripts\Auxiliary classes\Visualizer.cs" />
      <Compile Include="Assets\Scripts\Formation controllers\BaseFormationController.cs" />
      <Compile Include="Assets\Scripts\Formation controllers\LeaderFormationController.cs" />
      <Compile Include="Assets\Scripts\Formation controllers\VirtualStructure.cs" />

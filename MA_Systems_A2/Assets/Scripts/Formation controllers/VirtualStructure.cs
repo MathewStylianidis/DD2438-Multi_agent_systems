@@ -39,6 +39,7 @@ public class VirtualStructure : BaseFormationController {
 			vertices[2] = new PointInfo(new Vector3(center.x - newFormationSideX/2, agentHeight, center.y - newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
 			// Bottom right 
 			vertices[3] = new PointInfo(new Vector3(center.x + newFormationSideX/2, agentHeight, center.y - newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
+			Visualizer.visualizePoints(getEdgeVectors());
 		}
 	}
 			
@@ -49,6 +50,22 @@ public class VirtualStructure : BaseFormationController {
 
 
 	void Update () {
+		// Get positions of virtual structure edges
+		PointInfo[] edges = formationRectangle.getEdges ();
+		// If the opponent is not inside the virtual structure rectangle
+		if (!Raycasting.insidePolygon (agents [0].transform.position.x, agents [0].transform.position.z, formationRectangle.getEdgeVectors())) {
+			// Move virtual center based on position of the closest edge to the opponent
+			float minDistance = float.MaxValue;
+			int minIdx = -1;
+			for (int i = 0; i < edges.Length; i++) {
+				float distance = Vector3.Distance (edges [i].pos, agents [0].transform.position);
+				if (distance < minDistance) {
+					minDistance = distance;
+					minIdx = i;
+				}
+			}
+		} 
+
 		this.desiredRelativePositions = getDesiredPositions (agents.Length - 1, false);
 		this.desiredAbsolutePositions = getDesiredPositions (agents.Length - 1);
 		//Visualizer.visualizePoints(this.desiredAbsolutePositions);
