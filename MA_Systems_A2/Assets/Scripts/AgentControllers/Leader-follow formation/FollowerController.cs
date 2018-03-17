@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class FollowerController : MonoBehaviour {
 
-	private Vector3[] trajectory; // Trajectory coordinates
-	private float[] trajectoryOrientation; // Orientation of virtual structure in each step of the trajectory
-	private float[] trajectoryTimestamps; // Timestamp <t> at each step of the trajectory
 	private World world;
 	private float accumulatedDeltaTime = 0.0f;
 	private float simulationSpeedFactor = 1.0f;
@@ -37,9 +34,6 @@ public class FollowerController : MonoBehaviour {
 			formationControl = formationController.GetComponent<LeaderFormationController> ();
 			if(formationControl != null) {
 				agentHeight = formationControl.agentHeight;
-				trajectory = formationControl.getTrajectory ();
-				trajectoryOrientation = formationControl.getTrajectoryOrientation ();
-				trajectoryTimestamps = formationControl.getTrajectoryTimestamps ();
 				Vector3 currentVelocity = new Vector3 (world.currentVelocities [agentIdx - 1].x, 0f, world.currentVelocities [agentIdx - 1].y);
 				lastPosInfo = new PointInfo (this.transform.position, currentVelocity, currentVelocity.normalized, 0f);
 				nextPosInfo = getNextPosition (lastPosInfo, world);
@@ -69,10 +63,9 @@ public class FollowerController : MonoBehaviour {
 			
 					}
 				}
-				if (routeIdx < trajectory.Length) {
-					transform.LookAt (lastPosInfo.pos + nextPosInfo.orientation);
-					world.currentVelocities [agentIdx - 1] = Vector3.zero;
-				}
+				transform.LookAt (lastPosInfo.pos + nextPosInfo.orientation);
+				world.currentVelocities [agentIdx - 1] = Vector3.zero;
+
 			} else {
 				transform.position = lastPosInfo.pos + (nextPosInfo.pos - lastPosInfo.pos) * Time.deltaTime / vehicle_dt;	
 			}
