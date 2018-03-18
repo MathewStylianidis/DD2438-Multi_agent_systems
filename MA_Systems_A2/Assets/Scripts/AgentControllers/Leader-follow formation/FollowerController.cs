@@ -51,21 +51,15 @@ public class FollowerController : MonoBehaviour {
 				accumulatedDeltaTime = 0.0f;
 				// Do completePath and get the first node only or do move forwards (maybe do it depending on how close you are)
 				// Get current desired position
-				if (agentIdx == 1) {
-					
-				}
 				transform.position = nextPosInfo.pos;
 				lastPosInfo = nextPosInfo;
 				PointInfo tmp = getNextPosition (lastPosInfo, world);
 				if (tmp != null) {
 					world.currentVelocities [agentIdx - 1] = tmp.vel;
 					nextPosInfo = tmp;
-					if (agentIdx == 1) {
-			
-					}
 				}
 				transform.LookAt (lastPosInfo.pos + nextPosInfo.orientation);
-				world.currentVelocities [agentIdx - 1] = Vector3.zero;
+				world.currentVelocities [agentIdx - 1] = lastPosInfo.vel;
 
 			} else {
 				transform.position = lastPosInfo.pos + (nextPosInfo.pos - lastPosInfo.pos) * Time.deltaTime / vehicle_dt;	
@@ -73,6 +67,10 @@ public class FollowerController : MonoBehaviour {
 		}
 	}
 
+	public void setLastPosInfo(PointInfo lastPosInfo) {this.lastPosInfo = lastPosInfo;}
+	public BaseModel getMotionModel() { return motionModel;}
+	public PointInfo getLastPosInfo() {return lastPosInfo;}
+	public World getWorld() {return world;}
 
 	private PointInfo getNextPosition(PointInfo lastPos, World world) {		
 		Vector3 goalPoint = new Vector3(formationControl.getDesiredPosition (agentIdx).x, agentHeight, formationControl.getDesiredPosition (agentIdx).y);

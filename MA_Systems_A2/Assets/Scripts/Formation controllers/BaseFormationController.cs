@@ -38,13 +38,18 @@ public class BaseFormationController : MonoBehaviour {
 	/// Get the positions of the formation, either in absolute coordinates or relative to the
 	/// a given agent's coordinates and starting orientation.
 	/// </summary>
-	protected Vector2[] getDesiredPositions(int agentReferenceIndex, bool absolute = true) {
+	protected Vector2[] getDesiredPositions(int agentReferenceIndex, bool rotate = true, bool absolute = true) {
 		Vector2[] desiredPositions = new Vector2[this.relativeFormationPositions.Length];
 		Vector3 leaderPosition = agents [agentReferenceIndex].transform.position;
 		Vector2 leaderPosition2D = new Vector2(leaderPosition.x, leaderPosition.z);
-		float[][] rotMatrix = UtilityClass.getRotationYMatrix(-agents [agentReferenceIndex].transform.rotation.eulerAngles.y * Mathf.Deg2Rad);
+		float[][] rotMatrix = null;
+		if(rotate)
+			rotMatrix = UtilityClass.getRotationYMatrix(-agents [agentReferenceIndex].transform.rotation.eulerAngles.y * Mathf.Deg2Rad);
 		for (int i = 0; i < this.relativeFormationPositions.Length; i++) {
-			desiredPositions [i] = UtilityClass.rotateVector(rotMatrix, this.relativeFormationPositions [i]);
+			if (rotate)
+				desiredPositions [i] = UtilityClass.rotateVector (rotMatrix, this.relativeFormationPositions [i]);
+			else
+				desiredPositions [i] = this.relativeFormationPositions [i];
 			if (absolute) 
 				desiredPositions [i] += leaderPosition2D;
 		}

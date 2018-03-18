@@ -510,8 +510,8 @@ MonoBehaviour:
   pointOfInterestModel: {fileID: 1371991534854146, guid: 60af354a4c4e345449409e042c27c5ce,
     type: 2}
   trajectoryData: {fileID: 4900000, guid: 2dbe7357c651f7e4cae78bf87830b167, type: 3}
-  deltaX: 1
-  deltaY: 1
+  deltaX: 0
+  deltaY: 0
 --- !u!4 &810943123
 Transform:
   m_ObjectHideFlags: 0

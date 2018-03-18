@@ -15,7 +15,7 @@ public class FootballPlayerController : MonoBehaviour {
 	private PointInfo nextPosInfo;
 	private VirtualStructure virtualStructure;
 	private int agentIdx;
-
+	private bool play = true;
 
 	// Use this for initialization
 	void Start () {
@@ -44,7 +44,7 @@ public class FootballPlayerController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (virtualStructure != null) {
+		if (play && virtualStructure != null) {
 			accumulatedDeltaTime += Time.deltaTime * simulationSpeedFactor;
 			if (accumulatedDeltaTime >= vehicle_dt) {
 				accumulatedDeltaTime = 0.0f;
@@ -54,18 +54,22 @@ public class FootballPlayerController : MonoBehaviour {
 				if (tmp != null) {
 					world.currentVelocities [agentIdx - 1] = tmp.vel;
 					nextPosInfo = tmp;
-					if (agentIdx == 1) {
-
-					}
 				}
 				transform.LookAt (lastPosInfo.pos + nextPosInfo.orientation);
-				world.currentVelocities [agentIdx - 1] = Vector3.zero;
+				world.currentVelocities [agentIdx - 1] = lastPosInfo.vel;
 
 			} else {
 				transform.position = lastPosInfo.pos + (nextPosInfo.pos - lastPosInfo.pos) * Time.deltaTime / vehicle_dt;	
 			}
 		}
 	}
+
+
+	public void setLastPosInfo(PointInfo lastPosInfo) {this.lastPosInfo = lastPosInfo;}
+	public BaseModel getMotionModel() { return motionModel;}
+	public PointInfo getLastPosInfo() {return lastPosInfo;}
+	public World getWorld() {return world;}
+	public void setPlay(bool play) {this.play = play;}
 
 	private PointInfo getNextPosition(PointInfo lastPos, World world) {		
 		// Get next desired position (agentIdx - 1 is used because the opponent player is part of the framework but is not included in the formation)
@@ -79,4 +83,6 @@ public class FootballPlayerController : MonoBehaviour {
 		}
 
 	}
+
+
 }

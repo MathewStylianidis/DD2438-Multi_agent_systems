@@ -32,8 +32,8 @@ public class LeaderFormationController : BaseFormationController {
 		// set formationPositions in parent class to relative positions from the leader
 		setRelativeFormationPositions(formationPositions, 0);	
 		// Get starting absolute positions and relative to the leader positions.
-		this.desiredRelativePositions = getDesiredPositions (0, false);
-		this.desiredAbsolutePositions = getDesiredPositions (0);
+		this.desiredRelativePositions = getDesiredPositions (0, true, false);
+		this.desiredAbsolutePositions = getDesiredPositions (0, true, true);
 		// Visualize starting desired positions
 		Visualizer.visualizePoints(this.desiredRelativePositions);
 		//Visualizer.visualizePoints(this.desiredAbsolutePositions);

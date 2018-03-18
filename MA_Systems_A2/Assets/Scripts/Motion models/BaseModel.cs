@@ -19,6 +19,8 @@ public abstract class BaseModel {
 	/// </summary>
 	public abstract List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck);
 
+	public float getDt() {return dt;}
+
 	public BaseModel(float maxVel, float dt) {
 		this.maxVelocity = maxVel;
 		this.dt = dt;
