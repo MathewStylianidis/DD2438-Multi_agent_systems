@@ -35,10 +35,10 @@ public class VirtualStructure : BaseFormationController {
 			vertices[0] = new PointInfo(new Vector3(center.x - newFormationSideX/2, agentHeight, center.y + newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
 			// Upper right 
 			vertices[1] = new PointInfo(new Vector3(center.x + newFormationSideX/2, agentHeight, center.y + newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
-			// Bottom left
-			vertices[2] = new PointInfo(new Vector3(center.x - newFormationSideX/2, agentHeight, center.y - newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
 			// Bottom right 
-			vertices[3] = new PointInfo(new Vector3(center.x + newFormationSideX/2, agentHeight, center.y - newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
+			vertices[2] = new PointInfo(new Vector3(center.x + newFormationSideX/2, agentHeight, center.y - newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
+			// Bottom left
+			vertices[3] = new PointInfo(new Vector3(center.x - newFormationSideX/2, agentHeight, center.y - newFormationSideY/2), Vector3.zero, Vector3.forward, 0.0f);
 			Visualizer.visualizePoints(getEdgeVectors());
 		}
 	}
@@ -52,10 +52,21 @@ public class VirtualStructure : BaseFormationController {
 	void Update () {
 		// Get positions of virtual structure edges
 		PointInfo[] edges = formationRectangle.getEdges ();
+
+		Vector3 targetPosition = agents [0].transform.position;
 		// If the opponent is not inside the virtual structure rectangle
-		if (!Raycasting.insidePolygon (agents [0].transform.position.x, agents [0].transform.position.z, formationRectangle.getEdgeVectors())) {
-			// Move virtual center based on position of the closest edge to the opponent
-			float minDistance = float.MaxValue;
+		if (!Raycasting.insidePolygon (targetPosition.x, targetPosition.z, formationRectangle.getEdgeVectors ())) {
+			// Get min x,y and max x,y of the virtual rectangle
+			float[] rectMinMaxes = getMinMaxes (formationRectangle.getEdgeVectors ());
+			if (isInFrontOfFormation (targetPosition, rectMinMaxes)) {
+				
+			} else if (isNextToFormation (targetPosition, rectMinMaxes)) {
+				
+			} else {
+				
+				//Otherwise get closest edge and move the whole structure
+				// Move virtual center based on position of the closest edge to the opponent
+				/*float minDistance = float.MaxValue;
 			int minIdx = -1;
 			for (int i = 0; i < edges.Length; i++) {
 				float distance = Vector3.Distance (edges [i].pos, agents [0].transform.position);
@@ -63,8 +74,11 @@ public class VirtualStructure : BaseFormationController {
 					minDistance = distance;
 					minIdx = i;
 				}
+			}*/
 			}
-		} 
+
+
+		}
 
 		this.desiredRelativePositions = getDesiredPositions (agents.Length - 1, false);
 		this.desiredAbsolutePositions = getDesiredPositions (agents.Length - 1);
@@ -127,5 +141,18 @@ public class VirtualStructure : BaseFormationController {
 				minMaxes[3] = formationPositions [i].y;
 		}
 		return minMaxes;
+	}
+
+
+	private bool isInFrontOfFormation(Vector3 targetPos, float[] areaMinMaxes) {
+		if (targetPos.x >= areaMinMaxes [0] && targetPos.x <= areaMinMaxes [2])
+			return true;
+		return false;
+	}
+
+	private bool isNextToFormation(Vector3 targetPos, float[] areaMinMaxes) {
+		if (targetPos.z >= areaMinMaxes [1] && targetPos.z <= areaMinMaxes [3])
+			return true;
+		return false;
 	}
 }

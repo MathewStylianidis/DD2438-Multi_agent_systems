@@ -506,12 +506,12 @@ MonoBehaviour:
   objectThickness: 0.01
   fieldMaterial: {fileID: 2100000, guid: 066326dda69827642ad629bb41725088, type: 2}
   modelName: 1
-  simulationSpeedFactor: 15
+  simulationSpeedFactor: 25
   pointOfInterestModel: {fileID: 1371991534854146, guid: 60af354a4c4e345449409e042c27c5ce,
     type: 2}
   trajectoryData: {fileID: 4900000, guid: 2dbe7357c651f7e4cae78bf87830b167, type: 3}
-  deltaX: 5
-  deltaY: 5
+  deltaX: 1
+  deltaY: 1
 --- !u!4 &810943123
 Transform:
   m_ObjectHideFlags: 0
