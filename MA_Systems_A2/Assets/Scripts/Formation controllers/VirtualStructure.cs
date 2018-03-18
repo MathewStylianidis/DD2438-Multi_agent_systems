@@ -82,14 +82,14 @@ public class VirtualStructure : BaseFormationController {
 				//Otherwise get closest edge and move the whole structure
 				// Move virtual center based on position of the closest edge to the opponent
 				/*float minDistance = float.MaxValue;
-			int minIdx = -1;
-			for (int i = 0; i < edges.Length; i++) {
-				float distance = Vector3.Distance (edges [i].pos, agents [0].transform.position);
-				if (distance < minDistance) {
-					minDistance = distance;
-					minIdx = i;
-				}
-			}*/
+				int minIdx = -1;
+				for (int i = 0; i < edges.Length; i++) {
+					float distance = Vector3.Distance (edges [i].pos, agents [0].transform.position);
+					if (distance < minDistance) {
+						minDistance = distance;
+						minIdx = i;
+					}
+				}*/
 			}
 
 
@@ -127,6 +127,7 @@ public class VirtualStructure : BaseFormationController {
 		agents [0].AddComponent<LeaderController> ();
 		for (int i = 1; i < agents.Length; i++)
 			agents [i].AddComponent<FootballPlayerController> ();
+		agents [agents.Length - 1].GetComponent<FootballPlayerController> ().setVirtualAgent (true);
 		formationRectangle = new  VirtualStructureRectangle (formationPositions, boundingPoly, deltaX, deltaY, agentHeight);
 	}
 
@@ -180,7 +181,13 @@ public class VirtualStructure : BaseFormationController {
 		List<PointInfo> path = model.completePath (lastPos, goalPointInfo, virtualCenterController.getWorld(), false);
 		// Move virtual center towards targetY
 		agents[agents.Length - 1].transform.position = path [0].pos;
+		Debug.Log ("SHIT");
+		Debug.Log (lastPos.vel);
+		Debug.Log (target);
+		Debug.Log (path[0].pos);
 		agents [agents.Length - 1].transform.LookAt(path[0].pos + (target - agents[agents.Length - 1].transform.position).normalized);
+		Debug.Log (path [0].vel);
+		virtualCenterController.setLastPosInfo (path [0]);
 		formationRectangle.updateRectangle (path [0].pos);
 	}
 }
