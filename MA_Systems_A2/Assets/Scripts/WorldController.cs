@@ -416,8 +416,8 @@ public class WorldController : MonoBehaviour {
 		// Remove obstacle vertex rows and columns from the distance matrix as GA does not work with them to find a solution
 		float[,] distanceMatrix = getSubArray(floydWarshallDistMatrix, obstacleVertCount);
 		// Use the genetic algorithm for the Vehicle Routing Problem
-		int M = 15000;
-		int lambda = 15000;
+		int M = 10000;
+		int lambda = 10000;
 		GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 500, false, 0.04f, 0.01f, true);
 		ga.generationalGeneticAlgorithm ();
 		List<int> solution = ga.getFittestIndividual ();

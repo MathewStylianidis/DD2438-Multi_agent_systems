@@ -69,32 +69,12 @@ public class VirtualStructure : BaseFormationController {
 			if (isInFrontOfFormation (targetPosition, rectMinMaxes)) {
 				// Get point in front of the virtual center at the same level on the y axis as the target
 				Vector3 targetY = new Vector3(agents[agents.Length - 1].transform.position.x, agentHeight, targetPosition.z);
-				// Move formation forward to meet targetPosition on the x axis
-				FootballPlayerController virtualCenterController = agents[agents.Length - 1].GetComponent<FootballPlayerController>();
-				BaseModel model = virtualCenterController.getMotionModel ();
-				PointInfo lastPos = virtualCenterController.getLastPosInfo ();
-				PointInfo goalPointInfo = new PointInfo (targetY, Vector3.zero, Vector3.forward, lastPos.currentTime + model.getDt());
-				List<PointInfo> path = model.completePath (lastPos, goalPointInfo, virtualCenterController.getWorld(), false);
-				// Move virtual center towards targetY
-				agents[agents.Length - 1].transform.position = path [0].pos;
-				agents [agents.Length - 1].transform.LookAt(path[0].pos + (targetY - agents[agents.Length - 1].transform.position).normalized);
-				formationRectangle.updateRectangle (path [0].pos);
-
+				moveCenterTowards (targetY);
 			} else if (isNextToFormation (targetPosition, rectMinMaxes)) {
 				// Get point in front of the virtual center at the same level on the x axis as the target
 				Vector3 targetX = new Vector3(targetPosition.x, agentHeight, agents[agents.Length - 1].transform.position.z);
 				// Move formation sideways to meet targetPosition on the y axis
-				// Move formation forward to meet targetPosition on the x axis
-				FootballPlayerController virtualCenterController = agents[agents.Length - 1].GetComponent<FootballPlayerController>();
-				BaseModel model = virtualCenterController.getMotionModel ();
-				PointInfo lastPos = virtualCenterController.getLastPosInfo ();
-				PointInfo goalPointInfo = new PointInfo (targetX, Vector3.zero, Vector3.forward, lastPos.currentTime + model.getDt());
-				List<PointInfo> path = model.completePath (lastPos, goalPointInfo, virtualCenterController.getWorld(), false);
-				// Move virtual center towards targetY
-				agents [agents.Length - 1].transform.position = path [0].pos;
-				agents [agents.Length - 1].transform.LookAt(path[0].pos + (targetX - agents[agents.Length - 1].transform.position).normalized);
-				formationRectangle.updateRectangle (path [0].pos);
-
+				moveCenterTowards (targetX);
 			} else {
 				// Move formation diagonally to meet targetPosition
 
@@ -189,5 +169,18 @@ public class VirtualStructure : BaseFormationController {
 		if (targetPos.z >= areaMinMaxes [1] && targetPos.z <= areaMinMaxes [3])
 			return true;
 		return false;
+	}
+
+	private void moveCenterTowards(Vector3 target) {
+		// Move formation forward to meet targetPosition on the x axis
+		FootballPlayerController virtualCenterController = agents[agents.Length - 1].GetComponent<FootballPlayerController>();
+		BaseModel model = virtualCenterController.getMotionModel ();
+		PointInfo lastPos = virtualCenterController.getLastPosInfo ();
+		PointInfo goalPointInfo = new PointInfo (target, Vector3.zero, Vector3.forward, lastPos.currentTime + model.getDt());
+		List<PointInfo> path = model.completePath (lastPos, goalPointInfo, virtualCenterController.getWorld(), false);
+		// Move virtual center towards targetY
+		agents[agents.Length - 1].transform.position = path [0].pos;
+		agents [agents.Length - 1].transform.LookAt(path[0].pos + (target - agents[agents.Length - 1].transform.position).normalized);
+		formationRectangle.updateRectangle (path [0].pos);
 	}
 }
