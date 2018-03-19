@@ -76,12 +76,8 @@ public class VirtualStructure : BaseFormationController {
 				// Move formation sideways to meet targetPosition on the y axis
 				moveCenterTowards (targetX);
 			} else {
-				// Move formation diagonally to meet targetPosition
-
-
-				//Otherwise get closest edge and move the whole structure
-				// Move virtual center based on position of the closest edge to the opponent
-				/*float minDistance = float.MaxValue;
+				// Get closest virtual structure edge to the target point
+				float minDistance = float.MaxValue;
 				int minIdx = -1;
 				for (int i = 0; i < edges.Length; i++) {
 					float distance = Vector3.Distance (edges [i].pos, agents [0].transform.position);
@@ -89,7 +85,9 @@ public class VirtualStructure : BaseFormationController {
 						minDistance = distance;
 						minIdx = i;
 					}
-				}*/
+				}
+				// Move formation diagonally so that the closest edge meets the target point
+				moveCenterDiagonally(targetPosition, edges[minIdx]);
 			}
 
 
@@ -181,13 +179,26 @@ public class VirtualStructure : BaseFormationController {
 		List<PointInfo> path = model.completePath (lastPos, goalPointInfo, virtualCenterController.getWorld(), false);
 		// Move virtual center towards targetY
 		agents[agents.Length - 1].transform.position = path [0].pos;
-		Debug.Log ("SHIT");
-		Debug.Log (lastPos.vel);
-		Debug.Log (target);
-		Debug.Log (path[0].pos);
 		agents [agents.Length - 1].transform.LookAt(path[0].pos + (target - agents[agents.Length - 1].transform.position).normalized);
-		Debug.Log (path [0].vel);
 		virtualCenterController.setLastPosInfo (path [0]);
 		formationRectangle.updateRectangle (path [0].pos);
+	}
+
+	private void moveCenterDiagonally(Vector3 target, PointInfo nearestEdge) {
+		FootballPlayerController virtualCenterController = agents[agents.Length - 1].GetComponent<FootballPlayerController>();
+		PointInfo lastPos = virtualCenterController.getLastPosInfo ();
+		Vector3 tmp = lastPos.pos;
+		lastPos.pos = nearestEdge.pos;
+		BaseModel model = virtualCenterController.getMotionModel ();
+		PointInfo goalPointInfo = new PointInfo (target, Vector3.zero, Vector3.forward, lastPos.currentTime + model.getDt());
+		List<PointInfo> path = model.completePath (lastPos, goalPointInfo, virtualCenterController.getWorld(), false);
+		Vector3 difference = path [0].pos - nearestEdge.pos;
+		path [0].pos = tmp + difference;
+		// Move virtual center towards targetY
+		agents[agents.Length - 1].transform.position = path [0].pos;
+		agents [agents.Length - 1].transform.LookAt(path[0].pos + (target - agents[agents.Length - 1].transform.position).normalized);
+		virtualCenterController.setLastPosInfo (path [0]);
+		formationRectangle.updateRectangle (path [0].pos);
+
 	}
 }
