@@ -11,7 +11,8 @@ public class VirtualStructure : BaseFormationController {
 		public VirtualStructureRectangle(VirtualStructureRectangle structure) {
 			center = new Vector3(structure.center.x, structure.center.y, structure.center.z);
 			vertices = new PointInfo[structure.vertices.Length];
-			System.Array.Copy(structure.vertices, vertices, structure.vertices.Length);
+			for(int i = 0; i < vertices.Length; i++)
+				vertices[i] = new PointInfo(structure.vertices[i].pos, structure.vertices[i].vel, structure.vertices[i].orientation, structure.vertices[i].currentTime);
 		}
 
 		public VirtualStructureRectangle(Vector2[] formationPositions, Vector2[] boundingPoly, float deltaX, float deltaY, float agentHeight) {
@@ -60,7 +61,7 @@ public class VirtualStructure : BaseFormationController {
 		// Checks if all edges of the rectangle are in the bounding polygon
 		public bool isInPolygon(Vector2[] boundingPolygon) {
 			for (int i = 0; i < vertices.Length; i++)
-				if (!Raycasting.insidePolygon (vertices [i].pos.x, vertices [i].pos.z, boundingPolygon))
+				if (!Raycasting.insidePolygon (vertices [i].pos.x, vertices [i].pos.z, boundingPolygon, 1e-01))
 					return false;
 			return true;
 		}
@@ -130,6 +131,9 @@ public class VirtualStructure : BaseFormationController {
 			failedAgents.Add (winnerIdx);
 			winnerIdx = agents.Length - 1;
 		}
+		setRelativeFormationPositions(this.relativeFormationPositions, winnerIdx - 1);
+		this.desiredRelativePositions = getDesiredPositions (winnerIdx, false, false);
+		this.desiredAbsolutePositions = getDesiredPositions (winnerIdx, false, true);
 	}
 
 	public void initializeController(GameObject[] agents, Vector2[] boundingPoly, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight, float deltaX, float deltaY) {
@@ -212,7 +216,8 @@ public class VirtualStructure : BaseFormationController {
 		Vector2[] tmpDesiredRelativePositions = getDesiredPositions (winnerIdx, false, false);
 		// Store previous positional information
 		Vector2[] prevRelativeFormationPositions = new Vector2[this.relativeFormationPositions.Length];
-		System.Array.Copy (this.relativeFormationPositions, prevRelativeFormationPositions, this.relativeFormationPositions.Length);
+		for (int i = 0; i < prevRelativeFormationPositions.Length; i++)
+			prevRelativeFormationPositions [i] = new Vector2 (this.relativeFormationPositions[i].x, this.relativeFormationPositions[i].y);
 		Vector2[] prevDesiredRelative = getDesiredPositions (winnerIdx, false, false);
 		Vector2[] prevDesiredAbsolute = getDesiredPositions (winnerIdx, false, true);
 		// Calculate new positional information
@@ -230,7 +235,12 @@ public class VirtualStructure : BaseFormationController {
 		VirtualStructureRectangle tmp = new VirtualStructureRectangle(formationRectangle);
 		// Update rectangle with new desired center
 		tmp.updateRectangle (desiredCenter3D);
-
+		//Debug.Log ("A");
+		//string x = "";
+		//for (int i = 0; i < tmp.vertices.Length; i++)
+			//x += tmp.vertices [i].pos + " ";
+		//Debug.Log ("FOrmation rectangle" + x);
+		//Debug.Log (desiredCenter3D);
 		// Check if new rectangle gets out of the bounding polygon
 		if (lastPos.currentTime > 30.0f && !tmp.isInPolygon (nearestAgentController.getWorld ().boundingPolygon)) {
 			// If it is not entirely inside, restore changes and return false
