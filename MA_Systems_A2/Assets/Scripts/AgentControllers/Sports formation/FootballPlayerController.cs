@@ -15,7 +15,7 @@ public class FootballPlayerController : MonoBehaviour {
 	private PointInfo nextPosInfo;
 	private VirtualStructure virtualStructure;
 	private int agentIdx;
-	private bool virtualAgent = false;
+	private bool play = true;
 
 	// Use this for initialization
 	void Start () {
@@ -42,15 +42,20 @@ public class FootballPlayerController : MonoBehaviour {
 		}
 	}
 	
-	// Update is called once per frame
-	void Update () {
-		if (!virtualAgent && virtualStructure != null) {
+	// LateUpdate  is called once per frame after update
+	void LateUpdate  () {
+		
+		if (play && virtualStructure != null) {
 			accumulatedDeltaTime += Time.deltaTime * simulationSpeedFactor;
 			if (accumulatedDeltaTime >= vehicle_dt) {
+				if (agentIdx == 11)
+					Debug.Log (1);
 				accumulatedDeltaTime = 0.0f;
 				transform.position = nextPosInfo.pos;
 				lastPosInfo = nextPosInfo;
+
 				PointInfo tmp = getNextPosition (lastPosInfo, world);
+
 				if (tmp != null) {
 					world.currentVelocities [agentIdx - 1] = tmp.vel;
 					nextPosInfo = tmp;
@@ -61,20 +66,26 @@ public class FootballPlayerController : MonoBehaviour {
 			} else {
 				transform.position = lastPosInfo.pos + (nextPosInfo.pos - lastPosInfo.pos) * Time.deltaTime / vehicle_dt;	
 			}
+		} else if (virtualStructure != null) {
+			accumulatedDeltaTime += Time.deltaTime * simulationSpeedFactor;
+			world.currentVelocities [agentIdx - 1] = lastPosInfo.vel;
 		}
+		play = true;
+		//set next point info to correct value in virtual formation shit
 	}
 
 
 	public void setLastPosInfo(PointInfo lastPosInfo) {this.lastPosInfo = lastPosInfo;}
+	public void setNextPosInfo(PointInfo nextPosInfo) {this.nextPosInfo = nextPosInfo;}
 	public BaseModel getMotionModel() { return motionModel;}
 	public PointInfo getLastPosInfo() {return lastPosInfo;}
 	public World getWorld() {return world;}
-	public void setVirtualAgent(bool virtualAgent) {this.virtualAgent = virtualAgent;}
+	public void setPlay(bool play) {this.play = play;}
 
 	private PointInfo getNextPosition(PointInfo lastPos, World world) {		
 		// Get next desired position (agentIdx - 1 is used because the opponent player is part of the framework but is not included in the formation)
 		Vector3 goalPoint = new Vector3(virtualStructure.getDesiredPosition (agentIdx - 1).x, agentHeight, virtualStructure.getDesiredPosition (agentIdx - 1).y);
-		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, virtualStructure.getAgentOrientation(virtualStructure.getAgents().Length - 1), lastPos.currentTime + vehicle_dt);
+		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, virtualStructure.getWinnerOrientation(), lastPos.currentTime + vehicle_dt);
 		List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
 		if (path.Count > 0) {
 			return path [0];

@@ -52,7 +52,7 @@ public class VirtualStructure : BaseFormationController {
 	}
 			
 	VirtualStructureRectangle formationRectangle;
-
+	int winnerIdx;
 
 
 
@@ -63,39 +63,49 @@ public class VirtualStructure : BaseFormationController {
 
 		Vector3 targetPosition = agents [0].transform.position;
 		// If the opponent is not inside the virtual structure rectangle
-		if (!Raycasting.insidePolygon (targetPosition.x, targetPosition.z, formationRectangle.getEdgeVectors ())) {
+		/*if (!Raycasting.insidePolygon (targetPosition.x, targetPosition.z, formationRectangle.getEdgeVectors ())) {
 			// Get min x,y and max x,y of the virtual rectangle
 			float[] rectMinMaxes = getMinMaxes (formationRectangle.getEdgeVectors ());
 			if (isInFrontOfFormation (targetPosition, rectMinMaxes)) {
 				// Get point in front of the virtual center at the same level on the y axis as the target
-				Vector3 targetY = new Vector3(agents[agents.Length - 1].transform.position.x, agentHeight, targetPosition.z);
+				Vector3 targetY = new Vector3 (agents [agents.Length - 1].transform.position.x, agentHeight, targetPosition.z);
 				moveCenterTowards (targetY);
 			} else if (isNextToFormation (targetPosition, rectMinMaxes)) {
 				// Get point in front of the virtual center at the same level on the x axis as the target
-				Vector3 targetX = new Vector3(targetPosition.x, agentHeight, agents[agents.Length - 1].transform.position.z);
+				Vector3 targetX = new Vector3 (targetPosition.x, agentHeight, agents [agents.Length - 1].transform.position.z);
 				// Move formation sideways to meet targetPosition on the y axis
 				moveCenterTowards (targetX);
 			} else {
 				// Get closest virtual structure edge to the target point
 				float minDistance = float.MaxValue;
-				int minIdx = -1;
+				int winnerIdx = -1;
 				for (int i = 0; i < edges.Length; i++) {
-					float distance = Vector3.Distance (edges [i].pos, agents [0].transform.position);
+					float distance = Vector3.Distance (edges [i].pos, targetPosition);
 					if (distance < minDistance) {
 						minDistance = distance;
-						minIdx = i;
+						winnerIdx = i;
 					}
 				}
 				// Move formation diagonally so that the closest edge meets the target point
-				moveCenterDiagonally(targetPosition, edges[minIdx]);
+				moveCenterDiagonally (targetPosition, edges [winnerIdx]);
 			}
-
-
+		}*/
+		// Get closest player to opponent
+		float minDistance = float.MaxValue;
+		winnerIdx = -1;
+		for (int i = 1; i < agents.Length - 1; i++) {
+			float distance = Vector3.Distance (targetPosition, getDesiredPosition(i - 1));
+			if (distance < minDistance) {
+				minDistance = distance;
+				winnerIdx = i;
+			}
 		}
 
-		this.desiredRelativePositions = getDesiredPositions (agents.Length - 1, false, false);
-		this.desiredAbsolutePositions = getDesiredPositions (agents.Length - 1, false, true);
-		//Visualizer.visualizePoints(this.desiredAbsolutePositions);
+		// Move closest player in formation towards opponent while changing the center position and velocity to keep formation
+		setRelativeFormationPositions(this.relativeFormationPositions, winnerIdx - 1);	
+		moveNearestAgent(targetPosition, winnerIdx);
+		this.desiredRelativePositions = getDesiredPositions (winnerIdx, false, false);
+		this.desiredAbsolutePositions = getDesiredPositions (winnerIdx, false, true);
 	}
 
 	public void initializeController(GameObject[] agents, Vector2[] boundingPoly, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight, float deltaX, float deltaY) {
@@ -125,10 +135,16 @@ public class VirtualStructure : BaseFormationController {
 		agents [0].AddComponent<LeaderController> ();
 		for (int i = 1; i < agents.Length; i++)
 			agents [i].AddComponent<FootballPlayerController> ();
-		agents [agents.Length - 1].GetComponent<FootballPlayerController> ().setVirtualAgent (true);
 		formationRectangle = new  VirtualStructureRectangle (formationPositions, boundingPoly, deltaX, deltaY, agentHeight);
 	}
 
+	public Vector3 getWinnerOrientation() {
+		return getAgentOrientation (winnerIdx);
+	}
+
+	public int getWinnerIdx() {
+		return winnerIdx;
+	}
 
 	public static Vector2 getCenter(Vector2[] formationPositions) {
 		float[] minMaxes = getMinMaxes (formationPositions);
@@ -170,6 +186,7 @@ public class VirtualStructure : BaseFormationController {
 		return false;
 	}
 
+
 	private void moveCenterTowards(Vector3 target) {
 		// Move formation forward to meet targetPosition on the x axis
 		FootballPlayerController virtualCenterController = agents[agents.Length - 1].GetComponent<FootballPlayerController>();
@@ -182,6 +199,7 @@ public class VirtualStructure : BaseFormationController {
 		agents [agents.Length - 1].transform.LookAt(path[0].pos + (target - agents[agents.Length - 1].transform.position).normalized);
 		virtualCenterController.setLastPosInfo (path [0]);
 		formationRectangle.updateRectangle (path [0].pos);
+		virtualCenterController.setPlay (false);
 	}
 
 	private void moveCenterDiagonally(Vector3 target, PointInfo nearestEdge) {
@@ -199,6 +217,39 @@ public class VirtualStructure : BaseFormationController {
 		agents [agents.Length - 1].transform.LookAt(path[0].pos + (target - agents[agents.Length - 1].transform.position).normalized);
 		virtualCenterController.setLastPosInfo (path [0]);
 		formationRectangle.updateRectangle (path [0].pos);
+		virtualCenterController.setPlay (false);
+	}
 
+	private void moveNearestAgent(Vector3 target, int nearestAgentIdx) {
+		// Get next position information of the nearestAgentIdx
+		FootballPlayerController nearestAgentController = agents[nearestAgentIdx].GetComponent<FootballPlayerController>();
+		PointInfo lastPos = nearestAgentController.getLastPosInfo ();
+		BaseModel model = nearestAgentController.getMotionModel ();
+		PointInfo goalPointInfo = new PointInfo (target, Vector3.zero, Vector3.forward, lastPos.currentTime + model.getDt());
+		List<PointInfo> path = model.completePath (lastPos, goalPointInfo, nearestAgentController.getWorld(), false);
+		Vector3 difference = path [0].pos - lastPos.pos;
+		agents[nearestAgentIdx].transform.position = path[0].pos;
+		agents [nearestAgentIdx].transform.LookAt(agents[nearestAgentIdx].transform.position + (target - agents[nearestAgentIdx].transform.position).normalized);
+		nearestAgentController.setLastPosInfo (path [0]);
+		PointInfo nextPos = new PointInfo (path [0].pos, Vector3.zero, path [0].orientation, path [0].currentTime + model.getDt ());
+		nearestAgentController.setNextPosInfo (nextPos);
+		nearestAgentController.setPlay (false);
+		// Get virtual center controller
+		FootballPlayerController virtualCenterController = agents[agents.Length - 1].GetComponent<FootballPlayerController>();
+		PointInfo lastCenterPos = virtualCenterController.getLastPosInfo ();
+		// Move center in the same way the nearest agent moves, anchoring the formation to the agent
+		Vector2 desiredCenterPosition = getDesiredPosition(agents.Length - 2);
+		Vector3 desiredCenter3D = new Vector3 (desiredCenterPosition.x, agentHeight, desiredCenterPosition.y);
+		agents [agents.Length - 1].transform.position = desiredCenter3D;
+		lastCenterPos.pos = desiredCenter3D;
+		lastCenterPos.vel = path [0].vel;
+		lastCenterPos.orientation = path [0].orientation;
+		lastCenterPos.currentTime = path [0].currentTime;
+		agents [agents.Length - 1].transform.LookAt(agents[agents.Length - 1].transform.position + (target - agents[agents.Length - 1].transform.position).normalized);
+		virtualCenterController.setLastPosInfo (lastCenterPos);
+		nextPos = new PointInfo (lastCenterPos.pos, Vector3.zero, lastCenterPos.orientation, lastCenterPos.currentTime + model.getDt ());
+		virtualCenterController.setNextPosInfo (nextPos);
+		formationRectangle.updateRectangle (agents[agents.Length - 1].transform.position);
+		virtualCenterController.setPlay (false);
 	}
 }
