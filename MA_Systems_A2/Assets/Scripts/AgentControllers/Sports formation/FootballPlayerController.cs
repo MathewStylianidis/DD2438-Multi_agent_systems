@@ -48,8 +48,6 @@ public class FootballPlayerController : MonoBehaviour {
 		if (play && virtualStructure != null) {
 			accumulatedDeltaTime += Time.deltaTime * simulationSpeedFactor;
 			if (accumulatedDeltaTime >= vehicle_dt) {
-				if (agentIdx == 11)
-					Debug.Log (1);
 				accumulatedDeltaTime = 0.0f;
 				transform.position = nextPosInfo.pos;
 				lastPosInfo = nextPosInfo;
