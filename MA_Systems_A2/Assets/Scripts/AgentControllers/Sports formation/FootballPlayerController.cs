@@ -64,9 +64,6 @@ public class FootballPlayerController : MonoBehaviour {
 			} else {
 				transform.position = lastPosInfo.pos + (nextPosInfo.pos - lastPosInfo.pos) * Time.deltaTime / vehicle_dt;	
 			}
-		} else if (virtualStructure != null) {
-			accumulatedDeltaTime += Time.deltaTime * simulationSpeedFactor;
-			world.currentVelocities [agentIdx - 1] = lastPosInfo.vel;
 		}
 		play = true;
 		//set next point info to correct value in virtual formation shit
