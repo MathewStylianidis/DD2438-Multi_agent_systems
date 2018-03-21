@@ -118,7 +118,7 @@ public class VirtualStructure : BaseFormationController {
 					// If this agent has failed moving before, due to moving the formation out of the polygon
 					if (failedAgents.Contains (i))
 						continue;
-					float distance = Vector3.Distance (targetPosition, getDesiredPosition (i - 1));
+					float distance = Vector2.Distance (new Vector2(targetPosition.x, targetPosition.z), getDesiredPosition (i - 1));
 					if (distance < minDistance) {
 						minDistance = distance;
 						winnerIdx = i;
@@ -126,17 +126,13 @@ public class VirtualStructure : BaseFormationController {
 				}
 
 				// If movement of agent succeeds without collision of the formation with the boundary polygon
-				if (moveNearestAgent (targetPosition, winnerIdx))
+				if (moveNearestAgent (targetPosition, winnerIdx)) {
+					Debug.Log (winnerIdx);
 					break;
+				}
 				failedAgents.Add (winnerIdx);
 				winnerIdx = agents.Length - 1;
 			}
-		}
-		Debug.Log (winnerIdx);
-		if (winnerIdx == agents.Length - 1) {
-			setRelativeFormationPositions (this.relativeFormationPositions, winnerIdx - 1);
-			this.desiredRelativePositions = getDesiredPositions (winnerIdx, false, false);
-			this.desiredAbsolutePositions = getDesiredPositions (winnerIdx, false, true);
 		}
 	}
 
@@ -253,12 +249,7 @@ public class VirtualStructure : BaseFormationController {
 		VirtualStructureRectangle tmp = new VirtualStructureRectangle(formationRectangle);
 		// Update rectangle with new desired center
 		tmp.updateRectangle (desiredCenter3D);
-		//Debug.Log ("A");
-		//string x = "";
-		//for (int i = 0; i < tmp.vertices.Length; i++)
-			//x += tmp.vertices [i].pos + " ";
-		//Debug.Log ("FOrmation rectangle" + x);
-		//Debug.Log (desiredCenter3D);
+
 		// Check if new rectangle gets out of the bounding polygon
 		if (lastPos.currentTime > 30.0f && !tmp.isInPolygon (nearestAgentController.getWorld ().boundingPolygon)) {
 			// If it is not entirely inside, restore changes and return false
@@ -268,14 +259,20 @@ public class VirtualStructure : BaseFormationController {
 			this.desiredRelativePositions = prevDesiredRelative;
 			return false;
 		}
-
+		if (nearestAgentIdx == 9) {
+			Debug.Log ("A");
+			string x = "";
+			for (int i = 0; i < tmp.vertices.Length; i++)
+				x += tmp.vertices [i].pos + " ";
+			Debug.Log ("FOrmation rectangle" + x);
+			Debug.Log (desiredCenter3D);
+		}
 
 		// Otherwise make all necessary changes to variables of the closest agent and formation center
+		agents[nearestAgentIdx].transform.position = prevPos;
 		agents [nearestAgentIdx].transform.LookAt(agents[nearestAgentIdx].transform.position + (target - agents[nearestAgentIdx].transform.position).normalized);
-		nearestAgentController.setLastPosInfo (path [0]);
 		PointInfo nextPos = new PointInfo (path [0].pos, Vector3.zero, path [0].orientation, path [0].currentTime + model.getDt ());
-		nearestAgentController.setNextPosInfo (nextPos);
-		nearestAgentController.setPlay (false);
+		nearestAgentController.setNextPosInfo (path [0]);
 
 		agents [agents.Length - 1].transform.position = desiredCenter3D;
 		lastCenterPos.pos = desiredCenter3D;
