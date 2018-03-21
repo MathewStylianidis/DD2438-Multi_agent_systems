@@ -26,7 +26,7 @@ public class DynamicPoint : BaseModel {
 		return new PointInfo (newPosition, new Vector3(xVel, 0f, zVel), newOrientation, curPointInfo.currentTime + dt);
 	}
 
-	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
+	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true, float constant = 1.0f)
 	{
 		float tolerance = 0.01f;
 		List<PointInfo> pointList = new List<PointInfo> ();
@@ -38,8 +38,7 @@ public class DynamicPoint : BaseModel {
 			pointList.Add (goalPointInfo);
 			return pointList;
 		}
-
-		float constant = 1f;
+			
 		float tmp = maxVelocity;
 		// get desired velocity
 		maxVelocity = maxVelocity / (1 + constant /(dist + 1e-40f));

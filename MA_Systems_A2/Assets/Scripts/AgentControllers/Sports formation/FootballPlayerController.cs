@@ -16,6 +16,7 @@ public class FootballPlayerController : MonoBehaviour {
 	private VirtualStructure virtualStructure;
 	private int agentIdx;
 	private bool play = true;
+	float[] boundingMinMaxes;
 
 	// Use this for initialization
 	void Start () {
@@ -36,8 +37,8 @@ public class FootballPlayerController : MonoBehaviour {
 				agentHeight = virtualStructure.agentHeight;
 				Vector3 currentVelocity = new Vector3 (world.currentVelocities [agentIdx - 1].x, 0f, world.currentVelocities [agentIdx - 1].y);
 				lastPosInfo = new PointInfo (this.transform.position, currentVelocity, currentVelocity.normalized, 0f);
-				nextPosInfo = getNextPosition (lastPosInfo, world);
-
+				nextPosInfo = getNextPosition (lastPosInfo, world, 1);
+				boundingMinMaxes = VirtualStructure.getMinMaxes (world.boundingPolygon);
 			}
 		}
 	}
@@ -51,7 +52,7 @@ public class FootballPlayerController : MonoBehaviour {
 				transform.position = nextPosInfo.pos;
 				lastPosInfo = nextPosInfo;
 
-				PointInfo tmp = getNextPosition (lastPosInfo, world);
+				PointInfo tmp = getNextPosition (lastPosInfo, world, 1.0f);
 
 				if (tmp != null) {
 					world.currentVelocities [agentIdx - 1] = tmp.vel;
@@ -76,18 +77,15 @@ public class FootballPlayerController : MonoBehaviour {
 	public World getWorld() {return world;}
 	public void setPlay(bool play) {this.play = play;}
 
-	private PointInfo getNextPosition(PointInfo lastPos, World world) {		
+	private PointInfo getNextPosition(PointInfo lastPos, World world, float constant = 1) {		
 		// Get next desired position (agentIdx - 1 is used because the opponent player is part of the framework but is not included in the formation)
 		Vector3 goalPoint = new Vector3(virtualStructure.getDesiredPosition (agentIdx - 1).x, agentHeight, virtualStructure.getDesiredPosition (agentIdx - 1).y);
 		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, virtualStructure.getWinnerOrientation(), lastPos.currentTime + vehicle_dt);
-		List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
+		List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false, constant);
 		if (path.Count > 0) {
 			return path [0];
 		} else {
 			return null;
 		}
-
 	}
-
-
 }

@@ -234,7 +234,7 @@ public class VirtualStructure : BaseFormationController {
 		// Update rectangle with new desired center
 		tmp.updateRectangle (desiredCenter3D);
 
-		// Check if new rectangle gets out of the bounding polygon
+		// Check if new rectangle gets out of the bounding polygon in case the agent is not already near the boundary
 		if (lastPos.currentTime > 30.0f && !tmp.isInPolygon (nearestAgentController.getWorld ().boundingPolygon)) {
 			// If it is not entirely inside, restore changes and return false
 			agents[nearestAgentIdx].transform.position = prevPos;
@@ -264,4 +264,6 @@ public class VirtualStructure : BaseFormationController {
 		virtualCenterController.setPlay (false);
 		return true;
 	}
+
+
 }
