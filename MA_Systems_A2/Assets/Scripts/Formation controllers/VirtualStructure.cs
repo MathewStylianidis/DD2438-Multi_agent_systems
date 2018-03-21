@@ -61,7 +61,7 @@ public class VirtualStructure : BaseFormationController {
 		// Checks if all edges of the rectangle are in the bounding polygon
 		public bool isInPolygon(Vector2[] boundingPolygon) {
 			for (int i = 0; i < vertices.Length; i++)
-				if (!Raycasting.insidePolygon (vertices [i].pos.x, vertices [i].pos.z, boundingPolygon, 1e-01))
+				if (!Raycasting.insidePolygon (vertices [i].pos.x, vertices [i].pos.z, boundingPolygon))
 					return false;
 			return true;
 		}
@@ -108,32 +108,36 @@ public class VirtualStructure : BaseFormationController {
 		}*/
 
 		List<int> failedAgents = new List<int> ();
-		winnerIdx = agents.Length - 1;
-		for(int t = 1; t < agents.Length - 1; t++)
-		{
-			// Get closest player to opponent
-			float minDistance = float.MaxValue;
-
-			for (int i = 1; i < agents.Length - 1; i++) {
-				// If this agent has failed moving before, due to moving the formation out of the polygon
-				if (failedAgents.Contains (i))
-					continue;
-				float distance = Vector3.Distance (targetPosition, getDesiredPosition (i - 1));
-				if (distance < minDistance) {
-					minDistance = distance;
-					winnerIdx = i;
-				}
-			}
-
-			// If movement of agent succeeds without collision of the formation with the boundary polygon
-			if (moveNearestAgent (targetPosition, winnerIdx))
-				break;
+		if (winnerIdx == agents.Length - 1 || !moveNearestAgent (targetPosition, winnerIdx)) {
 			failedAgents.Add (winnerIdx);
-			winnerIdx = agents.Length - 1;
+			for (int t = 1; t < agents.Length - 1; t++) {
+				// Get closest player to opponent
+				float minDistance = float.MaxValue;
+
+				for (int i = 1; i < agents.Length - 1; i++) {
+					// If this agent has failed moving before, due to moving the formation out of the polygon
+					if (failedAgents.Contains (i))
+						continue;
+					float distance = Vector3.Distance (targetPosition, getDesiredPosition (i - 1));
+					if (distance < minDistance) {
+						minDistance = distance;
+						winnerIdx = i;
+					}
+				}
+
+				// If movement of agent succeeds without collision of the formation with the boundary polygon
+				if (moveNearestAgent (targetPosition, winnerIdx))
+					break;
+				failedAgents.Add (winnerIdx);
+				winnerIdx = agents.Length - 1;
+			}
 		}
-		setRelativeFormationPositions(this.relativeFormationPositions, winnerIdx - 1);
-		this.desiredRelativePositions = getDesiredPositions (winnerIdx, false, false);
-		this.desiredAbsolutePositions = getDesiredPositions (winnerIdx, false, true);
+		Debug.Log (winnerIdx);
+		if (winnerIdx == agents.Length - 1) {
+			setRelativeFormationPositions (this.relativeFormationPositions, winnerIdx - 1);
+			this.desiredRelativePositions = getDesiredPositions (winnerIdx, false, false);
+			this.desiredAbsolutePositions = getDesiredPositions (winnerIdx, false, true);
+		}
 	}
 
 	public void initializeController(GameObject[] agents, Vector2[] boundingPoly, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight, float deltaX, float deltaY) {
@@ -164,6 +168,20 @@ public class VirtualStructure : BaseFormationController {
 		for (int i = 1; i < agents.Length; i++)
 			agents [i].AddComponent<FootballPlayerController> ();
 		formationRectangle = new  VirtualStructureRectangle (formationPositions, boundingPoly, deltaX, deltaY, agentHeight);
+		// Get nearest agent to opponent player
+		winnerIdx = agents.Length - 1;
+		for (int t = 1; t < agents.Length - 1; t++) {
+			// Get closest player to opponent
+			float minDistance = float.MaxValue;
+			for (int i = 1; i < agents.Length - 1; i++) {
+				// If this agent has failed moving before, due to moving the formation out of the polygon
+				float distance = Vector3.Distance (agents[0].transform.position, getDesiredPosition (i - 1));
+				if (distance < minDistance) {
+					minDistance = distance;
+					winnerIdx = i;
+				}
+			}
+		}
 	}
 
 	public Vector3 getWinnerOrientation() {
