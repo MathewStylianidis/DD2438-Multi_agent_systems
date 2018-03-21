@@ -44,7 +44,6 @@ public class FootballPlayerController : MonoBehaviour {
 	
 	// LateUpdate  is called once per frame after update
 	void LateUpdate  () {
-		
 		if (play && virtualStructure != null) {
 			accumulatedDeltaTime += Time.deltaTime * simulationSpeedFactor;
 			if (accumulatedDeltaTime >= vehicle_dt) {

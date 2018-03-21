@@ -101,12 +101,19 @@ public class VirtualStructure : BaseFormationController {
 
 					// If movement of agent succeeds without collision of the formation with the boundary polygon
 					if (moveNearestAgent (targetPosition, winnerIdx)) {
-						Debug.Log (winnerIdx);
 						break;
 					}
 					failedAgents.Add (winnerIdx);
 					winnerIdx = agents.Length - 1;
 				}
+			}
+			//If noone can move
+			if (winnerIdx == agents.Length - 1) {
+				setRelativeFormationPositions(this.relativeFormationPositions, winnerIdx - 1);
+				this.desiredRelativePositions = getDesiredPositions (winnerIdx, false, false);
+				this.desiredAbsolutePositions = getDesiredPositions (winnerIdx, false, true);
+				FootballPlayerController virtualCenterController = agents[agents.Length - 1].GetComponent<FootballPlayerController>();
+				virtualCenterController.setPlay (false);
 			}
 		}
 	}
@@ -148,7 +155,7 @@ public class VirtualStructure : BaseFormationController {
 			float minDistance = float.MaxValue;
 			for (int i = 1; i < agents.Length - 1; i++) {
 				// If this agent has failed moving before, due to moving the formation out of the polygon
-				float distance = Vector3.Distance (agents[0].transform.position, getDesiredPosition (i - 1));
+				float distance = Vector2.Distance (new Vector2 (agents[0].transform.position.x, agents[0].transform.position.z), getDesiredPosition (i - 1));
 				if (distance < minDistance) {
 					minDistance = distance;
 					winnerIdx = i;
@@ -236,14 +243,7 @@ public class VirtualStructure : BaseFormationController {
 			this.desiredRelativePositions = prevDesiredRelative;
 			return false;
 		}
-		if (nearestAgentIdx == 9) {
-			Debug.Log ("A");
-			string x = "";
-			for (int i = 0; i < tmp.vertices.Length; i++)
-				x += tmp.vertices [i].pos + " ";
-			Debug.Log ("FOrmation rectangle" + x);
-			Debug.Log (desiredCenter3D);
-		}
+
 
 		// Otherwise make all necessary changes to variables of the closest agent and formation center
 		agents[nearestAgentIdx].transform.position = prevPos;

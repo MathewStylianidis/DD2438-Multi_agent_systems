@@ -74,7 +74,10 @@ public class WorldController : MonoBehaviour {
 			GameObject plane = GameObject.Find ("Plane");
 			Renderer ren = plane.GetComponent<Renderer> ();
 			ren.material = fieldMaterial;
-
+			//for (int i = 0; i < world.trajectory.x.Length; i++) {
+				//world.trajectory.x [i] += -10.0f;
+				//world.trajectory.y [i] += 35.0f;
+			//}
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
 			agentParent.AddComponent<VirtualStructure> ();
 			// Add virtual center to formation positions
