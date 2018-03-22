@@ -32,6 +32,7 @@ public class DynamicPoint : BaseModel {
 	/// </summary>
 	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
 	{
+		
 		return null;
 	}
 
@@ -41,7 +42,7 @@ public class DynamicPoint : BaseModel {
 	public override PointInfo moveTowardsWithDecreasingVelocity (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true, float constant = 1.0f)
 	{
 		float tolerance = 0.01f;
-		Vector3 path = goalPointInfo.pos - curPointInfo.pos;
+			Vector3 path = goalPointInfo.pos - curPointInfo.pos;
 		float dist = path.magnitude;
 		PointInfo nextPointInfo = moveTowards(curPointInfo, goalPointInfo.pos);
 

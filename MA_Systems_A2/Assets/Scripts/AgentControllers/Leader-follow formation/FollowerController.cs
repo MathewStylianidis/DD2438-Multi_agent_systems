@@ -16,7 +16,7 @@ public class FollowerController : MonoBehaviour {
 	private PointInfo nextPosInfo;
 	private LeaderFormationController formationControl;
 	private int agentIdx;
-
+	bool formationDecreasingGoalVelocity;
 
 	// Use this for initialization
 	void Start () {
@@ -35,10 +35,10 @@ public class FollowerController : MonoBehaviour {
 			formationControl = formationController.GetComponent<LeaderFormationController> ();
 			if(formationControl != null) {
 				agentHeight = formationControl.agentHeight;
+				formationDecreasingGoalVelocity = formationControl.formationDecreasingGoalVelocity;
 				Vector3 currentVelocity = new Vector3 (world.currentVelocities [agentIdx - 1].x, 0f, world.currentVelocities [agentIdx - 1].y);
 				lastPosInfo = new PointInfo (this.transform.position, currentVelocity, currentVelocity.normalized, 0f);
 				nextPosInfo = getNextPosition (lastPosInfo, world);
-
 			}
 		}
 	}
@@ -75,12 +75,16 @@ public class FollowerController : MonoBehaviour {
 	private PointInfo getNextPosition(PointInfo lastPos, World world) {		
 		Vector3 goalPoint = new Vector3(formationControl.getDesiredPosition (agentIdx).x, agentHeight, formationControl.getDesiredPosition (agentIdx).y);
 		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, formationControl.getAgentOrientation(leaderIndex), lastPos.currentTime + vehicle_dt);
-		List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
-		if (path.Count > 0) {
-			return path [0];
-		} else {
-			return null;
+		if (!formationDecreasingGoalVelocity) {
+			List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
+			if (path.Count > 0) {
+				return path [0];
+			} else {
+				return null;
+			}
 		}
+		else 
+			return motionModel.moveTowardsWithDecreasingVelocity (lastPos, goalPointInfo, world, false);
 		
 	}
 }

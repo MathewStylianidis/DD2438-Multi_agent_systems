@@ -58,6 +58,7 @@
      <Compile Include="Assets\Scripts\AgentControllers\Sports formation\FootballPlayerController.cs" />
      <Compile Include="Assets\Scripts\AgentControllers\VRP\AgentControllerVRP.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\FloydWarshall.cs" />
+     <Compile Include="Assets\Scripts\Auxiliary classes\NewtonSolver.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\Raycasting.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\UtilityClass.cs" />
      <Compile Include="Assets\Scripts\Auxiliary classes\VisibilityGraph.cs" />

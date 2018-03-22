@@ -28,7 +28,7 @@ public class WorldController : MonoBehaviour {
 	public float simulationSpeedFactor = 1.0f;
 	private GameObject[] agents;
 	private BaseModel motionModel; // Motion model to be used
-	public bool optimalDynamicPointFormation = true;
+
 
 	// VRP variables
 	public GameObject pointOfInterestModel;
@@ -41,7 +41,8 @@ public class WorldController : MonoBehaviour {
 	public TextAsset trajectoryData;
 	public float deltaX = 5.0f; // Determines the expansion of the virtual formation rectangle on the x axis (sports formation)
 	public float deltaY = 5.0f; // Determines the expansion of the virtual formation rectangle on the y axis (sports formation)
-
+	// Is true if the agents converge to a zero velocity on the goal formation point without paying respect to any goal velocity direction and magnitude
+	public bool formationDecreasingGoalVelocity; 
 
 
 
@@ -68,7 +69,7 @@ public class WorldController : MonoBehaviour {
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
 			GameObject tmp = new GameObject ("LeaderFormationController");
 			tmp.AddComponent<LeaderFormationController> ();
-			tmp.GetComponent<LeaderFormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2);
+			tmp.GetComponent<LeaderFormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2, formationDecreasingGoalVelocity);
 		}
 		else if (data.name == "P26") {
 			// Formation problems
@@ -88,7 +89,7 @@ public class WorldController : MonoBehaviour {
 			formationPositions [formationPositions.Length - 1] = new Vector2(agents [agents.Length - 1].transform.position.x, agents [agents.Length - 1].transform.position.z) ; //position of virtual center.
 			Debug.Log (formationPositions [formationPositions.Length - 1]);
 			agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.boundingPolygon, world.trajectory, formationPositions, agents [0].transform.localScale.y / 2, deltaX, deltaY,
-																				simulationSpeedFactor, world.vehicle.dt);
+																				simulationSpeedFactor, world.vehicle.dt, formationDecreasingGoalVelocity);
 		}
 	}
 	

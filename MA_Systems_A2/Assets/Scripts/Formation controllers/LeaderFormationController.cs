@@ -14,9 +14,10 @@ public class LeaderFormationController : BaseFormationController {
 		Visualizer.visualizePoints(this.desiredAbsolutePositions);
 	}
 		
-	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight) {
+	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight, bool formationDecreasingGoalVelocity) {
 		this.agentHeight = agentHeight;
 		this.agents = agents;
+		this.formationDecreasingGoalVelocity = formationDecreasingGoalVelocity;
 		// Get trajectory coordinates
 		this.trajectory = new Vector3[trajectory.x.Length];
 		for (int i = 0; i < trajectory.x.Length; i++) 

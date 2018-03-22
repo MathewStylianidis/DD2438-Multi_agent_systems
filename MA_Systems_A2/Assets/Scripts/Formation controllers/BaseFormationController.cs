@@ -5,6 +5,7 @@ using UnityEngine;
 public class BaseFormationController : MonoBehaviour {
 
 	public float agentHeight;
+	public bool formationDecreasingGoalVelocity; // Is true if the agents converge to a zero velocity on the goal formation point without paying respect to any goal velocity direction and magnitude
 	protected GameObject[] agents; // Agents in the formation
 	protected Vector3[] trajectory; // Trajectory coordinates
 	protected float[] trajectoryOrientation; // Orientation of virtual structure in each step of the trajectory

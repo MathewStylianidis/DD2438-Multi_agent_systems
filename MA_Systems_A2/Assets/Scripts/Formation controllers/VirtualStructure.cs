@@ -118,11 +118,13 @@ public class VirtualStructure : BaseFormationController {
 		}
 	}
 
-	public void initializeController(GameObject[] agents, Vector2[] boundingPoly, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight, float deltaX, float deltaY, float simulationFactor, float vehicleDt) {
+	public void initializeController(GameObject[] agents, Vector2[] boundingPoly, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight,
+										float deltaX, float deltaY, float simulationFactor, float vehicleDt, bool formationDecreasingGoalVelocity) {
 		this.simulationSpeedFactor = simulationFactor;
 		this.vehicleDt = vehicleDt;
 		this.agentHeight = agentHeight;
 		this.agents = agents;
+		this.formationDecreasingGoalVelocity = formationDecreasingGoalVelocity;
 		// Get trajectory coordinates
 		this.trajectory = new Vector3[trajectory.x.Length];
 		for (int i = 0; i < trajectory.x.Length; i++) 
