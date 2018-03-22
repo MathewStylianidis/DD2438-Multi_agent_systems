@@ -20,10 +20,10 @@ MonoBehaviour:
     y: 30
     width: 1920
     height: 947
-  m_MinSize: {x: 681, y: 321}
+  m_MinSize: {x: 681, y: 342}
   m_MaxSize: {x: 12006, y: 8042}
   vertical: 0
-  controlID: 5194
+  controlID: 6613
 --- !u!114 &2
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -121,10 +121,10 @@ MonoBehaviour:
     y: 0
     width: 1456
     height: 947
-  m_MinSize: {x: 404, y: 321}
-  m_MaxSize: {x: 8004, y: 8021}
+  m_MinSize: {x: 404, y: 342}
+  m_MaxSize: {x: 8004, y: 8042}
   vertical: 1
-  controlID: 5163
+  controlID: 6614
 --- !u!114 &4
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -148,7 +148,7 @@ MonoBehaviour:
   m_MinSize: {x: 404, y: 221}
   m_MaxSize: {x: 8004, y: 4021}
   vertical: 0
-  controlID: 5164
+  controlID: 6615
 --- !u!114 &5
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -167,8 +167,8 @@ MonoBehaviour:
     y: 0
     width: 429
     height: 478
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 202, y: 221}
+  m_MaxSize: {x: 4002, y: 4021}
   m_ActualView: {fileID: 6}
   m_Panes:
   - {fileID: 6}
@@ -309,14 +309,14 @@ MonoBehaviour:
     height: 457
   m_PersistentViewDataDictionary: {fileID: 0}
   m_SceneLighting: 1
-  lastFramingTime: 4251.737672682597
+  lastFramingTime: 10217.052288829525
   m_2DMode: 0
   m_isRotationLocked: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: 36.696846, y: -38.83764, z: 76.11865}
+    m_Target: {x: 35.65026, y: 4.8563957, z: 27.441647}
     speed: 2
-    m_Value: {x: 36.696846, y: -38.83764, z: 76.11865}
+    m_Value: {x: 35.65026, y: 4.8563957, z: 27.441647}
   m_RenderMode: 0
   m_ValidateTrueMetals: 0
   m_SceneViewState:
@@ -340,13 +340,13 @@ MonoBehaviour:
       speed: 2
       m_Value: 0
   m_Rotation:
-    m_Target: {x: -0.37359142, y: -0.001433168, z: 0.0005743974, w: -0.92759204}
+    m_Target: {x: -0.3791474, y: 0.004122194, z: -0.001691903, w: -0.92532563}
     speed: 2
-    m_Value: {x: -0.37359142, y: -0.001433168, z: 0.0005743974, w: -0.92759204}
+    m_Value: {x: -0.37914738, y: 0.004122194, z: -0.001691903, w: -0.9253256}
   m_Size:
-    m_Target: 107.30234
+    m_Target: 22
     speed: 2
-    m_Value: 107.30234
+    m_Value: 22
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -423,18 +423,18 @@ MonoBehaviour:
     m_ShowAllHits: 0
     m_SearchArea: 0
     m_Folders:
-    - Assets/Scripts/AgentControllers/Sports formation
+    - Assets/Scripts/Motion models
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/Scripts/AgentControllers/Sports formation
+  - Assets/Scripts/Motion models
   m_LastFoldersGridSize: -1
   m_LastProjectPath: D:\My myself and I\Sweden 2017-2018\KTH\AI and MA systems\DD2438-Multi_agent_systems\DD2438-Multi_agent_systems\MA_Systems_A2
   m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 26280000
-    m_LastClickedID: 10278
+    m_SelectedIDs: 9c270000
+    m_LastClickedID: 10140
     m_ExpandedIDs: 0000000092270000b0270000c0270000da2700001a280000602800004e29000050290000ffffff7f
     m_RenameOverlay:
       m_UserAcceptedRename: 0
@@ -568,7 +568,7 @@ MonoBehaviour:
   m_MinSize: {x: 277, y: 292}
   m_MaxSize: {x: 4002, y: 8042}
   vertical: 1
-  controlID: 5195
+  controlID: 6513
 --- !u!114 &14
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -683,8 +683,8 @@ MonoBehaviour:
     y: 616
     width: 464
     height: 331
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 202, y: 221}
+  m_MaxSize: {x: 4002, y: 4021}
   m_ActualView: {fileID: 2}
   m_Panes:
   - {fileID: 2}

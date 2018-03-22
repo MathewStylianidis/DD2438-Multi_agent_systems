@@ -42,5 +42,6 @@ public class LeaderFormationController : BaseFormationController {
 		agents [0].AddComponent<LeaderController> ();
 		for (int i = 1; i < agents.Length; i++)
 			agents [i].AddComponent<FollowerController> ();
+		currentVelocities = new Vector3[agents.Length];
 	}
 }

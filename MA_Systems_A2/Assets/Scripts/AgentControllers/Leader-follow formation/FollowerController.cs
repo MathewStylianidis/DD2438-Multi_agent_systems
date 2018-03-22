@@ -60,6 +60,7 @@ public class FollowerController : MonoBehaviour {
 				}
 				transform.LookAt (lastPosInfo.pos + nextPosInfo.orientation);
 				world.currentVelocities [agentIdx - 1] = lastPosInfo.vel;
+				formationControl.setCurrentVelocity (0, world.currentVelocities [agentIdx - 1]);
 
 			} else {
 				transform.position = lastPosInfo.pos + (nextPosInfo.pos - lastPosInfo.pos) * Time.deltaTime / vehicle_dt;	
@@ -74,17 +75,18 @@ public class FollowerController : MonoBehaviour {
 
 	private PointInfo getNextPosition(PointInfo lastPos, World world) {		
 		Vector3 goalPoint = new Vector3(formationControl.getDesiredPosition (agentIdx).x, agentHeight, formationControl.getDesiredPosition (agentIdx).y);
-		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, formationControl.getAgentOrientation(leaderIndex), lastPos.currentTime + vehicle_dt);
 		if (!formationDecreasingGoalVelocity) {
+			PointInfo goalPointInfo = new PointInfo (goalPoint, formationControl.getAgentVelocity(leaderIndex), formationControl.getAgentOrientation(leaderIndex), lastPos.currentTime + vehicle_dt);
 			List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
-			if (path.Count > 0) {
+			if (path != null && path.Count > 0) {
 				return path [0];
 			} else {
 				return null;
 			}
-		}
-		else 
+		} else {
+			PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, formationControl.getAgentOrientation(leaderIndex), lastPos.currentTime + vehicle_dt);
 			return motionModel.moveTowardsWithDecreasingVelocity (lastPos, goalPointInfo, world, false);
+		}
 		
 	}
 }

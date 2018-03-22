@@ -13,6 +13,7 @@ public class BaseFormationController : MonoBehaviour {
 	protected Vector2[] relativeFormationPositions; // The formation positions of each agent assuming the first agent is the leader at 0.0
 	protected Vector2[] desiredRelativePositions; // True desired positions relative to the leader's position and orientation
 	protected Vector2[] desiredAbsolutePositions; // True desired world positions for the whole formation
+	protected Vector3[] currentVelocities;
 
 	public GameObject[] getAgents() {return agents;}
 
@@ -58,10 +59,12 @@ public class BaseFormationController : MonoBehaviour {
 	}
 
 
-
+	public void setCurrentVelocity(int agentIndex, Vector3 value) {currentVelocities [agentIndex] = value;}
+	public Vector3 getAgentVelocity(int agentIndex) {return currentVelocities [agentIndex];}
 	public Vector3[] getTrajectory() { return this.trajectory;	}
 	public float[] getTrajectoryOrientation() { return this.trajectoryOrientation; }
 	public float[] getTrajectoryTimestamps() { return this.trajectoryTimestamps; }
 	public Vector3 getAgentOrientation(int agentIndex) { return UtilityClass.rads2Vec (getAgentRotation(agentIndex));}
 	public float getAgentRotation(int agentIndex) { return (90.0f - agents [agentIndex].transform.rotation.eulerAngles.y) * Mathf.Deg2Rad; }
+
 }

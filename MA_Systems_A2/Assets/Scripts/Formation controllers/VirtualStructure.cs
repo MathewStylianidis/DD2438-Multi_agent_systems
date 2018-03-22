@@ -164,6 +164,7 @@ public class VirtualStructure : BaseFormationController {
 				}
 			}
 		}
+		currentVelocities = new Vector3[agents.Length];
 	}
 
 	public Vector3 getWinnerOrientation() {

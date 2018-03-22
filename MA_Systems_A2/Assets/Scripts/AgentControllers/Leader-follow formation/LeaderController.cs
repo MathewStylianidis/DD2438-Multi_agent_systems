@@ -12,6 +12,7 @@ public class LeaderController : MonoBehaviour {
 	private int routeIdx = 1;
 	private float vehicle_dt;
 	private Vector3 lastPos;
+	private BaseFormationController formationScript;
 
 	// Use this for initialization
 	void Start () {
@@ -24,7 +25,6 @@ public class LeaderController : MonoBehaviour {
 				simulationSpeedFactor = worldController.simulationSpeedFactor;
 			}
 			GameObject formationController = GameObject.Find ("LeaderFormationController");
-			BaseFormationController formationScript;
 			if (formationController != null)
 				// If there is a leader formation controller object then it is a leader-follow problem
 				formationScript = formationController.GetComponent<LeaderFormationController> ();
@@ -55,6 +55,7 @@ public class LeaderController : MonoBehaviour {
 				transform.position = trajectory [routeIdx];
 				lastPos = trajectory [routeIdx];
 				routeIdx++;
+				formationScript.setCurrentVelocity (0, (trajectory [routeIdx] - trajectory [routeIdx - 1]) / vehicle_dt);
 				if(routeIdx < trajectory.Length)
 					transform.LookAt (lastPos + UtilityClass.rads2Vec (trajectoryOrientation[routeIdx]));
 			} else 
