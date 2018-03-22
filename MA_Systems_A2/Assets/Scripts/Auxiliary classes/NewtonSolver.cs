@@ -31,7 +31,7 @@ public class NewtonSolver {
 	}
 
 	// Simple Newton
-	public static float Newton(float coeff, float x0, int max_n) {
+	public static float Newton(float[] coeff, float x0, int max_n) {
 		for (var i = 0; i < max_n; i++) {
 			float[] fdf = eval(coeff, x0);
 			x0 = x0 - fdf[0]/fdf[1];

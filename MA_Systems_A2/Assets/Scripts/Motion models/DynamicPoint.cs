@@ -26,16 +26,8 @@ public class DynamicPoint : BaseModel {
 		return new PointInfo (newPosition, new Vector3(xVel, 0f, zVel), newOrientation, curPointInfo.currentTime + dt);
 	}
 
-	/// <summary>
-	/// Completes the path from the current point denoted by curPointInfo to the goal point denoted by goalPointInfo
-	/// respecting the constraints of the given motion model.
-	/// </summary>
-	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
-	{
-		
-		return null;
-	}
 
+		
 	/// <summary>
 	/// Goes from curPointInfo to goalPointInfo with a decreasing velocity and without caring for the goal velocity direction
 	/// </summary>
@@ -60,6 +52,136 @@ public class DynamicPoint : BaseModel {
 		return nextPointInfo;
 	}
 
+	private float getOptimalTau(PointInfo goalPointInfo, PointInfo startPointInfo,
+		/*params for Newton*/	float t0 = 30, int max_n = 10, float r = 1.0f) {
+		float p_x0 = startPointInfo.pos.x;
+		float p_y0 = startPointInfo.pos.z;
+		float v_x0 = startPointInfo.vel.x;
+		float v_y0 = startPointInfo.vel.z;
+
+		float p_x1 = goalPointInfo.pos.x;
+		float p_y1 = goalPointInfo.pos.z;
+		float v_x1 = goalPointInfo.vel.x;
+		float v_y1 = goalPointInfo.vel.z;
+
+		float a = ((24*r*v_x1*v_x0)+(12*r*v_x1*(v_x1-v_x0))-(4*r*Mathf.Pow(2*(v_x1-v_x0)-3*v_x0,2))-(4*r*Mathf.Pow(2*(v_y1-v_y0)-3*v_y0,2)));
+		float b = (-24*r*v_x1*(p_x1-p_x0) + 24*r*(2*(v_x1-v_x0) - 3*v_x0)*(p_x1-p_x0) + 24*r*(2*(v_y1-v_y0) - 3*v_y0)*(p_y1-p_y0));
+		float c = -36*r*((p_x1-p_x0)*(p_x1-p_x0) + (p_y1-p_y0)*(p_y1-p_y0));
+
+		float[] coefficients = new float[5];
+		coefficients [0] = c;
+		coefficients [1] = b;
+		coefficients [2] = a;
+		coefficients [3] = 0;
+		coefficients [4] = 1;
+		return NewtonSolver.Newton(coefficients, t0, max_n);
+	}
+
+	/// <summary>
+	/// Completes the path from the current point denoted by curPointInfo to the goal point denoted by goalPointInfo
+	/// respecting the constraints of the given motion model.
+	/// </summary>
+	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
+	{
+		float tau = getOptimalTau (goalPointInfo, curPointInfo);
+		return getPath(goalPointInfo, curPointInfo, tau);
+	}
+
+	private List<PointInfo> getPath(PointInfo goalPointInfo, PointInfo startPointInfo, float tau, float r = 1.0f) {
+		float p_x0 = startPointInfo.pos.x;
+		float p_y0 = startPointInfo.pos.z;
+		float v_x0 = startPointInfo.vel.x;
+		float v_y0 = startPointInfo.vel.z;
+
+		float p_x1 = goalPointInfo.pos.x;
+		float p_y1 = goalPointInfo.pos.z;
+		float v_x1 = goalPointInfo.vel.x;
+		float v_y1 = goalPointInfo.vel.z;
+
+		float d1Tau = 2*r*(6*(p_x1-p_x0-v_x0*tau)/(tau*tau*tau) - 3*(v_x1-v_x0)/(tau*tau));
+		float d2Tau = 2*r*(6*(p_y1-p_y0-v_y0*tau)/(tau*tau*tau) - 3*(v_y1-v_y0)/(tau*tau));
+		float d3Tau = 2*r*((2/tau)*(v_x1-v_x0) - 3*(p_x1-p_x0-v_x0*tau)/(tau*tau));
+		float d4Tau = 2*r*((2/tau)*(v_y1-v_y0) - 3*(p_y1-p_y0-v_y0*tau)/(tau*tau));
+
+		float a_x_curr = (d3Tau-(1e-7f-tau)*d1Tau)/r;
+		float a_y_curr = (d4Tau-(1e-7f-tau)*d2Tau)/r;
+
+		if (Mathf.Sqrt(a_x_curr*a_x_curr + a_y_curr*a_y_curr) > aMax) {
+			return null;
+		}
+
+		float v_x_curr = v_x1 - Mathf.Pow(1e-7f-tau,2)*d1Tau/(2*r) + (1e-7f-tau)*(d3Tau)/r;
+		float v_y_curr = v_y1 - Mathf.Pow(1e-7f-tau,2)*d2Tau/(2*r) + (1e-7f-tau)*(d4Tau)/r;
+		if (Mathf.Sqrt(v_x_curr*v_x_curr + v_y_curr*v_y_curr) > maxVelocity){
+			return null;
+		}
+
+		float p_prev_x = p_x0;
+		float p_prev_y = p_y0;
+
+		float v_prev_x = v_x0;
+		float v_prev_y = v_y0;
+
+		List<PointInfo> path = new List<PointInfo>();
+		PointInfo prevPoint = startPointInfo;
+		for (float t = dt; t < tau; t+=dt) {
+			float p_x_curr = p_x1 + v_x1*(t-tau) + Mathf.Pow(t-tau,2)*d3Tau/(2*r) - t*d1Tau*(t*t/3 - t*tau + tau*tau)/(2*r) + Mathf.Pow(tau,3)*d1Tau/(6*r);
+			float p_y_curr = p_y1 + v_y1*(t-tau) + Mathf.Pow(t-tau,2)*d4Tau/(2*r) - t*d2Tau*(t*t/3 - t*tau + tau*tau)/(2*r) + Mathf.Pow(tau,3)*d2Tau/(6*r);
+
+			v_x_curr = v_x1 - Mathf.Pow(t-tau,2)*d1Tau/(2*r) + (t-tau)*(d3Tau)/r;
+			v_y_curr = v_y1 - Mathf.Pow(t-tau,2)*d2Tau/(2*r) + (t-tau)*(d4Tau)/r;
+
+			if (Mathf.Sqrt(v_x_curr*v_x_curr + v_y_curr*v_y_curr) > maxVelocity) {
+				return null;
+			}
+
+			Vector3 curPos = new Vector3 (p_x_curr, startPointInfo.pos.y, p_y_curr);
+			Vector3 curVel = new Vector3 (v_x_curr, 0.0f, v_y_curr);
+			Vector3 curOri = curVel.normalized;
+			PointInfo newPoint = new PointInfo (curPos,curVel , curOri, prevPoint.currentTime + dt);
+			path.Add (newPoint);
+			prevPoint = newPoint;
+			//if (Math.sqrt((v_x_curr-v_prev_x)*(v_x_curr-v_prev_x) + (v_y_curr-v_prev_y)*(v_y_curr-v_prev_y))/dt > map.vehicle_a_max) {
+			//	return false;
+			//}
+
+			//a_x_curr = (d3Tau-(t-tau)*d1Tau)/r;
+			//a_y_curr = (d4Tau-(t-tau)*d2Tau)/r;
+
+			//if (Math.sqrt(a_x_curr*a_x_curr + a_y_curr*a_y_curr) > map.vehicle_a_max) {
+			//	return false;
+			//}
+
+			p_prev_x = p_x_curr;
+			p_prev_y = p_y_curr;
+			//v_prev_x = v_x_curr;
+			//v_prev_y = v_y_curr;
+		}
+
+		v_x_curr = v_x1 - Mathf.Pow(-1e-3f,2)*d1Tau/(2*r) + (-1e-3f)*(d3Tau)/r;
+		v_y_curr = v_y1 - Mathf.Pow(-1e-3f,2)*d2Tau/(2*r) + (-1e-3f)*(d4Tau)/r;
+		if (Mathf.Sqrt(v_x_curr*v_x_curr + v_y_curr*v_y_curr) > maxVelocity){
+			return null;
+		}
+
+		float t_crit = (d3Tau+d1Tau*tau+d4Tau+d2Tau*tau)/(d1Tau+d2Tau);
+		if (t_crit > 0 && t_crit < tau) {
+			float a_x_crit = (d3Tau-(t_crit-tau)*d1Tau)/r;
+			float a_y_crit = (d4Tau-(t_crit-tau)*d2Tau)/r;
+			if (Mathf.Sqrt(a_x_crit*a_x_crit + a_y_crit*a_y_crit) > maxVelocity) {
+				return null;
+			}
+		}
+
+		a_x_curr = (d3Tau-(-1e-7f)*d1Tau)/r;
+		a_y_curr = (d4Tau-(-1e-7f)*d2Tau)/r;
+
+		if (Mathf.Sqrt(a_x_curr*a_x_curr + a_y_curr*a_y_curr) > maxVelocity) {
+			return null;
+		}
+
+		return path;
+	}
 
 	/*
 	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
