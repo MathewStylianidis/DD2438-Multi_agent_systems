@@ -24,7 +24,7 @@ public class KinematicPoint : BaseModel {
 		return new PointInfo (curPointInfo.pos + newPath, new Vector3(xVel, 0, zVel), Vector3.Normalize(path), curPointInfo.currentTime + time	);
 	}
 
-	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true, float constant = 1.0f)
+	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
 	{
 		List<PointInfo> path = new List<PointInfo> ();
 		while (Vector3.Distance (goalPointInfo.pos, curPointInfo.pos) != 0) {
@@ -36,5 +36,27 @@ public class KinematicPoint : BaseModel {
 		return path;
 	}
 
+	/// <summary>
+	/// Goes from curPointInfo to goalPointInfo with a decreasing velocity and without caring for the goal velocity direction
+	/// </summary>
+	public override PointInfo moveTowardsWithDecreasingVelocity (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true, float constant = 1.0f)
+	{
+		float tolerance = 0.01f;
+		Vector3 path = goalPointInfo.pos - curPointInfo.pos;
+		float dist = path.magnitude;
+		PointInfo nextPointInfo = moveTowards(curPointInfo, goalPointInfo.pos);
+
+		if (curPointInfo.pos == goalPointInfo.pos || Vector3.Distance(nextPointInfo.pos, goalPointInfo.pos) < tolerance)
+			return goalPointInfo;
+
+		float tmp = maxVelocity;
+		// get desired velocity
+		maxVelocity = maxVelocity / (1 + constant /(dist + 1e-40f));
+		// if desired velocity is smaller than the one that can be achieved then lower velocity as much as possible
+		nextPointInfo = moveTowards(curPointInfo,goalPointInfo.pos);
+		maxVelocity = tmp;
+
+		return nextPointInfo;
+	}
 
 }

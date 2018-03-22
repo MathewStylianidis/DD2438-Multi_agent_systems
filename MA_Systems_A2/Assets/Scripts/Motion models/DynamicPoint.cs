@@ -26,30 +26,38 @@ public class DynamicPoint : BaseModel {
 		return new PointInfo (newPosition, new Vector3(xVel, 0f, zVel), newOrientation, curPointInfo.currentTime + dt);
 	}
 
-	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true, float constant = 1.0f)
+	/// <summary>
+	/// Completes the path from the current point denoted by curPointInfo to the goal point denoted by goalPointInfo
+	/// respecting the constraints of the given motion model.
+	/// </summary>
+	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
+	{
+		return null;
+	}
+
+	/// <summary>
+	/// Goes from curPointInfo to goalPointInfo with a decreasing velocity and without caring for the goal velocity direction
+	/// </summary>
+	public override PointInfo moveTowardsWithDecreasingVelocity (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true, float constant = 1.0f)
 	{
 		float tolerance = 0.01f;
-		List<PointInfo> pointList = new List<PointInfo> ();
 		Vector3 path = goalPointInfo.pos - curPointInfo.pos;
 		float dist = path.magnitude;
 		PointInfo nextPointInfo = moveTowards(curPointInfo, goalPointInfo.pos);
 
-		if (curPointInfo.pos == goalPointInfo.pos || Vector3.Distance(nextPointInfo.pos, goalPointInfo.pos) < tolerance) {
-			pointList.Add (goalPointInfo);
-			return pointList;
-		}
-			
+		if (curPointInfo.pos == goalPointInfo.pos || Vector3.Distance(nextPointInfo.pos, goalPointInfo.pos) < tolerance)
+			return goalPointInfo;
+
 		float tmp = maxVelocity;
 		// get desired velocity
 		maxVelocity = maxVelocity / (1 + constant /(dist + 1e-40f));
 		// if desired velocity is smaller than the one that can be achieved then lower velocity as much as possible
 		maxVelocity = curPointInfo.vel.magnitude - aMax > maxVelocity ? curPointInfo.vel.magnitude - aMax : maxVelocity;
-		pointList.Add (moveTowards(curPointInfo,goalPointInfo.pos));
+		nextPointInfo = moveTowards(curPointInfo,goalPointInfo.pos);
 		maxVelocity = tmp;
 
-		return pointList;
+		return nextPointInfo;
 	}
-
 
 
 	/*

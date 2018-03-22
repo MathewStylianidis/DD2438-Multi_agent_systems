@@ -14,10 +14,16 @@ public abstract class BaseModel {
 	public abstract PointInfo moveTowards (PointInfo curPointInfo, Vector3 goalPoint);
 
 	/// <summary>
-	/// Gets the coordinates of a trivial path from curPointInfo and goalPoint 
-	/// (I.e. straight line for kinematic point model)
+	/// Moves from curPointInfo to goalPointInfo with a decreasing velocity without caring about the goal direction of velocity
+	/// aiming to have a goal velocity of zero.
 	/// </summary>
-	public abstract List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck, float constant = 1.0f);
+	public abstract PointInfo moveTowardsWithDecreasingVelocity (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true, float constant = 1.0f);
+
+	/// <summary>
+	/// Completes the path from the current point denoted by curPointInfo to the goal point denoted by goalPointInfo
+	/// respecting the constraints of the given motion model.
+	/// </summary>
+	public abstract List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck);
 
 	public float getDt() {return dt;}
 

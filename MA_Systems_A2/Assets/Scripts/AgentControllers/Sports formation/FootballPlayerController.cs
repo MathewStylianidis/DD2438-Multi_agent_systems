@@ -81,11 +81,6 @@ public class FootballPlayerController : MonoBehaviour {
 		// Get next desired position (agentIdx - 1 is used because the opponent player is part of the framework but is not included in the formation)
 		Vector3 goalPoint = new Vector3(virtualStructure.getDesiredPosition (agentIdx - 1).x, agentHeight, virtualStructure.getDesiredPosition (agentIdx - 1).y);
 		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, virtualStructure.getWinnerOrientation(), lastPos.currentTime + vehicle_dt);
-		List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false, constant);
-		if (path.Count > 0) {
-			return path [0];
-		} else {
-			return null;
-		}
+		return motionModel.moveTowardsWithDecreasingVelocity (lastPos, goalPointInfo, world, false, constant);
 	}
 }

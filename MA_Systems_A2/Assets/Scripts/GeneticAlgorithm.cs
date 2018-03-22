@@ -46,7 +46,8 @@ public class GeneticAlgorithm {
 	{
 		float[] populationFitness = calculateFitness (this.population);
 		System.Array.Sort (populationFitness, this.population);
-		Debug.Log("SOLUTION FITNESS: " + calculateIndividualFitness(this.population[0]));
+		Debug.Log("SOLUTION FITNESS (total path): " + calculateIndividualFitness(this.population[0]));
+		Debug.Log("SOLUTION FITNESS (maximum subpath): " + alternativeIndividualFitness(this.population[0]));
 		return this.population [0];
 	}
 

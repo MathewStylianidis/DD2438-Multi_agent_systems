@@ -207,10 +207,10 @@ public class VirtualStructure : BaseFormationController {
 		PointInfo lastPos = nearestAgentController.getLastPosInfo ();
 		BaseModel model = nearestAgentController.getMotionModel ();
 		PointInfo goalPointInfo = new PointInfo (target, Vector3.zero, Vector3.forward, lastPos.currentTime + vehicleDt);
-		List<PointInfo> path = model.completePath (lastPos, goalPointInfo, nearestAgentController.getWorld(), false);
+		PointInfo nextPoint = model.moveTowardsWithDecreasingVelocity (lastPos, goalPointInfo, nearestAgentController.getWorld(), false);
 		// Get previous position of agent
 		Vector3 prevPos = new Vector3(agents[nearestAgentIdx].transform.position.x , agents[nearestAgentIdx].transform.position.y, agents[nearestAgentIdx].transform.position.z);
-		agents[nearestAgentIdx].transform.position = path[0].pos;
+		agents[nearestAgentIdx].transform.position = nextPoint.pos;
 		Vector2[] tmpDesiredRelativePositions = getDesiredPositions (winnerIdx, false, false);
 		// Store previous positional information
 		Vector2[] prevRelativeFormationPositions = new Vector2[this.relativeFormationPositions.Length];
@@ -248,14 +248,14 @@ public class VirtualStructure : BaseFormationController {
 		// Otherwise make all necessary changes to variables of the closest agent and formation center
 		agents[nearestAgentIdx].transform.position = prevPos;
 		agents [nearestAgentIdx].transform.LookAt(agents[nearestAgentIdx].transform.position + (target - agents[nearestAgentIdx].transform.position).normalized);
-		PointInfo nextPos = new PointInfo (path [0].pos, Vector3.zero, path [0].orientation, path [0].currentTime + vehicleDt);
-		nearestAgentController.setNextPosInfo (path [0]);
+		PointInfo nextPos = new PointInfo (nextPoint.pos, Vector3.zero, nextPoint.orientation, nextPoint.currentTime + vehicleDt);
+		nearestAgentController.setNextPosInfo (nextPoint);
 
 		agents [agents.Length - 1].transform.position = desiredCenter3D;
 		lastCenterPos.pos = desiredCenter3D;
-		lastCenterPos.vel = path [0].vel;
-		lastCenterPos.orientation = path [0].orientation;
-		lastCenterPos.currentTime = path [0].currentTime;
+		lastCenterPos.vel = nextPoint.vel;
+		lastCenterPos.orientation = nextPoint.orientation;
+		lastCenterPos.currentTime = nextPoint.currentTime;
 		formationRectangle = tmp;
 		agents [agents.Length - 1].transform.LookAt(agents[agents.Length - 1].transform.position + (target - agents[agents.Length - 1].transform.position).normalized);
 		virtualCenterController.setLastPosInfo (lastCenterPos);

@@ -28,6 +28,7 @@ public class WorldController : MonoBehaviour {
 	public float simulationSpeedFactor = 1.0f;
 	private GameObject[] agents;
 	private BaseModel motionModel; // Motion model to be used
+	public bool optimalDynamicPointFormation = true;
 
 	// VRP variables
 	public GameObject pointOfInterestModel;
