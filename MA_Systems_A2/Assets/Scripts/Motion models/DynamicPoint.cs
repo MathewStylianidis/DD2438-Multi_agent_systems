@@ -52,6 +52,16 @@ public class DynamicPoint : BaseModel {
 		return nextPointInfo;
 	}
 
+	/// <summary>
+	/// Completes the path from the current point denoted by curPointInfo to the goal point denoted by goalPointInfo
+	/// respecting the constraints of the given motion model.
+	/// </summary>
+	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
+	{
+		float tau = getOptimalTau (goalPointInfo, curPointInfo);
+		return getPath(goalPointInfo, curPointInfo, tau);
+	}
+
 	private float getOptimalTau(PointInfo goalPointInfo, PointInfo startPointInfo,
 		/*params for Newton*/	float t0 = 30, int max_n = 10, float r = 1.0f) {
 		float p_x0 = startPointInfo.pos.x;
@@ -77,17 +87,10 @@ public class DynamicPoint : BaseModel {
 		return NewtonSolver.Newton(coefficients, t0, max_n);
 	}
 
-	/// <summary>
-	/// Completes the path from the current point denoted by curPointInfo to the goal point denoted by goalPointInfo
-	/// respecting the constraints of the given motion model.
-	/// </summary>
-	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
-	{
-		float tau = getOptimalTau (goalPointInfo, curPointInfo);
-		return getPath(goalPointInfo, curPointInfo, tau);
-	}
+
 
 	private List<PointInfo> getPath(PointInfo goalPointInfo, PointInfo startPointInfo, float tau, float r = 1.0f) {
+
 		float p_x0 = startPointInfo.pos.x;
 		float p_y0 = startPointInfo.pos.z;
 		float v_x0 = startPointInfo.vel.x;
@@ -131,15 +134,16 @@ public class DynamicPoint : BaseModel {
 			v_x_curr = v_x1 - Mathf.Pow(t-tau,2)*d1Tau/(2*r) + (t-tau)*(d3Tau)/r;
 			v_y_curr = v_y1 - Mathf.Pow(t-tau,2)*d2Tau/(2*r) + (t-tau)*(d4Tau)/r;
 
-			if (Mathf.Sqrt(v_x_curr*v_x_curr + v_y_curr*v_y_curr) > maxVelocity) {
-				return null;
-			}
+			//if (Mathf.Sqrt(v_x_curr*v_x_curr + v_y_curr*v_y_curr) > maxVelocity) {
+				//return null;
+			//}
 
 			Vector3 curPos = new Vector3 (p_x_curr, startPointInfo.pos.y, p_y_curr);
 			Vector3 curVel = new Vector3 (v_x_curr, 0.0f, v_y_curr);
 			Vector3 curOri = curVel.normalized;
 			PointInfo newPoint = new PointInfo (curPos,curVel , curOri, prevPoint.currentTime + dt);
 			path.Add (newPoint);
+			return path;
 			prevPoint = newPoint;
 			//if (Math.sqrt((v_x_curr-v_prev_x)*(v_x_curr-v_prev_x) + (v_y_curr-v_prev_y)*(v_y_curr-v_prev_y))/dt > map.vehicle_a_max) {
 			//	return false;
