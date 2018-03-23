@@ -16,7 +16,8 @@ public class FootballPlayerController : MonoBehaviour {
 	private VirtualStructure virtualStructure;
 	private int agentIdx;
 	private bool play = true;
-	float[] boundingMinMaxes;
+	private float[] boundingMinMaxes;
+	private bool formationDecreasingGoalVelocity;
 
 	// Use this for initialization
 	void Start () {
@@ -35,6 +36,7 @@ public class FootballPlayerController : MonoBehaviour {
 			virtualStructure = agentsObj.GetComponent<VirtualStructure> ();
 			if(virtualStructure != null) {
 				agentHeight = virtualStructure.agentHeight;
+				formationDecreasingGoalVelocity = virtualStructure.formationDecreasingGoalVelocity;
 				Vector3 currentVelocity = new Vector3 (world.currentVelocities [agentIdx - 1].x, 0f, world.currentVelocities [agentIdx - 1].y);
 				lastPosInfo = new PointInfo (this.transform.position, currentVelocity, currentVelocity.normalized, 0f);
 				nextPosInfo = getNextPosition (lastPosInfo, world, 1);
@@ -60,6 +62,7 @@ public class FootballPlayerController : MonoBehaviour {
 				}
 				transform.LookAt (lastPosInfo.pos + nextPosInfo.orientation);
 				world.currentVelocities [agentIdx - 1] = lastPosInfo.vel;
+				virtualStructure.setCurrentVelocity (agentIdx, world.currentVelocities [agentIdx - 1]);
 
 			} else {
 				transform.position = lastPosInfo.pos + (nextPosInfo.pos - lastPosInfo.pos) * Time.deltaTime / vehicle_dt;	
@@ -80,7 +83,17 @@ public class FootballPlayerController : MonoBehaviour {
 	private PointInfo getNextPosition(PointInfo lastPos, World world, float constant = 1) {		
 		// Get next desired position (agentIdx - 1 is used because the opponent player is part of the framework but is not included in the formation)
 		Vector3 goalPoint = new Vector3(virtualStructure.getDesiredPosition (agentIdx - 1).x, agentHeight, virtualStructure.getDesiredPosition (agentIdx - 1).y);
-		PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, virtualStructure.getWinnerOrientation(), lastPos.currentTime + vehicle_dt);
-		return motionModel.moveTowardsWithDecreasingVelocity (lastPos, goalPointInfo, world, false, constant);
+		if (!formationDecreasingGoalVelocity) {
+			PointInfo goalPointInfo = new PointInfo (goalPoint, virtualStructure.getAgentVelocity(virtualStructure.getWinnerIdx()), virtualStructure.getWinnerOrientation(), lastPos.currentTime + vehicle_dt);
+			List<PointInfo> path = motionModel.completePath (lastPos, goalPointInfo, world, false);
+			if (path != null && path.Count > 0) {
+				return path [0];
+			} else {
+				return null;
+			}
+		} else {
+			PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, virtualStructure.getWinnerOrientation(), lastPos.currentTime + vehicle_dt);
+			return motionModel.moveTowardsWithDecreasingVelocity (lastPos, goalPointInfo, world, false, constant);
+		}
 	}
 }

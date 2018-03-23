@@ -209,8 +209,23 @@ public class VirtualStructure : BaseFormationController {
 		FootballPlayerController nearestAgentController = agents[nearestAgentIdx].GetComponent<FootballPlayerController>();
 		PointInfo lastPos = nearestAgentController.getLastPosInfo ();
 		BaseModel model = nearestAgentController.getMotionModel ();
-		PointInfo goalPointInfo = new PointInfo (target, Vector3.zero, Vector3.forward, lastPos.currentTime + vehicleDt);
-		PointInfo nextPoint = model.moveTowardsWithDecreasingVelocity (lastPos, goalPointInfo, nearestAgentController.getWorld(), false);
+
+		PointInfo nextPoint;
+		if (formationDecreasingGoalVelocity) {
+			PointInfo goalPointInfo = new PointInfo (target, Vector3.zero, Vector3.forward, lastPos.currentTime + vehicleDt);
+			nextPoint = model.moveTowardsWithDecreasingVelocity (lastPos, goalPointInfo, nearestAgentController.getWorld (), false);
+		}
+		else {
+			PointInfo goalPointInfo = new PointInfo (target, getAgentVelocity(0), getAgentOrientation(0), lastPos.currentTime + vehicleDt);
+			List<PointInfo> path = model.completePath (lastPos, goalPointInfo, nearestAgentController.getWorld(), false);
+			if (path != null && path.Count > 0)
+				nextPoint = path [0];
+			else 
+				return false;
+		}
+		nearestAgentController.getWorld().currentVelocities [nearestAgentIdx - 1] = nextPoint.vel;
+		setCurrentVelocity (nearestAgentIdx, nextPoint.vel);
+
 		// Get previous position of agent
 		Vector3 prevPos = new Vector3(agents[nearestAgentIdx].transform.position.x , agents[nearestAgentIdx].transform.position.y, agents[nearestAgentIdx].transform.position.z);
 		agents[nearestAgentIdx].transform.position = nextPoint.pos;
