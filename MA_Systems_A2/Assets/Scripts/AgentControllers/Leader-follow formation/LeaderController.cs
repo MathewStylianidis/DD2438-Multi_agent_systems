@@ -54,7 +54,8 @@ public class LeaderController : MonoBehaviour {
 				accumulatedDeltaTime = 0.0f;
 				transform.position = trajectory [routeIdx];
 				lastPos = trajectory [routeIdx];
-				formationScript.setCurrentVelocity (0, (trajectory [routeIdx] - trajectory [routeIdx - 1]) / vehicle_dt);
+				if(routeIdx > 2)
+					formationScript.setCurrentVelocity (0, (trajectory [routeIdx] - trajectory [routeIdx - 3]) / (3 * vehicle_dt));
 				routeIdx++;
 				if(routeIdx < trajectory.Length)
 					transform.LookAt (lastPos + UtilityClass.rads2Vec (trajectoryOrientation[routeIdx]));

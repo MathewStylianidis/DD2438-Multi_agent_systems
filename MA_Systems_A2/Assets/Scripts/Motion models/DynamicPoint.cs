@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class DynamicPoint : BaseModel {
 
+	private static System.Random rand = new System.Random ();
+
 	private float aMax;
 
 	public DynamicPoint(float velocityMax, float dt, float aMax) :base(velocityMax, dt) {
@@ -58,8 +60,26 @@ public class DynamicPoint : BaseModel {
 	/// </summary>
 	public override List<PointInfo> completePath (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true)
 	{
-		float tau = getOptimalTau (goalPointInfo, curPointInfo);
-		return getPath(goalPointInfo, curPointInfo, tau);
+		if ((goalPointInfo.pos - curPointInfo.pos).magnitude < 0.001) {
+			return new List<PointInfo> { goalPointInfo };
+		}
+
+		int n = 100;
+		float r = 0.01f;
+		float tau = float.MaxValue;
+		float step = 3.0f;
+		int i = 0;
+		for (float t0 = 0.5f; true; t0 += step) {
+			t0 += (float)(0.1 * rand.NextDouble ());
+			float tau_ = getOptimalTau (goalPointInfo, curPointInfo, t0, n, r);
+			if (tau_ > 0.0f) {
+				tau = tau_;
+				break;
+			}
+			i++;
+		}
+
+		return getPath (goalPointInfo, curPointInfo, tau, r);
 	}
 
 	private float getOptimalTau(PointInfo goalPointInfo, PointInfo startPointInfo,
@@ -109,15 +129,19 @@ public class DynamicPoint : BaseModel {
 		float a_x_curr = (d3Tau-(1e-7f-tau)*d1Tau)/r;
 		float a_y_curr = (d4Tau-(1e-7f-tau)*d2Tau)/r;
 
+		/*
 		if (Mathf.Sqrt(a_x_curr*a_x_curr + a_y_curr*a_y_curr) > aMax) {
 			return null;
 		}
+		*/
 
 		float v_x_curr = v_x1 - Mathf.Pow(1e-7f-tau,2)*d1Tau/(2*r) + (1e-7f-tau)*(d3Tau)/r;
 		float v_y_curr = v_y1 - Mathf.Pow(1e-7f-tau,2)*d2Tau/(2*r) + (1e-7f-tau)*(d4Tau)/r;
+		/*
 		if (Mathf.Sqrt(v_x_curr*v_x_curr + v_y_curr*v_y_curr) > maxVelocity){
 			return null;
 		}
+		*/
 
 		float p_prev_x = p_x0;
 		float p_prev_y = p_y0;
@@ -127,7 +151,7 @@ public class DynamicPoint : BaseModel {
 
 		List<PointInfo> path = new List<PointInfo>();
 		PointInfo prevPoint = startPointInfo;
-		for (float t = dt; t < tau; t+=dt) {
+		for (float t = dt; true /*t < tau*/ ; t+=dt) {
 			float p_x_curr = p_x1 + v_x1*(t-tau) + Mathf.Pow(t-tau,2)*d3Tau/(2*r) - t*d1Tau*(t*t/3 - t*tau + tau*tau)/(2*r) + Mathf.Pow(tau,3)*d1Tau/(6*r);
 			float p_y_curr = p_y1 + v_y1*(t-tau) + Mathf.Pow(t-tau,2)*d4Tau/(2*r) - t*d2Tau*(t*t/3 - t*tau + tau*tau)/(2*r) + Mathf.Pow(tau,3)*d2Tau/(6*r);
 

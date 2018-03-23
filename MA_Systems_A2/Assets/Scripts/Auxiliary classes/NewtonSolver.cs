@@ -32,9 +32,15 @@ public class NewtonSolver {
 
 	// Simple Newton
 	public static float Newton(float[] coeff, float x0, int max_n) {
+		float x_prev;
 		for (var i = 0; i < max_n; i++) {
+			x_prev = x0;
 			float[] fdf = eval(coeff, x0);
 			x0 = x0 - fdf[0]/fdf[1];
+
+			if (Mathf.Abs (x_prev - x0) < 0.01f) {
+				break;
+			}
 		}
 		return x0;
 	}
