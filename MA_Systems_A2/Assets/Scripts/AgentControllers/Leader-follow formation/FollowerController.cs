@@ -81,7 +81,7 @@ public class FollowerController : MonoBehaviour {
 			if (path != null && path.Count > 0) {
 				return path [0];
 			} else {
-				return lastPos;
+				return null;
 			}
 		} else {
 			PointInfo goalPointInfo = new PointInfo (goalPoint, Vector3.zero, formationControl.getAgentOrientation(leaderIndex), lastPos.currentTime + vehicle_dt);

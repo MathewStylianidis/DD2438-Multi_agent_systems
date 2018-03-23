@@ -11,7 +11,7 @@ public class LeaderFormationController : BaseFormationController {
 	void Update () {
 		this.desiredRelativePositions = getDesiredPositions (0, false);
 		this.desiredAbsolutePositions = getDesiredPositions (0);
-		Visualizer.visualizePoints(this.desiredAbsolutePositions);
+		//Visualizer.visualizePoints(this.desiredAbsolutePositions);
 	}
 		
 	public void initializeController(GameObject[] agents, World.TrajectoryMap trajectory, Vector2[] formationPositions, float agentHeight, bool formationDecreasingGoalVelocity) {

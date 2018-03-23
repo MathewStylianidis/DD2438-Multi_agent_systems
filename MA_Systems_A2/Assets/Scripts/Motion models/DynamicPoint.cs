@@ -34,7 +34,7 @@ public class DynamicPoint : BaseModel {
 	public override PointInfo moveTowardsWithDecreasingVelocity (PointInfo curPointInfo, PointInfo goalPointInfo, World world, bool collisionCheck = true, float constant = 1.0f)
 	{
 		float tolerance = 0.01f;
-			Vector3 path = goalPointInfo.pos - curPointInfo.pos;
+		Vector3 path = goalPointInfo.pos - curPointInfo.pos;
 		float dist = path.magnitude;
 		PointInfo nextPointInfo = moveTowards(curPointInfo, goalPointInfo.pos);
 
@@ -63,7 +63,7 @@ public class DynamicPoint : BaseModel {
 	}
 
 	private float getOptimalTau(PointInfo goalPointInfo, PointInfo startPointInfo,
-		/*params for Newton*/	float t0 = 30, int max_n = 10, float r = 1.0f) {
+		/*params for Newton*/	float t0 = 20, int max_n = 10, float r = 2.0f) {
 		float p_x0 = startPointInfo.pos.x;
 		float p_y0 = startPointInfo.pos.z;
 		float v_x0 = startPointInfo.vel.x;
@@ -89,7 +89,7 @@ public class DynamicPoint : BaseModel {
 
 
 
-	private List<PointInfo> getPath(PointInfo goalPointInfo, PointInfo startPointInfo, float tau, float r = 1.0f) {
+	private List<PointInfo> getPath(PointInfo goalPointInfo, PointInfo startPointInfo, float tau, float r = 2.0f) {
 
 		float p_x0 = startPointInfo.pos.x;
 		float p_y0 = startPointInfo.pos.z;
@@ -134,7 +134,7 @@ public class DynamicPoint : BaseModel {
 			v_x_curr = v_x1 - Mathf.Pow(t-tau,2)*d1Tau/(2*r) + (t-tau)*(d3Tau)/r;
 			v_y_curr = v_y1 - Mathf.Pow(t-tau,2)*d2Tau/(2*r) + (t-tau)*(d4Tau)/r;
 
-			//if (Mathf.Sqrt(v_x_curr*v_x_curr + v_y_curr*v_y_curr) > maxVelocity) {
+			//	if (Mathf.Sqrt(v_x_curr*v_x_curr + v_y_curr*v_y_curr) > maxVelocity) {
 				//return null;
 			//}
 
