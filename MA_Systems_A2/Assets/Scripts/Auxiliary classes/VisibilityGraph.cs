@@ -4,7 +4,9 @@ using UnityEngine;
 
 public class VisibilityGraph {
 
-	public static void initVisibilityGraph (World world) {
+	//public 
+
+	public static void initVisibilityGraph (World world, IEnumerable<Vector2> additionalPoints = null) {
 
 		var vertices = new List<World.VisibilityVertex> ();
 		var obstEdges = new List<Segment> ();
@@ -19,19 +21,11 @@ public class VisibilityGraph {
 			}
 		}
 
-		foreach (var point in world.pointsOfInterest) {
-			vertices.Add (new World.VisibilityVertex (point, false));
+		if (additionalPoints != null) {
+			foreach (var point in additionalPoints) {
+				vertices.Add(new World.VisibilityVertex (point, false));
+			}
 		}
-
-		foreach (var vertex in world.startPositions) {
-			vertices.Add (new World.VisibilityVertex(vertex, false));
-		}
-
-		foreach (var vertex in world.goalPositions) {
-			vertices.Add (new World.VisibilityVertex(vertex, false));
-		}
-
-
 
 		var visibilityGraph = new float[vertices.Count][];
 		for (var i = 0; i < vertices.Count; i++) {
@@ -71,11 +65,12 @@ public class VisibilityGraph {
 
 		world.visibilityGraph = visibilityGraph;
 		world.graphVertices = vertices;
+		world.obstacleEdges = obstEdges;
 
 	}
 
 
-	class Segment {
+	public class Segment {
 		public readonly Vector2 vertex1;
 		public readonly Vector2 vertex2;
 

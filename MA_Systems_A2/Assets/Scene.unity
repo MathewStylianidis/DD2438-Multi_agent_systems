@@ -255,13 +255,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 585449599}
-  m_LocalRotation: {x: 0.5449987, y: 0.037901226, z: -0.0025266767, w: 0.837576}
-  m_LocalPosition: {x: 14.52, y: 45.72, z: 19.15}
+  m_LocalRotation: {x: 0.67816865, y: 0.036935605, z: -0.008868398, w: 0.73392403}
+  m_LocalPosition: {x: 12.874, y: 46.77, z: 14.988}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 65.944, y: 8.569, z: 5.2190003}
+  m_LocalEulerAnglesHint: {x: 84.94, y: 28.578001, z: 24.863}
 --- !u!1 &586352133
 GameObject:
   m_ObjectHideFlags: 0
@@ -476,7 +476,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startButton: {fileID: 1875005645}
   timeText: {fileID: 925281167}
-  data: {fileID: 4900000, guid: 7c510cb51ed229b42aa80c4aba657298, type: 3}
+  data: {fileID: 4900000, guid: 8b2023ab240174849a5a0ac85ad085fe, type: 3}
   agentPrefab: {fileID: 1177329548899570, guid: f0091b1d408c02f4aa665fd56a2db987,
     type: 2}
   world:
@@ -505,14 +505,17 @@ MonoBehaviour:
   objectHeight: 4
   objectThickness: 0.01
   fieldMaterial: {fileID: 2100000, guid: 066326dda69827642ad629bb41725088, type: 2}
-  modelName: 1
+  modelName: 0
   simulationSpeedFactor: 25
   pointOfInterestModel: {fileID: 1371991534854146, guid: 60af354a4c4e345449409e042c27c5ce,
     type: 2}
+  populationSize: 10000
+  geneticAlgorithmIterations: 500
   trajectoryData: {fileID: 4900000, guid: 2dbe7357c651f7e4cae78bf87830b167, type: 3}
   deltaX: 0
   deltaY: 0
   formationDecreasingGoalVelocity: 0
+  weaponType: 0
 --- !u!4 &810943123
 Transform:
   m_ObjectHideFlags: 0

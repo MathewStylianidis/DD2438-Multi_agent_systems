@@ -33,6 +33,11 @@ public class World {
 	/// </summary>
 	public List<VisibilityVertex> graphVertices;
 
+	/// <summary>
+	/// The obstacle edges.
+	/// </summary>
+	public List<VisibilityGraph.Segment> obstacleEdges;
+
 	class TempMap {
 		public float[][] bounding_polygon;
 		public float[][] obstacle_1;
@@ -79,8 +84,8 @@ public class World {
 	}
 
 	public class VisibilityVertex {
-		public readonly Vector2 vertex;
-		public readonly bool obstacleVertex;
+		public Vector2 vertex { get; set;}
+		public bool obstacleVertex { get; set; }
 		public int obstacleIndex { get; set; }
 
 		public VisibilityVertex(Vector2 vertex, bool obstacleVertex) {

@@ -7,6 +7,10 @@ public enum model {
 	KinematicPoint, DynamicPoint //, DifferentialDrive, KinematicCar
 }
 
+public enum WeaponTypeEnum {
+	Shotgun,
+	Rifle
+}
 
 
 public class WorldController : MonoBehaviour {
@@ -32,6 +36,8 @@ public class WorldController : MonoBehaviour {
 
 	// VRP variables
 	public GameObject pointOfInterestModel;
+	public int populationSize = 10000;
+	public int geneticAlgorithmIterations = 500;
 	private List<List<PointInfo>> solutionCoordinates; // Coordinates of the path of each vehicle for the VRP
 	private List<List<int>> solutionList; // List of indices with the visiting order for each agent
 	private int longestPathIndex;
@@ -42,9 +48,12 @@ public class WorldController : MonoBehaviour {
 	public float deltaX = 5.0f; // Determines the expansion of the virtual formation rectangle on the x axis (sports formation)
 	public float deltaY = 5.0f; // Determines the expansion of the virtual formation rectangle on the y axis (sports formation)
 	// Is true if the agents converge to a zero velocity on the goal formation point without paying respect to any goal velocity direction and magnitude
-	public bool formationDecreasingGoalVelocity; 
+	public bool formationDecreasingGoalVelocity;
 
+	//Shooting coordination variables
+	public static System.Random rand = new System.Random();
 
+	public WeaponTypeEnum weaponType = WeaponTypeEnum.Shotgun;
 
 
 	void Start () {
@@ -64,21 +73,19 @@ public class WorldController : MonoBehaviour {
 
 		if (data.name == "P22") {
 			solveVRP (world);
-		} 
-		else if (data.name == "P25") {
+		} else if (data.name == "P25") {
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
 			GameObject tmp = new GameObject ("LeaderFormationController");
 			tmp.AddComponent<LeaderFormationController> ();
 			tmp.GetComponent<LeaderFormationController> ().initializeController (agents, world.trajectory, world.formationPositions, agents [0].transform.localScale.y / 2, formationDecreasingGoalVelocity);
-		}
-		else if (data.name == "P26") {
+		} else if (data.name == "P26") {
 			// Formation problems
 			GameObject plane = GameObject.Find ("Plane");
 			Renderer ren = plane.GetComponent<Renderer> ();
 			ren.material = fieldMaterial;
 			//for (int i = 0; i < world.trajectory.x.Length; i++) {
-				//world.trajectory.x [i] += -10.0f;
-				//world.trajectory.y [i] += 35.0f;
+			//world.trajectory.x [i] += -10.0f;
+			//world.trajectory.y [i] += 35.0f;
 			//}
 			Visualizer.visualizeTrajectory (world.trajectory.x, world.trajectory.y);
 			agentParent.AddComponent<VirtualStructure> ();
@@ -86,10 +93,34 @@ public class WorldController : MonoBehaviour {
 			Vector2[] formationPositions = new Vector2[world.formationPositions.Length + 1];
 			for (int i = 0; i < formationPositions.Length - 1; i++)
 				formationPositions [i] = world.formationPositions [i];
-			formationPositions [formationPositions.Length - 1] = new Vector2(agents [agents.Length - 1].transform.position.x, agents [agents.Length - 1].transform.position.z) ; //position of virtual center.
+			formationPositions [formationPositions.Length - 1] = new Vector2 (agents [agents.Length - 1].transform.position.x, agents [agents.Length - 1].transform.position.z); //position of virtual center.
 			Debug.Log (formationPositions [formationPositions.Length - 1]);
 			agentParent.GetComponent<VirtualStructure> ().initializeController (agents, world.boundingPolygon, world.trajectory, formationPositions, agents [0].transform.localScale.y / 2, deltaX, deltaY,
-																				simulationSpeedFactor, world.vehicle.dt, formationDecreasingGoalVelocity);
+				simulationSpeedFactor, world.vehicle.dt, formationDecreasingGoalVelocity);
+		} else if (data.name == "P27") {
+			float[] minMaxes = VirtualStructure.getMinMaxes (world.boundingPolygon);
+			int n = 100; // number of samples
+			Vector2[] points = new Vector2[n];
+
+			for (int i = 0; i < n; i++) {
+				do {
+					points[i].x = (float)(rand.NextDouble () * (minMaxes [2] - minMaxes [0]) + minMaxes [0]);
+					points[i].y = (float)(rand.NextDouble () * (minMaxes [3] - minMaxes [1]) + minMaxes [1]);
+				} while ((!Raycasting.insidePolygon(points[i].x, points[i].y, world.boundingPolygon)) || Raycasting.insideObstacle (points[i].x, points[i].y, world.obstacles));
+			}
+			List<Vector2> addPoints = new List<Vector2> (points);
+			foreach (var point in world.startPositions) {
+				addPoints.Add (point);
+			}
+			foreach (var point in world.enemyPositions) {
+				addPoints.Add (point);
+			}
+			VisibilityGraph.initVisibilityGraph (world, addPoints);
+
+			agentParent.AddComponent<ShooterController> ();
+			List<ShootingPlanner.ShooterOneStepPlan[]> gamePlan = (new ShootingPlanner (world, weaponType)).getPlan ();
+			agentParent.GetComponent<ShooterController> ().initializeController (gamePlan);
+
 		}
 	}
 	
@@ -178,6 +209,17 @@ public class WorldController : MonoBehaviour {
 
 		if (world.startPositions.Length != 0 && world.enemyPositions.Length != 0) {
 			//Spawn actors in a way suitable for the shooting problem
+			agents = new GameObject[world.startPositions.Length + world.enemyPositions.Length];
+			for (int i = 0; i < world.startPositions.Length; i++) {
+				Vector3 orientation = Vector3.zero;
+				spawnActor (world.startPositions [i], orientation, i); 
+			}
+			for (int i = 0; i < world.enemyPositions.Length; i++) {
+				Vector3 orientation = Vector3.zero;
+				GameObject actor = spawnActor (world.enemyPositions [i], orientation, world.startPositions.Length + i); 
+				Renderer ren = actor.GetComponent<Renderer> ();
+				ren.material = fieldMaterial;
+			}
 		} else if (world.startPositions.Length != 0 && world.goalPositions.Length != 0) {
 			//Spawn actors in a way suitable for all the other problems
 			world.currentAngularVel = new float[world.startPositions.Length];
@@ -226,7 +268,7 @@ public class WorldController : MonoBehaviour {
 		}
 	}
 
-	private void spawnActor(Vector2 position, Vector3 orientation, int agentIdx, bool addPrefab = true) {
+	private GameObject spawnActor(Vector2 position, Vector3 orientation, int agentIdx, bool addPrefab = true) {
 		if (addPrefab) {
 			agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
 			scaleAgent (agents [agentIdx]); 
@@ -239,6 +281,7 @@ public class WorldController : MonoBehaviour {
 		agents [agentIdx].name = "AgentNo_" + agentIdx;
 		if (data.name == "P21")
 			agents [agentIdx].AddComponent<AgentControllerCollAvoidance> ();
+		return agents [agentIdx];
 	}
 
 
@@ -414,7 +457,15 @@ public class WorldController : MonoBehaviour {
 		// Spawns objects that visualize the points of interest
 		spawnPointOfInterestObjects ();
 		// Initialize visibility graph
-		VisibilityGraph.initVisibilityGraph (world);
+
+		List<Vector2> addPoints = new List<Vector2> (world.pointsOfInterest);
+		foreach (var point in world.startPositions) {
+			addPoints.Add (point);
+		}
+		foreach (var point in world.goalPositions) {
+			addPoints.Add (point);
+		}
+		VisibilityGraph.initVisibilityGraph (world, addPoints);
 		// Execute FloydWarshall algorithm on visibility graph to get shortest paths
 		FloydWarshall fw = new FloydWarshall(world.visibilityGraph);
 		float[,] floydWarshallDistMatrix = fw.findShortestPaths ();
@@ -423,9 +474,7 @@ public class WorldController : MonoBehaviour {
 		// Remove obstacle vertex rows and columns from the distance matrix as GA does not work with them to find a solution
 		float[,] distanceMatrix = getSubArray(floydWarshallDistMatrix, obstacleVertCount);
 		// Use the genetic algorithm for the Vehicle Routing Problem
-		int M = 10000;
-		int lambda = 10000;
-		GeneticAlgorithm ga = new GeneticAlgorithm (M, lambda, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, 500, false, 0.04f, 0.01f, true);
+		GeneticAlgorithm ga = new GeneticAlgorithm (populationSize, populationSize, world.pointsOfInterest.Length, agents.Length, distanceMatrix, 0.02f, geneticAlgorithmIterations , false, 0.04f, 0.01f, true);
 		ga.generationalGeneticAlgorithm ();
 		List<int> solution = ga.getFittestIndividual ();
 		solution = GeneticAlgorithmHelper.includeSolutionGoals (solution, world.pointsOfInterest.Length, agents.Length);
