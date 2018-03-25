@@ -84,7 +84,7 @@ public class World {
 	}
 
 	public class VisibilityVertex {
-		public Vector2 vertex { get; set;}
+        public readonly Vector2 vertex;
 		public bool obstacleVertex { get; set; }
 		public int obstacleIndex { get; set; }
 
@@ -93,7 +93,14 @@ public class World {
 			this.obstacleVertex = obstacleVertex;
 		}
 
-		public VisibilityVertex(Vector2 vertex, bool obstacleVertex, int obstacleIndex) {
+        public VisibilityVertex(VisibilityVertex another)
+        {
+            vertex = another.vertex;
+            obstacleVertex = another.obstacleVertex;
+            obstacleIndex = another.obstacleIndex;
+        }
+
+        public VisibilityVertex(Vector2 vertex, bool obstacleVertex, int obstacleIndex) {
 			this.vertex = vertex;
 			this.obstacleVertex = obstacleVertex;
 			this.obstacleIndex = obstacleIndex;

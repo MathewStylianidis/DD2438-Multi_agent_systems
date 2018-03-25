@@ -118,7 +118,7 @@ public class WorldController : MonoBehaviour {
 			VisibilityGraph.initVisibilityGraph (world, addPoints);
 
 			agentParent.AddComponent<ShooterController> ();
-			List<ShootingPlanner.ShooterOneStepPlan[]> gamePlan = (new ShootingPlanner (world, weaponType)).getPlan ();
+            List<ShootingPlanner.OneStepPlan> gamePlan = (new ShootingPlanner (world, weaponType)).getPlan ();
 			agentParent.GetComponent<ShooterController> ().initializeController (gamePlan);
 
 		}

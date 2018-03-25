@@ -8,8 +8,8 @@ public class ShooterController : MonoBehaviour {
 	private float accumelatedTimeDt;
 	private int stepIndex;
 	private int positionIndex;
-	List<ShootingPlanner.ShooterOneStepPlan[]> gamePlan;
-	ShootingPlanner.ShooterOneStepPlan[] currentStepPlan;
+    List<ShootingPlanner.OneStepPlan> gamePlan;
+    ShootingPlanner.OneStepPlan currentStepPlan;
 
 
 	// Use this for initialization
@@ -38,14 +38,14 @@ public class ShooterController : MonoBehaviour {
 		if (accumelatedTimeDt >= 0.1f) {
 			accumelatedTimeDt = 0.0f;
 			positionIndex++;
-			Vector2 agent0Position = currentStepPlan [0].positions [positionIndex];
+			Vector2 agent0Position = currentStepPlan.shooterPlans [0].positions [positionIndex];
 			// Visualize positions
 		}
 		
 	}
 
 
-	public void initializeController(List<ShootingPlanner.ShooterOneStepPlan[]> gamePlan) {
+	public void initializeController(List<ShootingPlanner.OneStepPlan> gamePlan) {
 		this.gamePlan = gamePlan;
 		currentStepPlan = gamePlan [0];
 	}

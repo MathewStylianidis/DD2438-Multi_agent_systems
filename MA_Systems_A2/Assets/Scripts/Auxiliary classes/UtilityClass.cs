@@ -36,6 +36,28 @@ public class UtilityClass {
 		rotatedVector.x = rotMatrix [0] [0] * vector.x + rotMatrix [0] [1] * vector.y;
 		rotatedVector.y = rotMatrix [1] [0] * vector.x + rotMatrix [1] [1] * vector.y;
 		return rotatedVector;
-	} 
-	 
+	}
+
+
+    public static void RotateRight(IList sequence, int count)
+    {
+        object tmp = sequence[count - 1];
+        sequence.RemoveAt(count - 1);
+        sequence.Insert(0, tmp);
+    }
+
+    public static IEnumerable<IList> Permutate(IList sequence, int count)
+    {
+        if (count == 1) yield return sequence;
+        else
+        {
+            for (int i = 0; i < count; i++)
+            {
+                foreach (var perm in Permutate(sequence, count - 1))
+                    yield return perm;
+                RotateRight(sequence, count);
+            }
+        }
+    }
+
 }
