@@ -126,10 +126,13 @@ public class ShootingPlanner {
                     float accumulatedTime = 0.0f;
                     
                     float travelTime;
+                    float prevStepRemTime;
 
                     while (maxTravelDist > remainingDist) {
 
                         // we're at point prevPosition + prevStepRemDist
+
+                        prevStepRemTime = prevStepRemDist / world.vehicle.maxVelocity;
 
                         travelTime = remainingDist / world.vehicle.maxVelocity;
                         while (accumulatedTime + world.vehicle.dt < travelTime)
@@ -144,7 +147,7 @@ public class ShootingPlanner {
                             }
                             
                             // calculate position, add it
-                            currComradePositions.Add((nextVertex - currVertex) * (accumulatedTime / travelTime) + currVertex);
+                            currComradePositions.Add((nextVertex - currVertex) * ((prevStepRemTime + accumulatedTime) / (prevStepRemTime + travelTime)) + currVertex);
                         }
                         accumulatedTime = accumulatedTime + world.vehicle.dt - travelTime;
                         // calculate position, add it
@@ -165,7 +168,9 @@ public class ShootingPlanner {
 						remainingDist = (nextVertex - currVertex).magnitude;
                         
 					}
-                    
+
+                    prevStepRemTime = prevStepRemDist / world.vehicle.maxVelocity;
+
                     travelTime = remainingDist / world.vehicle.maxVelocity;
                     while (accumulatedTime + world.vehicle.dt < travelTime)
                     {
@@ -178,7 +183,9 @@ public class ShootingPlanner {
                         }
 
                         // calculate position, add it
-                        currComradePositions.Add((nextVertex - currVertex) * (accumulatedTime / travelTime) + currVertex);
+                        //currComradePositions.Add((nextVertex - currVertex) * (accumulatedTime / travelTime) + currVertex);
+
+                        currComradePositions.Add((nextVertex - currVertex) * ((prevStepRemTime + accumulatedTime) / (prevStepRemTime + travelTime)) + currVertex);
                     }
                     accumulatedTime = accumulatedTime + world.vehicle.dt - travelTime;
 
@@ -246,7 +253,7 @@ public class ShootingPlanner {
         State bestPermuState = null;
 
         var enemyIndices = Enumerable.Range(0, enemyCount).Where(i => bestMeetingState.health[comradeCount + i] > 0.0f).ToList();
-        foreach (var permu in UtilityClass.Permutate(enemyIndices, enemyCount))
+        foreach (var permu in UtilityClass.Permutate(enemyIndices, enemyIndices.Count))
         {
             List<int> path = new List<int>();
             List<int> reconstructedPath = shortestPathsFinder.reconstructShortestPath(meetingVertexIndex, enemyStartIndex + (int)permu[0]);
@@ -278,7 +285,7 @@ public class ShootingPlanner {
                 shooterOneStepPlans = new ShooterOneStepPlan[comradeCount];
                 oneStepPlan = new OneStepPlan(shooterOneStepPlans);
 
-                for (int comradeIndex = 0; comradeIndex < comradeCount; comradeCount++)
+                for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
                 {
                     List<Vector2> curComradePositions = new List<Vector2>();
                     shooterOneStepPlans[comradeIndex] = new ShooterOneStepPlan(curComradePositions, curState.health[comradeIndex]);
@@ -294,8 +301,13 @@ public class ShootingPlanner {
                 float accumulatedTime = 0.0f;
                 float travelTime;
 
+                float prevStepRemTime;
+
                 while (maxTravelDist > remainingDist)
                 {
+
+                    prevStepRemTime = prevStepRemDist / world.vehicle.maxVelocity;
+
                     // we're at point prevPosition + prevStepRemDist
                     travelTime = remainingDist / world.vehicle.maxVelocity;
                     while (accumulatedTime + world.vehicle.dt < travelTime)
@@ -311,9 +323,9 @@ public class ShootingPlanner {
 
                         // calculate position, add it (for each comrade)
 
-                        for (int comradeIndex = 0; comradeIndex < comradeCount; comradeCount++)
+                        for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
                         {
-                            shooterOneStepPlans[comradeIndex].positions.Add((nextVertex - currVertex) * (accumulatedTime / travelTime) + currVertex);
+                            shooterOneStepPlans[comradeIndex].positions.Add((nextVertex - currVertex) * ((prevStepRemTime + accumulatedTime) / (prevStepRemTime + travelTime)) + currVertex);
                         }
                     }
                     accumulatedTime = accumulatedTime + world.vehicle.dt - travelTime;
@@ -334,6 +346,7 @@ public class ShootingPlanner {
                     remainingDist = (nextVertex - currVertex).magnitude;
                 }
 
+                prevStepRemTime = prevStepRemDist / world.vehicle.maxVelocity;
 
                 travelTime = remainingDist / world.vehicle.maxVelocity;
                 while (accumulatedTime + world.vehicle.dt < travelTime)
@@ -348,9 +361,9 @@ public class ShootingPlanner {
 
                     // calculate position, add it (for each fucker)
                     
-                    for (int comradeIndex = 0; comradeIndex < comradeCount; comradeCount++)
+                    for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
                     {
-                        shooterOneStepPlans[comradeIndex].positions.Add((nextVertex - currVertex) * (accumulatedTime / travelTime) + currVertex);
+                        shooterOneStepPlans[comradeIndex].positions.Add((nextVertex - currVertex) * ((prevStepRemTime + accumulatedTime) / (prevStepRemTime + travelTime)) + currVertex);
                     }
                 }
                 accumulatedTime = accumulatedTime + world.vehicle.dt - travelTime;
@@ -360,12 +373,12 @@ public class ShootingPlanner {
                 {
                     // TODO: Change positions so that healthiest fucker is in the front
 
-                    for(int comradeIndex = 0; comradeIndex < comradeCount; comradeCount++)
+                    for(int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
                         curState.positions[comradeIndex] = world.graphVertices[path[path.Count - 1]];
                     
                     while (stepTimeLeft > 0.0f)
                     {
-                        for (int comradeIndex = 0; comradeIndex < comradeCount; comradeCount++)
+                        for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
                         {
                             shooterOneStepPlans[comradeIndex].positions.Add(curState.positions[comradeIndex].vertex);
                         }
@@ -379,7 +392,7 @@ public class ShootingPlanner {
 
                 // TODO: Change positions so that healthiest fucker is in the front
 
-                for (int comradeIndex = 0; comradeIndex < comradeCount; comradeCount++)
+                for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
                 {
                     curState.positions[comradeIndex] = new World.VisibilityVertex((world.graphVertices[path[prevPivot + 1]].vertex - prevPosition) *
                         ((maxTravelDist + prevStepRemDist) / currTravelLineLength) + prevPosition, false);
@@ -517,9 +530,13 @@ public class ShootingPlanner {
 
             if (minIndex != -1)
             {
+                float ourHealthBeforeDamage = state.health[minIndex];
+
                 state.health[minIndex] -= damage(minDistance, d0_enemy, k_enemy);
                 state.health[minIndex] = Math.Max(state.health[minIndex], 0.0f);
                 enemyTargets[currEnemyIndex] = minIndex;
+
+                ourTotalHealth -= (ourHealthBeforeDamage - state.health[minIndex]);
             }
 
         }

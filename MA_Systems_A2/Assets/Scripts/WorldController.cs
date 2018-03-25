@@ -119,7 +119,7 @@ public class WorldController : MonoBehaviour {
 
 			agentParent.AddComponent<ShooterController> ();
             List<ShootingPlanner.OneStepPlan> gamePlan = (new ShootingPlanner (world, weaponType)).getPlan ();
-			agentParent.GetComponent<ShooterController> ().initializeController (gamePlan);
+			agentParent.GetComponent<ShooterController> ().initializeController (gamePlan, agents);
 
 		}
 	}
