@@ -222,7 +222,8 @@ public class ShootingPlanner {
 
                     int[] comradeTargets;
                     int[] enemyTargets;
-                    shoot(currState, 2.0f, 1.0f / 5, 1.0f, 1.0f / 20, out comradeTargets, out enemyTargets);
+                    float enemiesTotalHealth;
+                    shoot(currState, 2.0f, 1.0f / 5, 1.0f, 1.0f / 20, out comradeTargets, out enemyTargets, out enemiesTotalHealth);
 
                     oneStepPlan.enemyTargetIndices = enemyTargets;
 
@@ -409,7 +410,8 @@ public class ShootingPlanner {
 
                 int[] comradeTargets;
                 int[] enemyTargets;
-                currTotalHealth = shoot(curState, 2.0f, 1.0f / 5, 1.0f, 1.0f / 20, out comradeTargets, out enemyTargets);
+                float enemiesTotalHealth;
+                currTotalHealth = shoot(curState, 2.0f, 1.0f / 5, 1.0f, 1.0f / 20, out comradeTargets, out enemyTargets, out enemiesTotalHealth);
                 
                 oneStepPlan.enemyTargetIndices = enemyTargets;
 
@@ -417,6 +419,11 @@ public class ShootingPlanner {
                     shooterOneStepPlans[comradeIndex].targetAgentIndex = comradeTargets[comradeIndex];
 
                 currPermuResult.Add(oneStepPlan);
+
+                if (!(enemiesTotalHealth > 0.0f))
+                {
+                    reachedFinish = true;
+                }
             }
 
 
@@ -461,7 +468,8 @@ public class ShootingPlanner {
 	*/
 
     
-	private float shoot(State state, float d0_comrade, float k_comrade, float d0_enemy, float k_enemy, out int[] comradeTargets, out int[] enemyTargets) {
+	private float shoot(State state, float d0_comrade, float k_comrade, float d0_enemy, float k_enemy, out int[] comradeTargets, out int[] enemyTargets, out float enemiesTotalHealth) {
+        enemiesTotalHealth = 0.0f;
         float ourTotalHealth = 0.0f;
 		int enemyStartIndex = world.graphVertices.Count - enemyCount;
 		int comradeStartIndex = enemyStartIndex - comradeCount;
@@ -510,8 +518,12 @@ public class ShootingPlanner {
                 continue;
             }
 
-            // The enemy shoots
+
             int currEnemyIndex = i - comradeCount;
+
+            enemiesTotalHealth += state.health[i];
+
+            // The enemy shoots
             for (int j = 0; j < comradeCount; j++)
             {
 

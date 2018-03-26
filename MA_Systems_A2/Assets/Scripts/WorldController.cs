@@ -20,7 +20,8 @@ public class WorldController : MonoBehaviour {
 	public Text timeText;
 	public TextAsset data;
 	public GameObject agentPrefab;
-	public World world;
+    public GameObject rifleSoldierPrefab;
+    public World world;
 	public GameObject obstacleParent;
 	public GameObject agentParent;
 	public GameObject boundingPolygon;
@@ -210,15 +211,26 @@ public class WorldController : MonoBehaviour {
 		if (world.startPositions.Length != 0 && world.enemyPositions.Length != 0) {
 			//Spawn actors in a way suitable for the shooting problem
 			agents = new GameObject[world.startPositions.Length + world.enemyPositions.Length];
-			for (int i = 0; i < world.startPositions.Length; i++) {
+            GameObject ourPrefab = null;
+            GameObject enemyPrefab = null;
+            if (weaponType == WeaponTypeEnum.Shotgun) { 
+                ourPrefab = agentPrefab;
+                enemyPrefab = rifleSoldierPrefab;
+            }
+            else { 
+                ourPrefab = rifleSoldierPrefab;
+                enemyPrefab = agentPrefab;
+            }
+
+            for (int i = 0; i < world.startPositions.Length; i++) {
 				Vector3 orientation = Vector3.zero;
-				spawnActor (world.startPositions [i], orientation, i); 
+				spawnActor (world.startPositions [i], orientation, i, ourPrefab, true, false); 
 			}
 			for (int i = 0; i < world.enemyPositions.Length; i++) {
 				Vector3 orientation = Vector3.zero;
-				GameObject actor = spawnActor (world.enemyPositions [i], orientation, world.startPositions.Length + i); 
-				Renderer ren = actor.GetComponent<Renderer> ();
-				ren.material = fieldMaterial;
+				GameObject actor = spawnActor (world.enemyPositions [i], orientation, world.startPositions.Length + i, enemyPrefab, true, false, 1.25f); 
+				//Renderer ren = actor.GetComponent<Renderer> ();
+				//ren.material = fieldMaterial;
 			}
 		} else if (world.startPositions.Length != 0 && world.goalPositions.Length != 0) {
 			//Spawn actors in a way suitable for all the other problems
@@ -227,7 +239,7 @@ public class WorldController : MonoBehaviour {
 			agents = new GameObject[world.startPositions.Length];
 			for (int i = 0; i < world.startPositions.Length; i++) {
 				Vector3 orientation = new Vector3 (world.goalPositions [i].x, objectHeight, world.goalPositions [i].y).normalized;
-				spawnActor (world.startPositions [i], orientation, i); 
+				spawnActor (world.startPositions [i], orientation, i, agentPrefab, true, true); 
 			}
 		} else if (world.startPositions.Length != 0 && world.formationPositions.Length != 0) {
 			// Actor spawning for P25 and P26 problems
@@ -238,12 +250,12 @@ public class WorldController : MonoBehaviour {
 				// Initialize leader
 				Vector3 orientation = UtilityClass.rads2Vec (world.trajectory.theta [0]);
 				Vector2 pos = new Vector2 (world.trajectory.x [0], world.trajectory.y [0]);
-				spawnActor (pos, orientation, 0);
+				spawnActor (pos, orientation, 0, agentPrefab, true, true);
 				world.currentPositions [0] = pos;
 				// Initialize followers
 				for (int i = 0; i < world.startPositions.Length; i++) {
 					orientation = Vector3.left; //change so that they look towards their formation position
-					spawnActor (world.startPositions [i], orientation, i + 1);
+					spawnActor (world.startPositions [i], orientation, i + 1, agentPrefab, true, true);
 					world.currentPositions [i + 1] = world.startPositions [i];
 				}
 			} else if (data.name == "P26") {
@@ -253,28 +265,29 @@ public class WorldController : MonoBehaviour {
 				// Initialize opponent football player
 				Vector3 orientation = UtilityClass.rads2Vec (world.trajectory.theta [0]);
 				Vector2 pos = new Vector2 (world.trajectory.x [0], world.trajectory.y [0]);
-				spawnActor (pos, orientation, 0);
+				spawnActor (pos, orientation, 0, agentPrefab, true, true);
 				world.currentPositions [0] = pos;
 				// Initialize players
 				for (int i = 0; i < world.startPositions.Length; i++) {
 					orientation = Vector3.left; //change so that they look towards their formation position
-					spawnActor (world.startPositions [i], orientation, i + 1);
+					spawnActor (world.startPositions [i], orientation, i + 1, agentPrefab, true, true);
 					world.currentPositions [i + 1] = world.startPositions [i];
 				}
 				// Initialize virtual structure center
 				world.currentPositions[world.currentPositions.Length - 1] = VirtualStructure.getCenter(world.formationPositions);
-				spawnActor (world.currentPositions [world.currentPositions.Length - 1], Vector3.forward, agents.Length - 1, false);
+				spawnActor (world.currentPositions [world.currentPositions.Length - 1], Vector3.forward, agents.Length - 1, agentPrefab, false, true);
 			}
 		}
 	}
 
-	private GameObject spawnActor(Vector2 position, Vector3 orientation, int agentIdx, bool addPrefab = true) {
+	private GameObject spawnActor(Vector2 position, Vector3 orientation, int agentIdx, GameObject prefab, bool addPrefab = true, bool agentScale = true, float heightOffset = 0.0f) {
 		if (addPrefab) {
-			agents [agentIdx] = (GameObject)Instantiate (agentPrefab);
-			scaleAgent (agents [agentIdx]); 
+			agents [agentIdx] = (GameObject)Instantiate (prefab);
 		} else
 			agents [agentIdx] = new GameObject ();
-		agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2, position.y);
+        if(agentScale)
+            scaleAgent(agents[agentIdx]);
+        agents [agentIdx].transform.position = new Vector3 (position.x, agents [agentIdx].transform.localScale.y / 2 - heightOffset, position.y);
 		agents [agentIdx].transform.LookAt(agents [agentIdx].transform.position  + orientation);
 		agents [agentIdx].transform.parent = agentParent.transform;
 		agents [agentIdx].transform.SetSiblingIndex (agentIdx);
@@ -286,7 +299,7 @@ public class WorldController : MonoBehaviour {
 
 
 	private void scaleAgent( GameObject agent) {
-		//MeshRenderer renderer = agent.GetComponent<MeshRenderer> ();
+		MeshRenderer renderer = agent.GetComponent<MeshRenderer> ();
 		Vector3[] vertices = agent.GetComponent<MeshFilter> ().mesh.vertices;
 		float maxX, minX, maxY, minY, maxZ, minZ;
 		maxX = maxY = maxZ = float.MinValue;
