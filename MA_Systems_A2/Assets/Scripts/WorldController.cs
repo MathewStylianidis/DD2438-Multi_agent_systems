@@ -100,7 +100,7 @@ public class WorldController : MonoBehaviour {
 				simulationSpeedFactor, world.vehicle.dt, formationDecreasingGoalVelocity);
 		} else if (data.name == "P27") {
 			float[] minMaxes = VirtualStructure.getMinMaxes (world.boundingPolygon);
-			int n = 100; // number of samples
+			int n = 500; // number of samples
 			Vector2[] points = new Vector2[n];
 
 			for (int i = 0; i < n; i++) {

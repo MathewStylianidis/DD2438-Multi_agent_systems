@@ -13,43 +13,53 @@ public class ShootingPlanner {
     public const float LOG_HEALTH_UTILITY_RATIO_BASE = 0.2f;
     public const float TERMINAL_STATE_BASE = 1000000.0f;
     public const double HEALTH_LOG_BASE = Math.E;
+    public const int MAX_NUMBER_OF_VISITS = 3;
 
     private World world;
 	private float maxHealth = 10.0f;
-	private int comradeCount; // Number of agents in team 1
-	private int enemyCount; // Number of agents in team 2
-	private WeaponTypeEnum weaponType;
+	private int comradeCount;       // Number of agents in team 1
+	private int enemyCount;         // Number of agents in team 2
+    private int comradeStartIndex;  // First index of comrade vertices in world.graphVertices
+    private int enemyStartIndex;    // First index of enemy vertices in world.graphVertices
+    private WeaponTypeEnum weaponType;
 	private FloydWarshall shortestPathsFinder;
 	private float[,] shortestDists;
 
-	public ShootingPlanner(World world, WeaponTypeEnum weaponType) {
+
+    public ShootingPlanner(World world, WeaponTypeEnum weaponType) {
 		this.world = world;
 		comradeCount = world.startPositions.Length;
 		enemyCount = world.enemyPositions.Length;
-		this.weaponType = weaponType;
+        enemyStartIndex = world.graphVertices.Count - enemyCount;
+        comradeStartIndex = enemyStartIndex - comradeCount;
+        this.weaponType = weaponType;
 	}
 
-	public List<OneStepPlan> getPlan() {
+    public List<OneStepPlan> getPlan()
+    {
 
-		if (shortestPathsFinder == null) {
-			shortestPathsFinder = new FloydWarshall (world.visibilityGraph);
-			shortestDists = shortestPathsFinder.findShortestPaths ();
-		}
+        if (shortestPathsFinder == null)
+        {
+            shortestPathsFinder = new FloydWarshall(world.visibilityGraph);
+            shortestDists = shortestPathsFinder.findShortestPaths();
+        }
 
         // Get initial greedy solution
         List<OneStepPlan> initialSolution;
-		switch (weaponType) {
-		case WeaponTypeEnum.Shotgun:
+        switch (weaponType)
+        {
+            case WeaponTypeEnum.Shotgun:
+                initialSolution = getShotgunInitialSolution();
+                return initialSolution;
 
-			initialSolution = getShotgunInitialSolution ();
-			return initialSolution;
-		
-		case WeaponTypeEnum.Rifle:
-			break;
-		}
+            case WeaponTypeEnum.Rifle:
+                initialSolution = getRifleInitialSolution();
+                return initialSolution;
+            
+        }
 
-		return null;
-	}
+        return null;
+    }
 
 	private List<OneStepPlan> getShotgunInitialSolution() {
 
@@ -57,8 +67,6 @@ public class ShootingPlanner {
         ShooterOneStepPlan[] shooterOneStepPlans;
         OneStepPlan oneStepPlan;
 
-        int enemyStartIndex = world.graphVertices.Count - enemyCount;
-		int comradeStartIndex = enemyStartIndex - comradeCount;
 
 		// Find "meeting" point
 		int meetingVertexIndex = 0;
@@ -67,18 +75,18 @@ public class ShootingPlanner {
 		for (int i = 0; i < world.graphVertices.Count; i++) {
 
             List<OneStepPlan> currResult = new List<OneStepPlan>();
-
-            float[] health = new float[comradeCount + enemyCount];
-			for (int j = 0; j < health.Length; j++)
-				health[j] = maxHealth;
-
+            
 			World.VisibilityVertex[] startVertices = new World.VisibilityVertex[comradeCount];
 			List<int>[] paths = new List<int>[comradeCount];
 			for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++) {
 				paths [comradeIndex] = shortestPathsFinder.reconstructShortestPath (comradeStartIndex + comradeIndex, i);
 				startVertices [comradeIndex] = world.graphVertices [comradeStartIndex + comradeIndex];
-			}
-			State currState = new State (startVertices, health);
+            }
+
+            float[] health = new float[comradeCount + enemyCount];
+            for (int j = 0; j < health.Length; j++)
+                health[j] = maxHealth;
+            State currState = new State (startVertices, health);
 
 			bool allReachedFinish = false;
 			int[] prevPivots = new int[comradeCount];
@@ -427,6 +435,27 @@ public class ShootingPlanner {
             }
 
 
+            // Adding the final state information
+            shooterOneStepPlans = new ShooterOneStepPlan[comradeCount];
+            oneStepPlan = new OneStepPlan(shooterOneStepPlans);
+            for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
+            {
+                List<Vector2> curComradePositions = new List<Vector2>();
+                shooterOneStepPlans[comradeIndex] = new ShooterOneStepPlan(curComradePositions, curState.health[comradeIndex]);
+            }
+            for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
+            {
+                shooterOneStepPlans[comradeIndex].positions.Add(curState.positions[comradeIndex].vertex);
+            }
+            float[] lastEnemyHealths = new float[enemyCount];
+            oneStepPlan.enemyHealths = lastEnemyHealths;
+            for (int enemIndex = 0; enemIndex < enemyCount; enemIndex++)
+            {
+                lastEnemyHealths[enemIndex] = curState.health[comradeCount + enemIndex];
+            }
+            currPermuResult.Add(oneStepPlan);
+
+
             // Estimate utility of curState
             float curUtility = estimateRelativeUtility(curState);
             if (curUtility > bestPermUtility)
@@ -445,34 +474,261 @@ public class ShootingPlanner {
 	}
 
 
+    private List<OneStepPlan> getRifleInitialSolution()
+    {
+        List<OneStepPlan> result = new List<OneStepPlan>();
+
+        int[] prevCombination = new int[comradeCount];
+        for (int i = 0; i < comradeCount; i++)
+        {
+            prevCombination[i] = comradeStartIndex + i;
+        }
+
+        Dictionary<int[], StateVisits> stateVisits = new Dictionary<int[], StateVisits>(new CombinationsEqualityComparer())
+        {
+            { prevCombination, new StateVisits() { numberOfVisits = 1 } }
+        };
+
+        float maxTravelDist = world.vehicle.maxVelocity * 1.0f;
+        
+        World.VisibilityVertex[] startVertices = new World.VisibilityVertex[comradeCount];
+        for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
+        {
+            startVertices[comradeIndex] = world.graphVertices[comradeStartIndex + comradeIndex];
+        }
+        float[] health = new float[comradeCount + enemyCount];
+        for (int j = 0; j < health.Length; j++)
+            health[j] = maxHealth;
+        State prevBestState = new State(startVertices, health);
 
 
-	/*
-	private PointInfo simulateMove (PointInfo curPointInfo, Vector3 goalPoint)
-	{
-		Vector3 path = goalPoint - curPointInfo.pos;
-		float dist = path.magnitude; // distance from current point to goal
-		float max_dt_dist = maxVelocity * dt; // distance that can be travelled in dt 
-		float part_dist = max_dt_dist / dist;
-		float time = dt;
-		// If we can travel more in dt than the distance left to the goal, then adjust part_dist and time needed to travel
-		if (part_dist >= 1.0) {
-			part_dist = 1f;
-			time /= part_dist;
-		}
-		Vector3 newPath = path * part_dist; // Get the proportion of the path to the goal to be travelled
-		float xVel = (float)System.Math.Round((System.Double)newPath.x/dt, 2, System.MidpointRounding.AwayFromZero);
-		float zVel = (float)System.Math.Round((System.Double)newPath.z/dt, 2, System.MidpointRounding.AwayFromZero);
-		return new PointInfo (curPointInfo.pos + newPath, new Vector3(xVel, 0, zVel), Vector3.Normalize(path), curPointInfo.currentTime + time	);
-	}
-	*/
+        bool terminalStateReached = false;
+        while (!terminalStateReached)
+        {
+            // Select feasible vertices to go to
+            List<int>[] oneStepAccessVertices = new List<int>[comradeCount];
+            for (int i = 0; i < comradeCount; i++)
+            {
+                oneStepAccessVertices[i] = new List<int>();
+                for (int j = 0; j < world.graphVertices.Count; j++)
+                {
+                    var comraringValue = shortestDists[prevCombination[i], j];
+                    if (comraringValue <= maxTravelDist)
+                    {
+                        oneStepAccessVertices[i].Add(j);
+                    }
+                }
+            }
 
+            bool currTerminalStateReached = false;
+            OneStepPlan bestOneStepPlan = null;
+            int[] bestCombination = new int[comradeCount];
+            State currBestState = null;
+            float bestUtility = float.NegativeInfinity;
+
+            int[] accessVertIndices = new int[comradeCount];
+            int[] newCombination = new int[comradeCount];
+            bool allCombinationsExhausted = false;
+            while (!allCombinationsExhausted)
+            {
+                // New combination that we're assessing
+                for (int j = 0; j < newCombination.Length; j++)
+                {
+                    newCombination[j] = oneStepAccessVertices[j][accessVertIndices[j]];
+                }
+                
+                StateVisits combVisits;
+                if (!stateVisits.TryGetValue(newCombination, out combVisits) || combVisits.numberOfVisits < MAX_NUMBER_OF_VISITS)
+                {
+                    combVisits.numberOfVisits++;
+
+                    ShooterOneStepPlan[] shooterOneStepPlans = new ShooterOneStepPlan[comradeCount];
+                    OneStepPlan oneStepPlan = new OneStepPlan(shooterOneStepPlans);
+                    
+                    int[] prevPivots = new int[comradeCount];
+
+                    // Simulation
+
+                    for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
+                    {
+                        List<Vector2> currComradePositions = new List<Vector2>();
+                        shooterOneStepPlans[comradeIndex] = new ShooterOneStepPlan(currComradePositions, prevBestState.health[comradeIndex]);
+
+                        if (prevCombination[comradeIndex] == newCombination[comradeIndex] || !(prevBestState.health[comradeIndex] > 0.0f))
+                        {
+                            var timeLeft = 1.0f;
+                            if (prevCombination[comradeIndex] == newCombination[comradeIndex])
+                            {
+                                while (timeLeft > 0.0f)
+                                {
+                                    currComradePositions.Add(world.graphVertices[prevCombination[comradeIndex]].vertex);
+                                    timeLeft -= world.vehicle.dt;
+                                }
+                            }
+                            else if (!(prevBestState.health[comradeIndex] > 0.0f))
+                            {
+                                //currComradePositions.Add(shooterOneStepPlans[comradeIndex].positions.Last());
+                                currComradePositions.Add(prevBestState.positions.Last().vertex);
+                            }
+
+                            continue;
+                        }
+
+                        List<int> path = shortestPathsFinder.reconstructShortestPath(prevCombination[comradeIndex], newCombination[comradeIndex]);
+
+                        Vector2 nextVertex = world.graphVertices[path[prevPivots[comradeIndex] + 1]].vertex;
+                        Vector2 currVertex = world.graphVertices[path[prevPivots[comradeIndex]]].vertex;
+                        float remainingDist = (nextVertex - currVertex).magnitude;
+
+                        float stepTimeLeft = 1.0f;
+                        float accumulatedTime = 0.0f;
+
+                        float travelTime;
+                        float prevStepRemTime;
+
+                        while (maxTravelDist >= remainingDist)
+                        {
+
+                            // we're at point prevPosition + prevStepRemDist
+                            travelTime = remainingDist / world.vehicle.maxVelocity;
+                            while (accumulatedTime + world.vehicle.dt < travelTime)
+                            {
+                                accumulatedTime += world.vehicle.dt;
+                                stepTimeLeft -= world.vehicle.dt;
+                                if (stepTimeLeft <= 0.0f)
+                                {
+                                    Debug.Log("FUCKKKK !!!");
+                                    break;
+                                }
+                                // calculate position, add it (for each comrade)
+                                currComradePositions.Add((nextVertex - currVertex) * ((accumulatedTime) / (travelTime)) + currVertex);
+                            }
+                            accumulatedTime = accumulatedTime + world.vehicle.dt - travelTime;
+
+
+                            prevPivots[comradeIndex]++;
+                            if (prevPivots[comradeIndex] == path.Count - 1)
+                            {
+                                remainingDist = 0.0f;
+                                break;
+                            }
+
+                            maxTravelDist -= remainingDist;
+
+                            nextVertex = world.graphVertices[path[prevPivots[comradeIndex] + 1]].vertex;
+                            currVertex = world.graphVertices[path[prevPivots[comradeIndex]]].vertex;
+                            remainingDist = (nextVertex - currVertex).magnitude;
+                        }
+
+                        // Adding missing dt-points
+                        while (stepTimeLeft > 0.0f)
+                        {
+                            Vector2 lastVertex = world.graphVertices[path.Last()].vertex;
+                            if (Vector2.Distance(lastVertex, nextVertex) > 0.000001f)
+                            {
+                                Debug.Log("FUCKKKK !!!");
+                            }
+                            currComradePositions.Add(world.graphVertices[path.Last()].vertex);
+                            stepTimeLeft -= 0.1f;
+                        }
+
+                    }
+                    
+                    // Create a new state
+
+                    World.VisibilityVertex[] currVertices = new World.VisibilityVertex[comradeCount];
+                    for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
+                    {
+                        currVertices[comradeIndex] = world.graphVertices[prevPivots[comradeIndex]];
+                    }
+                    float[] currHealths = new float[comradeCount + enemyCount];
+                    for (int j = 0; j < currHealths.Length; j++)
+                        currHealths[j] = prevBestState.health[j];
+                    State currState = new State(currVertices, currHealths);
+                    
+                    float[] enemyHealths = new float[enemyCount];
+                    oneStepPlan.enemyHealths = enemyHealths;
+                    for (int enemIndex = 0; enemIndex < enemyCount; enemIndex++)
+                    {
+                        enemyHealths[enemIndex] = currState.health[comradeCount + enemIndex];
+                    }
+                    
+                    // TODO: If some fuckers are at one point - change positions so that healthiest fucker is in the front
+                    
+                    int[] comradeTargets;
+                    int[] enemyTargets;
+                    float enemiesTotalHealth;
+                    // Shooting
+                    float currTotalHealth = shoot(currState, 2.0f, 1.0f / 5, 1.0f, 1.0f / 20, out comradeTargets, out enemyTargets, out enemiesTotalHealth);
+
+                    oneStepPlan.enemyTargetIndices = enemyTargets;
+
+                    for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
+                        shooterOneStepPlans[comradeIndex].targetAgentIndex = comradeTargets[comradeIndex];
+
+                    if (!(enemiesTotalHealth > 0.0f) || !(currTotalHealth > 0.0f))
+                    {
+                        currTerminalStateReached = true;
+                    }
+
+                    float currUtility = estimateRelativeUtility(currState); // TODO: change utility
+
+                    if (currUtility > bestUtility)
+                    {
+                        // Record best values
+                        bestUtility = currUtility;
+                        bestOneStepPlan = oneStepPlan;
+                        currBestState = currState;
+                        terminalStateReached = currTerminalStateReached;
+                        
+                        for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
+                        {
+                            bestCombination[comradeIndex] = newCombination[comradeIndex];
+                        }
+                    }
+                }
+                
+
+
+                // Generate a new combination
+                int i = comradeCount - 1;
+                accessVertIndices[i]++;
+                while (accessVertIndices[i] >= oneStepAccessVertices[i].Count)
+                {
+                    accessVertIndices[i] = 0;
+                    i--;
+                    if (i < 0)
+                    {
+                        allCombinationsExhausted = true;
+                        break;
+                    }
+
+                    accessVertIndices[i]++;
+                }
+            }
+
+
+            StateVisits combVisits;
+            if (!stateVisits.TryGetValue(bestCombination, out combVisits))
+            {
+                combVisits = new StateVisits();
+                stateVisits.Add(bestCombination, combVisits);
+            }
+            combVisits.numberOfVisits++;
+
+            prevBestState = currBestState;
+            result.Add(bestOneStepPlan);
+
+        }
+
+
+
+        return result;
+    }
     
 	private float shoot(State state, float d0_comrade, float k_comrade, float d0_enemy, float k_enemy, out int[] comradeTargets, out int[] enemyTargets, out float enemiesTotalHealth) {
         enemiesTotalHealth = 0.0f;
         float ourTotalHealth = 0.0f;
-		int enemyStartIndex = world.graphVertices.Count - enemyCount;
-		int comradeStartIndex = enemyStartIndex - comradeCount;
 
         comradeTargets = Enumerable.Repeat(-1, comradeCount).ToArray();
         enemyTargets = Enumerable.Repeat(-1, enemyCount).ToArray();
@@ -734,4 +990,45 @@ public class ShootingPlanner {
 		}
 
 	}
+
+
+    private class CombinationsEqualityComparer : IEqualityComparer<int[]>
+    {
+        public bool Equals(int[] x, int[] y)
+        {
+            if (x.Length != y.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < x.Length; i++)
+            {
+                if (x[i] != y[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public int GetHashCode(int[] obj)
+        {
+            int result = 17;
+            for (int i = 0; i < obj.Length; i++)
+            {
+                result = result * 23 + obj[i];
+                /*
+                unchecked
+                {
+                    result = result * 23 + obj[i];
+                }
+                */
+            }
+            return result;
+        }
+    }
+
+    private class StateVisits
+    {
+        public int numberOfVisits { get; set; }
+    }
 }
