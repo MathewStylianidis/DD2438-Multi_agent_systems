@@ -477,9 +477,9 @@ MonoBehaviour:
   startButton: {fileID: 1875005645}
   timeText: {fileID: 925281167}
   data: {fileID: 4900000, guid: 8b2023ab240174849a5a0ac85ad085fe, type: 3}
-  agentPrefab: {fileID: 1884348970391030, guid: 6f613bf6c3894184a8669ef7d8b9ef0a,
+  agentPrefab: {fileID: 1756034890778868, guid: 5b09c41f029c2484a84c83cecdddd8bf,
     type: 2}
-  rifleSoldierPrefab: {fileID: 1709353653927126, guid: c3db8633af2a2e1419f693593debce04,
+  rifleSoldierPrefab: {fileID: 1853912471311984, guid: 4db726f8ca7565a4a9bd4a6b0dd33db7,
     type: 2}
   world:
     boundingPolygon: []
@@ -507,7 +507,7 @@ MonoBehaviour:
   objectHeight: 4
   objectThickness: 0.01
   fieldMaterial: {fileID: 2100000, guid: 066326dda69827642ad629bb41725088, type: 2}
-  modelName: 0
+  modelName: 1
   simulationSpeedFactor: 25
   pointOfInterestModel: {fileID: 1371991534854146, guid: 60af354a4c4e345449409e042c27c5ce,
     type: 2}
@@ -517,6 +517,7 @@ MonoBehaviour:
   deltaX: 0
   deltaY: 0
   formationDecreasingGoalVelocity: 0
+  pivotSamples: 700
   weaponType: 1
 --- !u!4 &810943123
 Transform:

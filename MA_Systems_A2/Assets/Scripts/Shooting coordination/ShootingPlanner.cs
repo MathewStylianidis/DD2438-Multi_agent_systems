@@ -5,13 +5,13 @@ using UnityEngine;
 
 public class ShootingPlanner {
 
-    public const float DEATH_UTILITY_FACTOR = 3.0f;
-    public const float HEALTH_UTILITY_FACTOR = 1.0f;
-    public const float LOG_HEALTH_UTILITY_FACTOR = 1.0f;
+    public const float DEATH_UTILITY_FACTOR = 5.0f;
+    public const float HEALTH_UTILITY_FACTOR = 3.0f;
+    public const float LOG_HEALTH_UTILITY_FACTOR = 3.0f;
     public const float DEATHS_UTILITY_RATIO_BASE = 0.1f;
     public const float HEALTH_UTILITY_RATIO_BASE = 0.2f;
     public const float LOG_HEALTH_UTILITY_RATIO_BASE = 0.2f;
-    public const float TERMINAL_STATE_BASE = 1000000.0f;
+    //public const float TERMINAL_STATE_BASE = 1000000.0f;
     public const double HEALTH_LOG_BASE = Math.E;
     public const int MAX_NUMBER_OF_VISITS = 3;
 
@@ -242,9 +242,9 @@ public class ShootingPlanner {
                 }
 
             }
-            
+
             // Estimate utility of currState
-            float currUtility = estimateRelativeUtility(currState);
+            float currUtility = estimateUtility(currState, isRelative: true);
             if (currUtility > bestMeetingUtility) {
                 bestMeetingUtility = currUtility;
                 bestMeetingState = currState;
@@ -457,7 +457,7 @@ public class ShootingPlanner {
 
 
             // Estimate utility of curState
-            float curUtility = estimateRelativeUtility(curState);
+            float curUtility = estimateUtility(curState, isRelative: true);
             if (curUtility > bestPermUtility)
             {
                 bestPermUtility = curUtility;
@@ -477,19 +477,24 @@ public class ShootingPlanner {
     private List<OneStepPlan> getRifleInitialSolution()
     {
         List<OneStepPlan> result = new List<OneStepPlan>();
+        
+        Dictionary<int, int> numberOfPointVisits = new Dictionary<int, int>();
+        for (int i = 0; i < world.graphVertices.Count; i++)
+        {
+            numberOfPointVisits.Add(i, 0);
+        }
 
         int[] prevCombination = new int[comradeCount];
         for (int i = 0; i < comradeCount; i++)
         {
             prevCombination[i] = comradeStartIndex + i;
+            numberOfPointVisits[prevCombination[i]] = 1;
         }
 
         Dictionary<int[], StateVisits> stateVisits = new Dictionary<int[], StateVisits>(new CombinationsEqualityComparer())
         {
             { prevCombination, new StateVisits() { numberOfVisits = 1 } }
         };
-
-        float maxTravelDist = world.vehicle.maxVelocity * 1.0f;
         
         World.VisibilityVertex[] startVertices = new World.VisibilityVertex[comradeCount];
         for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
@@ -500,7 +505,6 @@ public class ShootingPlanner {
         for (int j = 0; j < health.Length; j++)
             health[j] = maxHealth;
         State prevBestState = new State(startVertices, health);
-
 
         bool terminalStateReached = false;
         while (!terminalStateReached)
@@ -513,7 +517,7 @@ public class ShootingPlanner {
                 for (int j = 0; j < world.graphVertices.Count; j++)
                 {
                     var comraringValue = shortestDists[prevCombination[i], j];
-                    if (comraringValue <= maxTravelDist)
+                    if (comraringValue <= world.vehicle.maxVelocity*1.0f)
                     {
                         oneStepAccessVertices[i].Add(j);
                     }
@@ -532,16 +536,27 @@ public class ShootingPlanner {
             while (!allCombinationsExhausted)
             {
                 // New combination that we're assessing
-                for (int j = 0; j < newCombination.Length; j++)
+                bool deadPlayerMoved = false;
+                for (int j = 0; j < comradeCount; j++)
                 {
                     newCombination[j] = oneStepAccessVertices[j][accessVertIndices[j]];
+                    if (prevBestState == null || prevBestState.health == null || newCombination == null || prevCombination == null)
+                    {
+                        Debug.Log("Fuck");
+                        deadPlayerMoved = true;
+                        break;
+                    }
+
+                    if (!(prevBestState.health[j] > 0.0f) && newCombination[j] != prevCombination[j])
+                    {
+                        deadPlayerMoved = true;
+                        break;
+                    }
                 }
                 
                 StateVisits combVisits;
-                if (!stateVisits.TryGetValue(newCombination, out combVisits) || combVisits.numberOfVisits < MAX_NUMBER_OF_VISITS)
+                if (!deadPlayerMoved && (!stateVisits.TryGetValue(newCombination, out combVisits) || combVisits.numberOfVisits < MAX_NUMBER_OF_VISITS))
                 {
-                    combVisits.numberOfVisits++;
-
                     ShooterOneStepPlan[] shooterOneStepPlans = new ShooterOneStepPlan[comradeCount];
                     OneStepPlan oneStepPlan = new OneStepPlan(shooterOneStepPlans);
                     
@@ -568,14 +583,15 @@ public class ShootingPlanner {
                             else if (!(prevBestState.health[comradeIndex] > 0.0f))
                             {
                                 //currComradePositions.Add(shooterOneStepPlans[comradeIndex].positions.Last());
-                                currComradePositions.Add(prevBestState.positions.Last().vertex);
+                                currComradePositions.Add(prevBestState.positions[comradeIndex].vertex);
                             }
 
                             continue;
                         }
 
                         List<int> path = shortestPathsFinder.reconstructShortestPath(prevCombination[comradeIndex], newCombination[comradeIndex]);
-
+                        
+                        float maxTravelDist = world.vehicle.maxVelocity * 1.0f;
                         Vector2 nextVertex = world.graphVertices[path[prevPivots[comradeIndex] + 1]].vertex;
                         Vector2 currVertex = world.graphVertices[path[prevPivots[comradeIndex]]].vertex;
                         float remainingDist = (nextVertex - currVertex).magnitude;
@@ -588,7 +604,6 @@ public class ShootingPlanner {
 
                         while (maxTravelDist >= remainingDist)
                         {
-
                             // we're at point prevPosition + prevStepRemDist
                             travelTime = remainingDist / world.vehicle.maxVelocity;
                             while (accumulatedTime + world.vehicle.dt < travelTime)
@@ -639,7 +654,7 @@ public class ShootingPlanner {
                     World.VisibilityVertex[] currVertices = new World.VisibilityVertex[comradeCount];
                     for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
                     {
-                        currVertices[comradeIndex] = world.graphVertices[prevPivots[comradeIndex]];
+                        currVertices[comradeIndex] = world.graphVertices[newCombination[comradeIndex]];
                     }
                     float[] currHealths = new float[comradeCount + enemyCount];
                     for (int j = 0; j < currHealths.Length; j++)
@@ -659,7 +674,7 @@ public class ShootingPlanner {
                     int[] enemyTargets;
                     float enemiesTotalHealth;
                     // Shooting
-                    float currTotalHealth = shoot(currState, 2.0f, 1.0f / 5, 1.0f, 1.0f / 20, out comradeTargets, out enemyTargets, out enemiesTotalHealth);
+                    float currTotalHealth = shoot(currState, 1.0f, 1.0f / 20, 2.0f, 1.0f / 5, out comradeTargets, out enemyTargets, out enemiesTotalHealth);
 
                     oneStepPlan.enemyTargetIndices = enemyTargets;
 
@@ -669,9 +684,68 @@ public class ShootingPlanner {
                     if (!(enemiesTotalHealth > 0.0f) || !(currTotalHealth > 0.0f))
                     {
                         currTerminalStateReached = true;
+                        //allCombinationsExhausted = true;
                     }
 
-                    float currUtility = estimateRelativeUtility(currState); // TODO: change utility
+                    float currUtility = estimateUtility(currState, isRelative: true);
+
+                    int currCombPointVisitsTotal = 0;
+                    int numberOfVisibleOpponents = 0;
+                    float sumShootingDist = 0.0f;
+                    int numShoots = 0;
+                    float sumShortDistToOp = 0.0f;
+                    float sumDistToComrades = 0.0f;
+                    int numberComradesAlive = 0;
+                    for (int j = 0; j < comradeCount; j++)
+                    {
+                        if (!(currState.health[j] > 0.0f))
+                        {
+                            continue;
+                        }
+
+                        numberComradesAlive++;
+                        sumDistToComrades += Enumerable.Range(0, comradeCount).Where(ind => currState.health[ind] > 0.0f)
+                            .Sum(sumInd => shortestDists[newCombination[j], newCombination[sumInd]]);
+
+                        currCombPointVisitsTotal += numberOfPointVisits[newCombination[j]];
+
+                        if (comradeTargets[j] != -1)
+                        {
+                            int numRepeat = comradeTargets.Count(x => x == comradeTargets[j]);
+                            numberOfVisibleOpponents += (numRepeat * numRepeat);
+                            numShoots++;
+                            sumShootingDist += Vector2.Distance(currState.positions[j].vertex, world.graphVertices[enemyStartIndex + comradeTargets[j]].vertex);
+                        }
+                        else
+                        {
+                            float minDistToOp = float.PositiveInfinity;
+                            for (int k = 0; k < enemyCount; k++)
+                            {
+                                if (shortestDists[newCombination[j], enemyStartIndex + k] < minDistToOp)
+                                {
+                                    minDistToOp = shortestDists[newCombination[j], enemyStartIndex + k];
+                                }
+                            }
+                            sumShortDistToOp += minDistToOp;
+                        }
+                    }
+                    currUtility -= 0.2f * currCombPointVisitsTotal;
+                    currUtility += 1.0f * numberOfVisibleOpponents;
+                    if (numShoots != 0)
+                    {
+                        currUtility += 0.3f * sumShootingDist / numShoots;
+                    }
+                    else
+                    {
+                        currUtility -= 50.0f * sumShortDistToOp / numberComradesAlive;
+                    }
+                    currUtility -= 100.0f * sumDistToComrades / numberComradesAlive;
+                    
+                    // Adding Gaussian noise
+                    double u1 = 1.0 - WorldController.rand.NextDouble();
+                    double u2 = 1.0 - WorldController.rand.NextDouble();
+                    double randStdNormal = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
+                    currUtility += (float)(randStdNormal * 0.1);
 
                     if (currUtility > bestUtility)
                     {
@@ -687,8 +761,6 @@ public class ShootingPlanner {
                         }
                     }
                 }
-                
-
 
                 // Generate a new combination
                 int i = comradeCount - 1;
@@ -708,21 +780,47 @@ public class ShootingPlanner {
             }
 
 
-            StateVisits combVisits;
-            if (!stateVisits.TryGetValue(bestCombination, out combVisits))
+            StateVisits bestCombVisits;
+            if (!stateVisits.TryGetValue(bestCombination, out bestCombVisits))
             {
-                combVisits = new StateVisits();
-                stateVisits.Add(bestCombination, combVisits);
+                bestCombVisits = new StateVisits();
+                stateVisits.Add(bestCombination, bestCombVisits);
             }
-            combVisits.numberOfVisits++;
+            bestCombVisits.numberOfVisits++;
 
             prevBestState = currBestState;
             result.Add(bestOneStepPlan);
 
+            for (int comradeIndex = 0; comradeIndex < comradeCount; comradeIndex++)
+            {
+                prevCombination[comradeIndex] = bestCombination[comradeIndex];
+                numberOfPointVisits[prevCombination[comradeIndex]]++;
+            }
+
+            if (terminalStateReached)
+            {
+                // Adding the last state info with zero healths
+
+                ShooterOneStepPlan[] shooterLastStepPlans = new ShooterOneStepPlan[comradeCount];
+                OneStepPlan lastStepPlan = new OneStepPlan(shooterLastStepPlans);
+
+                float[] lastEnemyHealths = new float[enemyCount];
+                for (int i = 0; i < enemyCount; i++)
+                {
+                    lastEnemyHealths[i] = prevBestState.health[comradeCount + i];
+                }
+                lastStepPlan.enemyHealths = lastEnemyHealths;
+
+                for (int i = 0; i < comradeCount; i++)
+                {
+                    shooterLastStepPlans[i] = new ShooterOneStepPlan(new List<Vector2> { prevBestState.positions[i].vertex }, prevBestState.health[i]);
+                    // prevBestState.positions.Select(p => p.vertex).ToList()
+                }
+
+                result.Add(lastStepPlan);
+            }
         }
-
-
-
+        
         return result;
     }
     
@@ -841,7 +939,7 @@ public class ShootingPlanner {
         return (float)Math.Exp(-r / 20);
 	}
 
-    private float estimateRelativeUtility(State state) {
+    private float estimateUtility(State state, bool isRelative = true) {
         float ourTotalHealth = 0.0f;
         float ourLogarithmHealth = 0.0f;
         int ourDeaths = 0;
@@ -889,9 +987,18 @@ public class ShootingPlanner {
         }
         */
 
-        return DEATH_UTILITY_FACTOR * ((DEATHS_UTILITY_RATIO_BASE + theirDeaths) / (DEATHS_UTILITY_RATIO_BASE + ourDeaths)) +
-            HEALTH_UTILITY_FACTOR * (HEALTH_UTILITY_RATIO_BASE + ourTotalHealth) / (HEALTH_UTILITY_RATIO_BASE + theirTotalHealth) +
-            LOG_HEALTH_UTILITY_FACTOR * (LOG_HEALTH_UTILITY_RATIO_BASE + ourLogarithmHealth) / (LOG_HEALTH_UTILITY_RATIO_BASE + theirLogarithmHealth);
+        if (isRelative)
+        {
+
+            return DEATH_UTILITY_FACTOR * ((DEATHS_UTILITY_RATIO_BASE + theirDeaths) / (DEATHS_UTILITY_RATIO_BASE + ourDeaths)) +
+                HEALTH_UTILITY_FACTOR * (HEALTH_UTILITY_RATIO_BASE + ourTotalHealth) / (HEALTH_UTILITY_RATIO_BASE + theirTotalHealth) +
+                LOG_HEALTH_UTILITY_FACTOR * (LOG_HEALTH_UTILITY_RATIO_BASE + ourLogarithmHealth) / (LOG_HEALTH_UTILITY_RATIO_BASE + theirLogarithmHealth);
+        }
+
+        return DEATH_UTILITY_FACTOR * ((theirDeaths - ourDeaths)) +
+            HEALTH_UTILITY_FACTOR * (ourTotalHealth - theirTotalHealth) +
+            LOG_HEALTH_UTILITY_FACTOR * (ourLogarithmHealth - theirLogarithmHealth);
+
     }
 
     private float estimateAbsoluteUtility(State state)

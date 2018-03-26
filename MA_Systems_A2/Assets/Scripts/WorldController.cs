@@ -53,8 +53,8 @@ public class WorldController : MonoBehaviour {
 
 	//Shooting coordination variables
 	public static System.Random rand = new System.Random();
-
-	public WeaponTypeEnum weaponType = WeaponTypeEnum.Shotgun;
+    public int pivotSamples = 700; // number of samples
+    public WeaponTypeEnum weaponType = WeaponTypeEnum.Shotgun;
 
 
 	void Start () {
@@ -100,10 +100,9 @@ public class WorldController : MonoBehaviour {
 				simulationSpeedFactor, world.vehicle.dt, formationDecreasingGoalVelocity);
 		} else if (data.name == "P27") {
 			float[] minMaxes = VirtualStructure.getMinMaxes (world.boundingPolygon);
-			int n = 500; // number of samples
-			Vector2[] points = new Vector2[n];
+			Vector2[] points = new Vector2[pivotSamples];
 
-			for (int i = 0; i < n; i++) {
+			for (int i = 0; i < pivotSamples; i++) {
 				do {
 					points[i].x = (float)(rand.NextDouble () * (minMaxes [2] - minMaxes [0]) + minMaxes [0]);
 					points[i].y = (float)(rand.NextDouble () * (minMaxes [3] - minMaxes [1]) + minMaxes [1]);
@@ -275,7 +274,7 @@ public class WorldController : MonoBehaviour {
 				}
 				// Initialize virtual structure center
 				world.currentPositions[world.currentPositions.Length - 1] = VirtualStructure.getCenter(world.formationPositions);
-				spawnActor (world.currentPositions [world.currentPositions.Length - 1], Vector3.forward, agents.Length - 1, agentPrefab, false, true);
+				spawnActor (world.currentPositions [world.currentPositions.Length - 1], Vector3.forward, agents.Length - 1, agentPrefab, false, false);
 			}
 		}
 	}

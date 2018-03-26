@@ -32,10 +32,13 @@ public class ShooterController : MonoBehaviour {
 		
 
 	// Update is called once per frame
-	void Update () {
-        if(animationTimer > 0.0f)
+	void Update ()
+    {
+        float timePassed = Time.deltaTime * 10.0f;
+
+        if (animationTimer > 0.0f)
         {
-            animationTimer -= Time.deltaTime;
+            animationTimer -= timePassed;
             return;
         }
         animationTimer = 0.0f;
@@ -45,7 +48,6 @@ public class ShooterController : MonoBehaviour {
             return;
         }
 
-        float timePassed = Time.deltaTime * 3.0f;  
         accumulatedTimePlan += timePassed;
 		accumelatedTimeDt += timePassed;
 
@@ -151,7 +153,7 @@ public class ShooterController : MonoBehaviour {
                 if (stepIndex >= gamePlan.Count)
                 {
                     // Show final frame
-                    
+
                     /*
                     for (int enemyIndex = 0; enemyIndex < enemyCount; enemyIndex++)
                     {
@@ -163,7 +165,7 @@ public class ShooterController : MonoBehaviour {
                         }
                     }
                     */
-
+                    Debug.Log(getOurTotalHealth(stepIndex - 1));
                     finished = true;
                     return;
                 }
@@ -208,6 +210,15 @@ public class ShooterController : MonoBehaviour {
 
         comradeCount = currentStepPlan.shooterPlans.Length;
         enemyCount = currentStepPlan.enemyHealths.Length;
+    }
 
+    private float getOurTotalHealth(int stepIndex)
+    {
+        float sum = 0.0f;
+        for (int i = 0; i < this.comradeCount; i++)
+        {
+            sum += gamePlan[stepIndex].shooterPlans[i].health;
+        }
+        return sum;
     }
 }
