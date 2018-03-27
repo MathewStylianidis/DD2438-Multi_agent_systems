@@ -536,26 +536,35 @@ public class ShootingPlanner {
             while (!allCombinationsExhausted)
             {
                 // New combination that we're assessing
-                bool deadPlayerMoved = false;
+                bool isInvalidCombination = false;
                 for (int j = 0; j < comradeCount; j++)
                 {
                     newCombination[j] = oneStepAccessVertices[j][accessVertIndices[j]];
                     if (prevBestState == null || prevBestState.health == null || newCombination == null || prevCombination == null)
                     {
                         Debug.Log("Fuck");
-                        deadPlayerMoved = true;
+                        isInvalidCombination = true;
                         break;
                     }
 
                     if (!(prevBestState.health[j] > 0.0f) && newCombination[j] != prevCombination[j])
                     {
-                        deadPlayerMoved = true;
+                        isInvalidCombination = true;
                         break;
+                    }
+
+                    for (int k = 0; k < comradeCount; k++)
+                    {
+                        if (j != k && newCombination[j] == newCombination[k])
+                        {
+                            isInvalidCombination = true;
+                            break;
+                        }
                     }
                 }
                 
                 StateVisits combVisits;
-                if (!deadPlayerMoved && (!stateVisits.TryGetValue(newCombination, out combVisits) || combVisits.numberOfVisits < MAX_NUMBER_OF_VISITS))
+                if (!isInvalidCombination && (!stateVisits.TryGetValue(newCombination, out combVisits) || combVisits.numberOfVisits < MAX_NUMBER_OF_VISITS))
                 {
                     ShooterOneStepPlan[] shooterOneStepPlans = new ShooterOneStepPlan[comradeCount];
                     OneStepPlan oneStepPlan = new OneStepPlan(shooterOneStepPlans);

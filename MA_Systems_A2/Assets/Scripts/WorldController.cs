@@ -439,12 +439,14 @@ public class WorldController : MonoBehaviour {
 				// Get the coordinates between node j and j + 1
 				Vector3 curPos = new Vector3(world.graphVertices[solutionList[i][j]].vertex.x, 0, world.graphVertices[solutionList[i][j]].vertex.y);
 				Vector3 goalPos = new Vector3 (world.graphVertices[solutionList[i][j + 1]].vertex.x, 0, world.graphVertices[solutionList[i][j + 1]].vertex.y);
+                if (Vector3.Distance(curPos, goalPos) == 0.0)
+                    continue;
 				PointInfo curPointInfo = new PointInfo(curPos, curVelocity, curOrientation, time);
 				PointInfo goalPointInfo = new PointInfo (goalPos, Vector3.zero, Vector3.zero, time + world.vehicle.dt);
 				List<PointInfo> subpathCoords = motionModel.completePath (curPointInfo, goalPointInfo, world, false);
 				if (subpathCoords == null)
 					throw new System.Exception ("A path has a point in an obstacle");
-				curVelocity = subpathCoords [subpathCoords.Count - 1].vel;
+                curVelocity = subpathCoords[subpathCoords.Count - 1].vel;
 				curOrientation = subpathCoords [subpathCoords.Count - 1].orientation;
 				time = subpathCoords [subpathCoords.Count - 1].currentTime;
 				// Add subpath coordinates to this vehicle's list
