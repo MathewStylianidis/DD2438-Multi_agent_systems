@@ -2,9 +2,9 @@
 
 ### (Under construction...)
 This repository includes solutions to 5 different multi agent problems: Multi-agent collision avoidance,
-the Vehicle Routing Problem........
+the Vehicle Routing Problem, Leader-follow formation, Sports formation, Shooting coordination.
 
-The implementation is done in Unity 2017.3.0f3 using C#.
+The implementation is done in Unity 2017.3.0f3 using C# except for the multi-agent collision avoidance which is in Python.
 
 Below a description of each problem is given along with a description of our solution. (The names in the parentheses are the file names containing the data for the respective problems)
 
